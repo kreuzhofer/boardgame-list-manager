@@ -4,7 +4,7 @@
 
 This document describes the technical design for a board game event coordination application. The application enables participants of private board game events to coordinate which games will be available by maintaining a shared list where users can indicate games they want to play or will bring. The system emphasizes pre-event coordination to prevent duplicate game copies and help fulfill game requests.
 
-The application follows a three-tier architecture with a React frontend, Express.js API backend, and PostgreSQL database, all containerized via Docker Compose.
+The application follows a three-tier architecture with a React frontend, Express.js API backend, and PostgreSQL database (accessed via Prisma ORM), all containerized via Docker Compose.
 
 ## Architecture
 
@@ -17,6 +17,7 @@ graph TB
         
         subgraph "API Container"
             Express[Express.js API]
+            Prisma[Prisma ORM]
         end
         
         subgraph "Database Container"
@@ -26,7 +27,8 @@ graph TB
     
     Browser[Browser] --> React
     React --> Express
-    Express --> PostgreSQL
+    Express --> Prisma
+    Prisma --> PostgreSQL
     
     subgraph "Browser Storage"
         LocalStorage[localStorage]
@@ -295,6 +297,8 @@ erDiagram
 
 ### SQL Schema
 
+The database schema is managed by Prisma. The following shows the equivalent SQL that Prisma generates:
+
 ```sql
 CREATE TABLE games (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -323,6 +327,58 @@ CREATE INDEX idx_players_game_id ON players(game_id);
 CREATE INDEX idx_bringers_game_id ON bringers(game_id);
 CREATE INDEX idx_players_user_name ON players(user_name);
 CREATE INDEX idx_bringers_user_name ON bringers(user_name);
+```
+
+### Prisma Schema
+
+```prisma
+// api/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  players   Player[]
+  bringers  Bringer[]
+
+  @@map("games")
+}
+
+model Player {
+  id       String   @id @default(uuid())
+  gameId   String   @map("game_id")
+  userName String   @map("user_name")
+  addedAt  DateTime @default(now()) @map("added_at")
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userName])
+  @@index([gameId])
+  @@index([userName])
+  @@map("players")
+}
+
+model Bringer {
+  id       String   @id @default(uuid())
+  gameId   String   @map("game_id")
+  userName String   @map("user_name")
+  addedAt  DateTime @default(now()) @map("added_at")
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userName])
+  @@index([gameId])
+  @@index([userName])
+  @@map("bringers")
+}
 ```
 
 ### TypeScript Entity Types
@@ -415,7 +471,8 @@ services:
       - EVENT_NAME=${EVENT_NAME}
       - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-3000}
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
 
   postgresql:
     image: postgres:15-alpine
@@ -425,11 +482,17 @@ services:
       - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./api/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
 ```
+
+Note: Database schema is managed by Prisma migrations. The API container runs `prisma migrate deploy` on startup.
 
 
 ## Correctness Properties
@@ -620,7 +683,7 @@ The testing strategy employs a dual approach combining unit tests for specific e
 
 - **Backend (Express.js)**: Jest with `fast-check` for property-based testing
 - **Frontend (React)**: Vitest with React Testing Library and `fast-check`
-- **Database**: Jest with test database isolation
+- **Database**: Jest with Prisma test client and database isolation
 
 ### Unit Testing Approach
 
@@ -726,8 +789,9 @@ frontend/
 ### Test Database Strategy
 
 - Use separate test database for integration tests
-- Reset database state before each test suite
-- Use transactions for test isolation where possible
+- Use Prisma's `$transaction` for test isolation
+- Reset database state before each test suite using Prisma's `deleteMany`
+- Use `@prisma/client` generated types for type safety in tests
 
 ### Coverage Goals
 

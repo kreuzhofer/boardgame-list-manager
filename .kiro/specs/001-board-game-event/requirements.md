@@ -140,6 +140,7 @@ This document defines the requirements for a board game event coordination appli
 1. THE Event_App frontend SHALL be built with React, TypeScript, and Tailwind CSS
 2. THE Event_App backend SHALL be built with Express.js
 3. THE Event_App SHALL use PostgreSQL as the database
-4. THE Event_App SHALL be deployable via Docker Compose with three containers: frontend, api, and postgresql
-5. THE Event_App SHALL store the shared password in an environment variable
-6. THE Event_App SHALL store the event name in an environment variable
+4. THE Event_App SHALL use Prisma ORM for database access
+5. THE Event_App SHALL be deployable via Docker Compose with three containers: frontend, api, and postgresql
+6. THE Event_App SHALL store the shared password in an environment variable
+7. THE Event_App SHALL store the event name in an environment variable

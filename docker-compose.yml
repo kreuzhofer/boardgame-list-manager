@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:${API_PORT:-3006}
+        - VITE_EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
+    ports:
+      - "${FRONTEND_PORT:-8086}:80"
+    environment:
+      - VITE_API_URL=http://localhost:${API_PORT:-3006}
+      - VITE_EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "${API_PORT:-3006}:3006"
+    environment:
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD:-postgres}@postgresql:5432/${DB_NAME:-boardgame_event}
+      - EVENT_PASSWORD=${EVENT_PASSWORD:-your-secret-password}
+      - EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
+      - API_PORT=3006
+      - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-8086}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+  postgresql:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-boardgame_event}
+    ports:
+      - "${DB_PORT:-5456}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME:-boardgame_event}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

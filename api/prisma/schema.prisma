@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  players   Player[]
+  bringers  Bringer[]
+
+  @@map("games")
+}
+
+model Player {
+  id       String   @id @default(uuid())
+  gameId   String   @map("game_id")
+  userName String   @map("user_name")
+  addedAt  DateTime @default(now()) @map("added_at")
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userName])
+  @@index([gameId])
+  @@index([userName])
+  @@map("players")
+}
+
+model Bringer {
+  id       String   @id @default(uuid())
+  gameId   String   @map("game_id")
+  userName String   @map("user_name")
+  addedAt  DateTime @default(now()) @map("added_at")
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userName])
+  @@index([gameId])
+  @@index([userName])
+  @@map("bringers")
+}

@@ -4,12 +4,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:${API_PORT:-3006}
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3006}
         - VITE_EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
     ports:
       - "${FRONTEND_PORT:-8086}:80"
     environment:
-      - VITE_API_URL=http://localhost:${API_PORT:-3006}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3006}
       - VITE_EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
     depends_on:
       - api
@@ -25,7 +25,7 @@ services:
       - EVENT_PASSWORD=${EVENT_PASSWORD:-your-secret-password}
       - EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
       - API_PORT=3006
-      - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-8086}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8086}
     depends_on:
       postgresql:
         condition: service_healthy

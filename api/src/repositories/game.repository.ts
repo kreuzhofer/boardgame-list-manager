@@ -5,15 +5,24 @@ import type { GameEntity, CreateGameDto } from '../types';
  * Repository for game-related database operations.
  * Uses Prisma client to interact with the PostgreSQL database.
  * 
- * Requirements: 10.3, 10.4
+ * Requirements: 10.3, 10.4, 4.1-4.5
  */
 export class GameRepository {
   /**
-   * Include clause for fetching related players and bringers
+   * Include clause for fetching related players and bringers with user data
+   * Requirements: 4.6 - Include full user object for each player and bringer
    */
   private readonly includeRelations = {
-    players: true,
-    bringers: true,
+    players: {
+      include: {
+        user: true,
+      },
+    },
+    bringers: {
+      include: {
+        user: true,
+      },
+    },
   };
 
   /**
@@ -45,11 +54,12 @@ export class GameRepository {
 
   /**
    * Create a new game with optional player and bringer entries
-   * @param data - Game creation data including name, userName, and isBringing flag
+   * @param data - Game creation data including name, userId, and isBringing flag
    * @returns The created game with related data
+   * Requirements: 4.1 - Accept userId instead of userName
    */
   async create(data: CreateGameDto): Promise<GameEntity> {
-    const { name, userName, isBringing } = data;
+    const { name, userId, isBringing } = data;
 
     // Create game with the user as a player, and optionally as a bringer
     const game = await prisma.game.create({
@@ -57,13 +67,13 @@ export class GameRepository {
         name,
         players: {
           create: {
-            userName,
+            userId,
           },
         },
         ...(isBringing && {
           bringers: {
             create: {
-              userName,
+              userId,
             },
           },
         }),
@@ -77,11 +87,12 @@ export class GameRepository {
   /**
    * Add a player to a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to add as a player
+   * @param userId - The user's ID to add as a player
    * @returns The updated game with related data
    * @throws Error if game not found or user already a player
+   * Requirements: 4.2 - Accept userId instead of userName
    */
-  async addPlayer(gameId: string, userName: string): Promise<GameEntity> {
+  async addPlayer(gameId: string, userId: string): Promise<GameEntity> {
     // First verify the game exists
     const existingGame = await prisma.game.findUnique({
       where: { id: gameId },
@@ -95,7 +106,7 @@ export class GameRepository {
     await prisma.player.create({
       data: {
         gameId,
-        userName,
+        userId,
       },
     });
 
@@ -111,11 +122,12 @@ export class GameRepository {
   /**
    * Remove a player from a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to remove as a player
+   * @param userId - The user's ID to remove as a player
    * @returns The updated game with related data
    * @throws Error if game not found or user not a player
+   * Requirements: 4.4 - Use userId for removal
    */
-  async removePlayer(gameId: string, userName: string): Promise<GameEntity> {
+  async removePlayer(gameId: string, userId: string): Promise<GameEntity> {
     // First verify the game exists
     const existingGame = await prisma.game.findUnique({
       where: { id: gameId },
@@ -125,15 +137,17 @@ export class GameRepository {
       throw new Error('Game not found');
     }
 
-    // Find and delete the player entry
-    const deleteResult = await prisma.player.deleteMany({
+    // Delete the player entry using the unique constraint
+    const deleteResult = await prisma.player.delete({
       where: {
-        gameId,
-        userName,
+        gameId_userId: {
+          gameId,
+          userId,
+        },
       },
-    });
+    }).catch(() => null);
 
-    if (deleteResult.count === 0) {
+    if (!deleteResult) {
       throw new Error('User is not a player of this game');
     }
 
@@ -149,11 +163,12 @@ export class GameRepository {
   /**
    * Add a bringer to a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to add as a bringer
+   * @param userId - The user's ID to add as a bringer
    * @returns The updated game with related data
    * @throws Error if game not found or user already a bringer
+   * Requirements: 4.3 - Accept userId instead of userName
    */
-  async addBringer(gameId: string, userName: string): Promise<GameEntity> {
+  async addBringer(gameId: string, userId: string): Promise<GameEntity> {
     // First verify the game exists
     const existingGame = await prisma.game.findUnique({
       where: { id: gameId },
@@ -167,7 +182,7 @@ export class GameRepository {
     await prisma.bringer.create({
       data: {
         gameId,
-        userName,
+        userId,
       },
     });
 
@@ -183,11 +198,12 @@ export class GameRepository {
   /**
    * Remove a bringer from a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to remove as a bringer
+   * @param userId - The user's ID to remove as a bringer
    * @returns The updated game with related data
    * @throws Error if game not found or user not a bringer
+   * Requirements: 4.5 - Use userId for removal
    */
-  async removeBringer(gameId: string, userName: string): Promise<GameEntity> {
+  async removeBringer(gameId: string, userId: string): Promise<GameEntity> {
     // First verify the game exists
     const existingGame = await prisma.game.findUnique({
       where: { id: gameId },
@@ -197,15 +213,17 @@ export class GameRepository {
       throw new Error('Game not found');
     }
 
-    // Find and delete the bringer entry
-    const deleteResult = await prisma.bringer.deleteMany({
+    // Delete the bringer entry using the unique constraint
+    const deleteResult = await prisma.bringer.delete({
       where: {
-        gameId,
-        userName,
+        gameId_userId: {
+          gameId,
+          userId,
+        },
       },
-    });
+    }).catch(() => null);
 
-    if (deleteResult.count === 0) {
+    if (!deleteResult) {
       throw new Error('User is not a bringer of this game');
     }
 

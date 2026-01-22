@@ -20,3 +20,5 @@ export { SearchFilters } from './SearchFilters';
 export type { SearchFiltersProps } from './SearchFilters';
 export { SortControls } from './SortControls';
 export { Statistics } from './Statistics';
+export { UserNameEditor } from './UserNameEditor';
+export { UserSelectionModal } from './UserSelectionModal';

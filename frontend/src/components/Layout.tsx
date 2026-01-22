@@ -5,17 +5,18 @@
 
 import { ReactNode } from 'react';
 import { Header } from './Header';
+import type { User } from '../types';
 
 interface LayoutProps {
   children: ReactNode;
-  userName?: string;
-  onNameChange?: () => void;
+  user?: User;
+  onUserUpdated?: (user: User) => void;
 }
 
-export function Layout({ children, userName, onNameChange }: LayoutProps) {
+export function Layout({ children, user, onUserUpdated }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Header userName={userName} onNameChange={onNameChange} />
+      <Header user={user} onUserUpdated={onUserUpdated} />
       <main className="flex-1 container mx-auto px-4 py-6">
         {children}
       </main>

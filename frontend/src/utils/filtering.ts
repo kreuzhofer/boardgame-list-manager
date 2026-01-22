@@ -81,7 +81,7 @@ export function filterByName(games: Game[], query: string): Game[] {
 export function filterByPlayer(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
   return games.filter((game) =>
-    game.players.some((player) => containsQuery(player.name, query))
+    game.players.some((player) => containsQuery(player.user.name, query))
   );
 }
 
@@ -99,7 +99,7 @@ export function filterByPlayer(games: Game[], query: string): Game[] {
 export function filterByBringer(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
   return games.filter((game) =>
-    game.bringers.some((bringer) => containsQuery(bringer.name, query))
+    game.bringers.some((bringer) => containsQuery(bringer.user.name, query))
   );
 }
 
@@ -123,21 +123,21 @@ export function filterWunschGames(games: Game[], enabled: boolean): Game[] {
  * A user is involved if they are either a player or a bringer.
  * 
  * @param games - Array of games to filter
- * @param currentUser - The current user's name
+ * @param currentUserName - The current user's name
  * @param enabled - Whether the filter is enabled
  * @returns Filtered array of games (only games where user is player or bringer if enabled)
  * 
  * Validates: Requirements 5.9
  * Property 14: My Games Filter Correctness
  */
-export function filterMyGames(games: Game[], currentUser: string, enabled: boolean): Game[] {
+export function filterMyGames(games: Game[], currentUserName: string, enabled: boolean): Game[] {
   if (!enabled) return games;
   return games.filter((game) => {
     const isPlayer = game.players.some(
-      (player) => player.name.toLowerCase() === currentUser.toLowerCase()
+      (player) => player.user.name.toLowerCase() === currentUserName.toLowerCase()
     );
     const isBringer = game.bringers.some(
-      (bringer) => bringer.name.toLowerCase() === currentUser.toLowerCase()
+      (bringer) => bringer.user.name.toLowerCase() === currentUserName.toLowerCase()
     );
     return isPlayer || isBringer;
   });

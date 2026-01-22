@@ -4,14 +4,59 @@ import App from './App';
 
 // Storage key used by AuthGuard
 const AUTH_STORAGE_KEY = 'boardgame_event_auth';
-// Storage key used by useUserName hook
-const USER_NAME_STORAGE_KEY = 'boardgame_event_user_name';
+// Storage key used by useUser hook
+const USER_ID_STORAGE_KEY = 'boardgame_event_user_id';
+
+// Mock user data
+const mockUser = { id: 'user-123', name: 'Test User' };
+const mockUsers = [
+  { id: 'user-123', name: 'Test User' },
+  { id: 'user-456', name: 'Another User' },
+];
+
+// Mock the API client
+vi.mock('./api/client', () => ({
+  usersApi: {
+    getAll: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  gamesApi: {
+    getAll: vi.fn().mockResolvedValue({ games: [] }),
+  },
+  statisticsApi: {
+    get: vi.fn().mockResolvedValue({
+      totalGames: 0,
+      totalParticipants: 0,
+      availableGames: 0,
+      requestedGames: 0,
+      popularGames: [],
+    }),
+  },
+  ApiError: class ApiError extends Error {
+    code: string;
+    constructor(message: string, code: string) {
+      super(message);
+      this.code = code;
+    }
+  },
+}));
+
+// Import mocked module
+import { usersApi } from './api/client';
 
 describe('App', () => {
   beforeEach(() => {
     // Clear sessionStorage and localStorage before each test
     sessionStorage.clear();
     localStorage.clear();
+    vi.clearAllMocks();
+    
+    // Default mock implementations
+    vi.mocked(usersApi.getAll).mockResolvedValue({ users: mockUsers });
+    vi.mocked(usersApi.getById).mockResolvedValue({ user: mockUser });
+    vi.mocked(usersApi.create).mockResolvedValue({ user: mockUser });
   });
 
   afterEach(() => {
@@ -23,7 +68,8 @@ describe('App', () => {
   describe('when not authenticated', () => {
     it('renders the password screen with event name', () => {
       render(<App />);
-      expect(screen.getByText('Brettspiel-Event')).toBeInTheDocument();
+      // Event name comes from env var, check for the h1 heading
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
 
     it('renders the password input field', () => {
@@ -47,150 +93,200 @@ describe('App', () => {
     });
   });
 
-  describe('when authenticated but no name stored', () => {
+  describe('when authenticated but no user stored', () => {
     beforeEach(() => {
-      // Simulate authenticated state without stored name
+      // Simulate authenticated state without stored user
       sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
     });
 
-    it('renders the name prompt modal', () => {
+    it('renders the user selection modal', async () => {
       render(<App />);
-      expect(screen.getByText('Wie heißen Sie?')).toBeInTheDocument();
-    });
-
-    it('renders the name input field', () => {
-      render(<App />);
-      expect(screen.getByLabelText('Name eingeben')).toBeInTheDocument();
-    });
-
-    it('renders the save button', () => {
-      render(<App />);
-      expect(screen.getByRole('button', { name: 'Speichern' })).toBeInTheDocument();
-    });
-
-    it('shows error when submitting empty name', async () => {
-      render(<App />);
-      const submitButton = screen.getByRole('button', { name: 'Speichern' });
-      fireEvent.click(submitButton);
-      
       await waitFor(() => {
-        expect(screen.getByText('Bitte geben Sie Ihren Namen ein.')).toBeInTheDocument();
+        expect(screen.getByText('Wer bist du?')).toBeInTheDocument();
       });
     });
 
-    it('stores name and shows main content after submission', async () => {
+    it('shows existing users in the modal', async () => {
       render(<App />);
-      const nameInput = screen.getByLabelText('Name eingeben');
-      const submitButton = screen.getByRole('button', { name: 'Speichern' });
+      await waitFor(() => {
+        expect(screen.getByText('Test User')).toBeInTheDocument();
+        expect(screen.getByText('Another User')).toBeInTheDocument();
+      });
+    });
+
+    it('allows selecting an existing user', async () => {
+      render(<App />);
       
-      fireEvent.change(nameInput, { target: { value: 'Max Mustermann' } });
+      await waitFor(() => {
+        expect(screen.getByText('Test User')).toBeInTheDocument();
+      });
+      
+      // Click on the user to select them
+      fireEvent.click(screen.getByText('Test User'));
+      
+      await waitFor(() => {
+        // Modal should close and user should be displayed in header
+        expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
+      });
+      
+      // Verify user ID was stored in localStorage
+      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBe('user-123');
+    });
+
+    it('shows create user form when clicking create button', async () => {
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+      });
+      
+      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      
+      await waitFor(() => {
+        expect(screen.getByText('Neuen Benutzer erstellen:')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
+      });
+    });
+
+    it('disables create button when name is empty', async () => {
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+      });
+      
+      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
+      });
+      
+      // Submit button should be disabled when name is empty
+      const submitButton = screen.getByRole('button', { name: 'Erstellen' });
+      expect(submitButton).toBeDisabled();
+      
+      // Also disabled with whitespace-only
+      const nameInput = screen.getByPlaceholderText('Dein Name');
+      fireEvent.change(nameInput, { target: { value: '   ' } });
+      expect(submitButton).toBeDisabled();
+    });
+
+    it('creates new user and closes modal after submission', async () => {
+      const newUser = { id: 'new-user-789', name: 'New User' };
+      vi.mocked(usersApi.create).mockResolvedValue({ user: newUser });
+      
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+      });
+      
+      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
+      });
+      
+      const nameInput = screen.getByPlaceholderText('Dein Name');
+      fireEvent.change(nameInput, { target: { value: 'New User' } });
+      
+      const submitButton = screen.getByRole('button', { name: 'Erstellen' });
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        // Name prompt should be gone
-        expect(screen.queryByText('Wie heißen Sie?')).not.toBeInTheDocument();
-        // User name should be displayed in header
-        expect(screen.getByText('Max Mustermann')).toBeInTheDocument();
+        // Modal should close
+        expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
       });
       
-      // Verify name was stored in localStorage
-      expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe('Max Mustermann');
+      // Verify user ID was stored in localStorage
+      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBe('new-user-789');
+    });
+
+    it('shows message when no users exist', async () => {
+      vi.mocked(usersApi.getAll).mockResolvedValue({ users: [] });
+      
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Noch keine Benutzer vorhanden.')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Ersten Benutzer erstellen' })).toBeInTheDocument();
+      });
     });
   });
 
-  describe('when authenticated with stored name', () => {
+  describe('when authenticated with stored user', () => {
     beforeEach(() => {
-      // Simulate authenticated state with stored name
+      // Simulate authenticated state with stored user ID
       sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      localStorage.setItem(USER_NAME_STORAGE_KEY, 'Test User');
+      localStorage.setItem(USER_ID_STORAGE_KEY, 'user-123');
     });
 
-    it('renders the header with event name', () => {
+    it('renders the header with event name', async () => {
       render(<App />);
-      expect(screen.getByText('Brettspiel-Event')).toBeInTheDocument();
-    });
-
-    it('renders the navigation links', () => {
-      render(<App />);
-      // Use getAllByText since "Spieleliste" appears in both nav and page title
-      const spielelisteElements = screen.getAllByText('Spieleliste');
-      expect(spielelisteElements.length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('Druckansicht')).toBeInTheDocument();
-    });
-
-    it('renders the home page by default', () => {
-      render(<App />);
-      // HomePage shows "Spieleliste" as the page title (h2)
-      expect(screen.getByRole('heading', { name: 'Spieleliste', level: 2 })).toBeInTheDocument();
-    });
-
-    it('renders the footer', () => {
-      render(<App />);
-      expect(screen.getByText(/Brettspiel-Event Koordination/)).toBeInTheDocument();
-    });
-
-    it('displays the user name in the header', () => {
-      render(<App />);
-      expect(screen.getByText('Test User')).toBeInTheDocument();
-      expect(screen.getByText('Angemeldet als:')).toBeInTheDocument();
-    });
-
-    it('shows change name button', () => {
-      render(<App />);
-      expect(screen.getByRole('button', { name: 'Name ändern' })).toBeInTheDocument();
-    });
-
-    it('opens name change dialog when clicking change button', async () => {
-      render(<App />);
-      const changeButton = screen.getByRole('button', { name: 'Name ändern' });
-      fireEvent.click(changeButton);
       
       await waitFor(() => {
-        expect(screen.getByText('Wie heißen Sie?')).toBeInTheDocument();
-        // Should show cancel button in change mode
-        expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeInTheDocument();
+        // Event name is in h1 heading
+        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
       });
     });
 
-    it('closes name change dialog when clicking cancel', async () => {
+    it('renders the navigation links', async () => {
       render(<App />);
-      const changeButton = screen.getByRole('button', { name: 'Name ändern' });
-      fireEvent.click(changeButton);
       
       await waitFor(() => {
-        expect(screen.getByText('Wie heißen Sie?')).toBeInTheDocument();
-      });
-      
-      const cancelButton = screen.getByRole('button', { name: 'Abbrechen' });
-      fireEvent.click(cancelButton);
-      
-      await waitFor(() => {
-        expect(screen.queryByText('Wie heißen Sie?')).not.toBeInTheDocument();
+        // Use getAllByText since "Spieleliste" appears in both nav and page title
+        const spielelisteElements = screen.getAllByText('Spieleliste');
+        expect(spielelisteElements.length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText('Druckansicht')).toBeInTheDocument();
       });
     });
 
-    it('updates name when submitting new name', async () => {
+    it('renders the home page by default', async () => {
       render(<App />);
-      const changeButton = screen.getByRole('button', { name: 'Name ändern' });
-      fireEvent.click(changeButton);
       
       await waitFor(() => {
-        expect(screen.getByText('Wie heißen Sie?')).toBeInTheDocument();
+        // HomePage shows "Spieleliste" as the page title (h2)
+        expect(screen.getByRole('heading', { name: 'Spieleliste', level: 2 })).toBeInTheDocument();
       });
-      
-      const nameInput = screen.getByLabelText('Name eingeben');
-      const submitButton = screen.getByRole('button', { name: 'Speichern' });
-      
-      fireEvent.change(nameInput, { target: { value: 'New Name' } });
-      fireEvent.click(submitButton);
+    });
+
+    it('renders the footer', async () => {
+      render(<App />);
       
       await waitFor(() => {
-        expect(screen.queryByText('Wie heißen Sie?')).not.toBeInTheDocument();
-        expect(screen.getByText('New Name')).toBeInTheDocument();
+        expect(screen.getByText(/Koordination/)).toBeInTheDocument();
+      });
+    });
+
+    it('displays the user name in the header', async () => {
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Test User')).toBeInTheDocument();
+        expect(screen.getByText('Angemeldet als:')).toBeInTheDocument();
+      });
+    });
+
+    it('shows edit name button', async () => {
+      render(<App />);
+      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Namen bearbeiten' })).toBeInTheDocument();
+      });
+    });
+
+    it('clears user if API returns not found', async () => {
+      vi.mocked(usersApi.getById).mockRejectedValue(new Error('User not found'));
+      
+      render(<App />);
+      
+      await waitFor(() => {
+        // Should show user selection modal since user was cleared
+        expect(screen.getByText('Wer bist du?')).toBeInTheDocument();
       });
       
-      // Verify name was updated in localStorage
-      expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe('New Name');
+      // User ID should be cleared from localStorage
+      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBeNull();
     });
   });
 });

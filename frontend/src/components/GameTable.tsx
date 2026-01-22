@@ -15,7 +15,7 @@ import { sortGamesByName, type SortOrder, DEFAULT_SORT_ORDER } from '../utils';
 
 interface GameTableProps {
   games: Game[];
-  currentUser: string;
+  currentUserId: string;
   sortOrder?: SortOrder;
   onSortOrderChange?: (order: SortOrder) => void;
   onAddPlayer?: (gameId: string) => void;
@@ -26,7 +26,7 @@ interface GameTableProps {
 
 export function GameTable({
   games,
-  currentUser,
+  currentUserId,
   sortOrder = DEFAULT_SORT_ORDER,
   onSortOrderChange,
   onAddPlayer,
@@ -121,7 +121,7 @@ export function GameTable({
             <GameCard
               key={game.id}
               game={game}
-              currentUser={currentUser}
+              currentUserId={currentUserId}
               onAddPlayer={onAddPlayer}
               onAddBringer={onAddBringer}
               onRemovePlayer={onRemovePlayer}
@@ -156,7 +156,7 @@ export function GameTable({
                 <GameRow
                   key={game.id}
                   game={game}
-                  currentUser={currentUser}
+                  currentUserId={currentUserId}
                   onAddPlayer={onAddPlayer}
                   onAddBringer={onAddBringer}
                   onRemovePlayer={onRemovePlayer}

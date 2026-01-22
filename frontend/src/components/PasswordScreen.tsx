@@ -50,7 +50,9 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
           setError(err.message);
         }
       } else {
-        setError('Ein Fehler ist aufgetreten. Bitte erneut versuchen.');
+        // Show detailed error for debugging
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(`Fehler: ${errorMessage}`);
       }
     } finally {
       setIsLoading(false);

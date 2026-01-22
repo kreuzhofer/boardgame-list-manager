@@ -9,11 +9,13 @@
 import { useEffect, useState } from 'react';
 import { gamesApi } from '../api/client';
 import { PrintList, filterGamesUserIsBringing } from '../components';
-import { useUserName } from '../hooks';
-import type { Game } from '../types';
+import type { Game, User } from '../types';
 
-export function PrintPage() {
-  const { userName } = useUserName();
+interface PrintPageProps {
+  user: User | null;
+}
+
+export function PrintPage({ user }: PrintPageProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +44,8 @@ export function PrintPage() {
   };
 
   // Count games user is bringing
-  const userGamesCount = userName 
-    ? filterGamesUserIsBringing(games, userName).length 
+  const userGamesCount = user 
+    ? filterGamesUserIsBringing(games, user.id).length 
     : 0;
 
   if (loading) {
@@ -82,7 +84,7 @@ export function PrintPage() {
     );
   }
 
-  if (!userName) {
+  if (!user) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -90,7 +92,7 @@ export function PrintPage() {
         </div>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
-            Bitte geben Sie zuerst Ihren Namen ein, um die Druckansicht zu nutzen.
+            Bitte wählen Sie zuerst einen Benutzer aus, um die Druckansicht zu nutzen.
           </p>
         </div>
       </div>
@@ -150,7 +152,7 @@ export function PrintPage() {
 
       {/* Print preview container */}
       <div className="bg-white rounded-lg shadow p-6">
-        <PrintList userName={userName} games={games} />
+        <PrintList userName={user.name} userId={user.id} games={games} />
       </div>
 
       {/* Print-specific global styles */}

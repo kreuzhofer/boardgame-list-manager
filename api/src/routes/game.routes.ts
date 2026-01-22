@@ -30,18 +30,18 @@ router.get('/', async (_req: Request, res: Response) => {
  * POST /api/games
  * Creates a new game with the user as a player (and optionally as a bringer).
  * 
- * Request body: { name: string, userName: string, isBringing: boolean }
+ * Request body: { name: string, userId: string, isBringing: boolean }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if name is empty
+ *   - 400 if name is empty or userId is missing
  *   - 409 if game name already exists
  * 
- * Requirements: 3.1, 3.3, 3.4
+ * Requirements: 3.1, 3.3, 3.4, 4.1
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userName, isBringing } = req.body;
+    const { name, userId, isBringing } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -53,18 +53,18 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    if (!userName || typeof userName !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Bitte einen Benutzernamen angeben.',
+          message: 'Benutzer-ID erforderlich.',
         },
       });
     }
 
     const game = await gameService.createGame(
       name,
-      userName,
+      userId,
       Boolean(isBringing)
     );
 
@@ -104,32 +104,32 @@ router.post('/', async (req: Request, res: Response) => {
  * POST /api/games/:id/players
  * Adds a user as a player to a game.
  * 
- * Request body: { userName: string }
+ * Request body: { userId: string }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if userName is missing
+ *   - 400 if userId is missing
  *   - 404 if game not found
  *   - 409 if user is already a player
  * 
- * Requirements: 3.5
+ * Requirements: 3.5, 4.2
  */
 router.post('/:id/players', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userName } = req.body;
+    const { userId } = req.body;
 
     // Validate required fields
-    if (!userName || typeof userName !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Bitte einen Benutzernamen angeben.',
+          message: 'Benutzer-ID erforderlich.',
         },
       });
     }
 
-    const game = await gameService.addPlayer(id, userName);
+    const game = await gameService.addPlayer(id, userId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -163,7 +163,7 @@ router.post('/:id/players', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/games/:id/players/:userName
+ * DELETE /api/games/:id/players/:userId
  * Removes a user from a game's players list.
  * 
  * Response: { game: Game }
@@ -171,13 +171,13 @@ router.post('/:id/players', async (req: Request, res: Response) => {
  * Error responses:
  *   - 404 if game not found or user not a player
  * 
- * Requirements: 3.5
+ * Requirements: 3.5, 4.4
  */
-router.delete('/:id/players/:userName', async (req: Request, res: Response) => {
+router.delete('/:id/players/:userId', async (req: Request, res: Response) => {
   try {
-    const { id, userName } = req.params;
+    const { id, userId } = req.params;
 
-    const game = await gameService.removePlayer(id, userName);
+    const game = await gameService.removePlayer(id, userId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -214,32 +214,32 @@ router.delete('/:id/players/:userName', async (req: Request, res: Response) => {
  * POST /api/games/:id/bringers
  * Adds a user as a bringer to a game.
  * 
- * Request body: { userName: string }
+ * Request body: { userId: string }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if userName is missing
+ *   - 400 if userId is missing
  *   - 404 if game not found
  *   - 409 if user is already a bringer
  * 
- * Requirements: 3.6
+ * Requirements: 3.6, 4.3
  */
 router.post('/:id/bringers', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userName } = req.body;
+    const { userId } = req.body;
 
     // Validate required fields
-    if (!userName || typeof userName !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Bitte einen Benutzernamen angeben.',
+          message: 'Benutzer-ID erforderlich.',
         },
       });
     }
 
-    const game = await gameService.addBringer(id, userName);
+    const game = await gameService.addBringer(id, userId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -273,7 +273,7 @@ router.post('/:id/bringers', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/games/:id/bringers/:userName
+ * DELETE /api/games/:id/bringers/:userId
  * Removes a user from a game's bringers list.
  * 
  * Response: { game: Game }
@@ -281,13 +281,13 @@ router.post('/:id/bringers', async (req: Request, res: Response) => {
  * Error responses:
  *   - 404 if game not found or user not a bringer
  * 
- * Requirements: 3.6
+ * Requirements: 3.6, 4.5
  */
-router.delete('/:id/bringers/:userName', async (req: Request, res: Response) => {
+router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
   try {
-    const { id, userName } = req.params;
+    const { id, userId } = req.params;
 
-    const game = await gameService.removeBringer(id, userName);
+    const game = await gameService.removeBringer(id, userId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {

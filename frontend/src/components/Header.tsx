@@ -2,14 +2,17 @@
  * Header component with event name and user info
  * All UI text in German (Requirement 9.1)
  * Requirement 6.1, 6.4: Responsive design with mobile-friendly navigation
+ * Requirement 6.3, 7.1: Display user name with edit option
  */
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { UserNameEditor } from './UserNameEditor';
+import type { User } from '../types';
 
 interface HeaderProps {
-  userName?: string;
-  onNameChange?: () => void;
+  user?: User;
+  onUserUpdated?: (user: User) => void;
 }
 
 // Get event name from environment variable
@@ -17,7 +20,7 @@ const getEventName = (): string => {
   return import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
 };
 
-export function Header({ userName, onNameChange }: HeaderProps) {
+export function Header({ user, onUserUpdated }: HeaderProps) {
   const eventName = getEventName();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,21 +76,14 @@ export function Header({ userName, onNameChange }: HeaderProps) {
           </nav>
 
           {/* Desktop User Info - hidden on mobile */}
-          {userName && (
+          {user && onUserUpdated && (
             <div className="hidden md:flex items-center gap-3">
               <span className="text-white/90 text-sm">
                 Angemeldet als:
               </span>
-              <span className="font-medium">{userName}</span>
-              {onNameChange && (
-                <button
-                  onClick={onNameChange}
-                  className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
-                  aria-label="Name ändern"
-                >
-                  Ändern
-                </button>
-              )}
+              <div className="bg-white/10 px-3 py-1 rounded">
+                <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
+              </div>
             </div>
           )}
 
@@ -162,24 +158,12 @@ export function Header({ userName, onNameChange }: HeaderProps) {
             </nav>
 
             {/* Mobile User Info */}
-            {userName && (
-              <div className="flex items-center justify-between px-4 py-3 bg-white/10 rounded-lg">
-                <div className="flex flex-col">
+            {user && onUserUpdated && (
+              <div className="px-4 py-3 bg-white/10 rounded-lg">
+                <div className="flex flex-col gap-2">
                   <span className="text-white/70 text-xs">Angemeldet als</span>
-                  <span className="font-medium text-base">{userName}</span>
+                  <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
                 </div>
-                {onNameChange && (
-                  <button
-                    onClick={() => {
-                      closeMobileMenu();
-                      onNameChange();
-                    }}
-                    className="text-sm bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg transition-colors min-h-[44px]"
-                    aria-label="Name ändern"
-                  >
-                    Ändern
-                  </button>
-                )}
               </div>
             )}
           </div>

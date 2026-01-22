@@ -16,11 +16,15 @@ import { GameTable } from '../components/GameTable';
 import { AddGameForm } from '../components/AddGameForm';
 import { SearchFilters } from '../components/SearchFilters';
 import { Statistics } from '../components/Statistics';
-import { useGameFilters, useUserName } from '../hooks';
-import type { Game } from '../types';
+import { useGameFilters } from '../hooks';
+import type { Game, User } from '../types';
 import type { SortOrder } from '../utils';
 
-export function HomePage() {
+interface HomePageProps {
+  user: User | null;
+}
+
+export function HomePage({ user }: HomePageProps) {
   // Game state
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,9 +49,9 @@ export function HomePage() {
     resetFilters,
   } = useGameFilters();
 
-  // Current user from hook (reacts to name changes)
-  const { userName } = useUserName();
-  const currentUser = userName || 'Unbekannt';
+  // Current user info
+  const currentUserId = user?.id || '';
+  const currentUserName = user?.name || 'Unbekannt';
 
   // Fetch games from API
   const fetchGames = useCallback(async () => {
@@ -86,8 +90,9 @@ export function HomePage() {
 
   // Handle add player action
   const handleAddPlayer = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
     try {
-      const response = await gamesApi.addPlayer(gameId, currentUser);
+      const response = await gamesApi.addPlayer(gameId, currentUserId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -100,12 +105,13 @@ export function HomePage() {
         alert('Fehler beim Hinzufügen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUser, refreshStats]);
+  }, [currentUserId, refreshStats]);
 
   // Handle add bringer action
   const handleAddBringer = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
     try {
-      const response = await gamesApi.addBringer(gameId, currentUser);
+      const response = await gamesApi.addBringer(gameId, currentUserId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -118,12 +124,13 @@ export function HomePage() {
         alert('Fehler beim Hinzufügen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUser, refreshStats]);
+  }, [currentUserId, refreshStats]);
 
   // Handle remove player action
   const handleRemovePlayer = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
     try {
-      const response = await gamesApi.removePlayer(gameId, currentUser);
+      const response = await gamesApi.removePlayer(gameId, currentUserId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -136,12 +143,13 @@ export function HomePage() {
         alert('Fehler beim Entfernen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUser, refreshStats]);
+  }, [currentUserId, refreshStats]);
 
   // Handle remove bringer action
   const handleRemoveBringer = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
     try {
-      const response = await gamesApi.removeBringer(gameId, currentUser);
+      const response = await gamesApi.removeBringer(gameId, currentUserId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -154,10 +162,10 @@ export function HomePage() {
         alert('Fehler beim Entfernen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUser, refreshStats]);
+  }, [currentUserId, refreshStats]);
 
   // Apply filters to games
-  const filteredGames = filterGames(games, currentUser);
+  const filteredGames = filterGames(games, currentUserName);
 
   // Loading state
   if (loading) {
@@ -249,7 +257,9 @@ export function HomePage() {
 
       <Statistics refreshTrigger={statsRefreshTrigger} />
 
-      <AddGameForm currentUser={currentUser} onGameAdded={handleGameAdded} />
+      {user && (
+        <AddGameForm currentUserId={currentUserId} onGameAdded={handleGameAdded} />
+      )}
 
       <SearchFilters
         onNameSearch={setNameQuery}
@@ -274,7 +284,7 @@ export function HomePage() {
 
       <GameTable
         games={filteredGames}
-        currentUser={currentUser}
+        currentUserId={currentUserId}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}
         onAddPlayer={handleAddPlayer}

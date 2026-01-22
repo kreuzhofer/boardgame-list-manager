@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { filterGamesUserIsBringing } from '../PrintList';
-import type { Game, Player, Bringer } from '../../types';
+import type { Game, Player, Bringer, User } from '../../types';
 
 // ============================================================================
 // Custom Arbitraries
@@ -30,20 +30,28 @@ const gameNameArbitrary = fc.string({ minLength: 1, maxLength: 100 })
   .filter(s => s.trim().length > 0);
 
 /**
- * Arbitrary for generating a Player object
+ * Arbitrary for generating a User object
+ */
+const userArbitrary: fc.Arbitrary<User> = fc.record({
+  id: fc.uuid(),
+  name: userNameArbitrary,
+});
+
+/**
+ * Arbitrary for generating a Player object with user
  */
 const playerArbitrary: fc.Arbitrary<Player> = fc.record({
   id: fc.uuid(),
-  name: userNameArbitrary,
+  user: userArbitrary,
   addedAt: fc.date(),
 });
 
 /**
- * Arbitrary for generating a Bringer object
+ * Arbitrary for generating a Bringer object with user
  */
 const bringerArbitrary: fc.Arbitrary<Bringer> = fc.record({
   id: fc.uuid(),
-  name: userNameArbitrary,
+  user: userArbitrary,
   addedAt: fc.date(),
 });
 
@@ -75,20 +83,20 @@ describe('Property 15: Print List Contains User\'s Games', () => {
    * **Validates: Requirements 7.2**
    * 
    * For any user and game list, the print output SHALL contain exactly 
-   * the games where the user is listed as a bringer.
+   * the games where the user is listed as a bringer (by user ID).
    */
 
   it('should return only games where user is a bringer', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
-          const filtered = filterGamesUserIsBringing(games, userName);
+        fc.uuid(),
+        (games, userId) => {
+          const filtered = filterGamesUserIsBringing(games, userId);
           
           // Property: Every returned game must have the user as a bringer
           for (const game of filtered) {
-            const userIsBringer = game.bringers.some(b => b.name === userName);
+            const userIsBringer = game.bringers.some(b => b.user.id === userId);
             expect(userIsBringer).toBe(true);
           }
           
@@ -103,13 +111,13 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
-          const filtered = filterGamesUserIsBringing(games, userName);
+        fc.uuid(),
+        (games, userId) => {
+          const filtered = filterGamesUserIsBringing(games, userId);
           
           // Property: All games where user is a bringer should be included
           for (const game of games) {
-            const userIsBringer = game.bringers.some(b => b.name === userName);
+            const userIsBringer = game.bringers.some(b => b.user.id === userId);
             if (userIsBringer) {
               expect(filtered).toContainEqual(game);
             }
@@ -126,15 +134,15 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
-          const filtered = filterGamesUserIsBringing(games, userName);
+        fc.uuid(),
+        (games, userId) => {
+          const filtered = filterGamesUserIsBringing(games, userId);
           const filteredIds = new Set(filtered.map(g => g.id));
           
           // Property: Biconditional - game is in result if and only if user is a bringer
           for (const game of games) {
             const isInResult = filteredIds.has(game.id);
-            const userIsBringer = game.bringers.some(b => b.name === userName);
+            const userIsBringer = game.bringers.some(b => b.user.id === userId);
             expect(isInResult).toBe(userIsBringer);
           }
           
@@ -149,13 +157,13 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
-          const filtered = filterGamesUserIsBringing(games, userName);
+        fc.uuid(),
+        (games, userId) => {
+          const filtered = filterGamesUserIsBringing(games, userId);
           
           // Property: Count should match exactly
           const expectedCount = games.filter(
-            g => g.bringers.some(b => b.name === userName)
+            g => g.bringers.some(b => b.user.id === userId)
           ).length;
           
           expect(filtered.length).toBe(expectedCount);
@@ -171,14 +179,14 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
-          const filtered = filterGamesUserIsBringing(games, userName);
+        fc.uuid(),
+        (games, userId) => {
+          const filtered = filterGamesUserIsBringing(games, userId);
           
           // Property: Games where user is only a player should NOT be included
           for (const game of games) {
-            const userIsPlayer = game.players.some(p => p.name === userName);
-            const userIsBringer = game.bringers.some(b => b.name === userName);
+            const userIsPlayer = game.players.some(p => p.user.id === userId);
+            const userIsBringer = game.bringers.some(b => b.user.id === userId);
             
             if (userIsPlayer && !userIsBringer) {
               expect(filtered).not.toContainEqual(game);
@@ -196,15 +204,15 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
+        fc.uuid(),
+        (games, userId) => {
           // Filter out games where user might be a bringer
           const gamesWithoutUser = games.map(game => ({
             ...game,
-            bringers: game.bringers.filter(b => b.name !== userName),
+            bringers: game.bringers.filter(b => b.user.id !== userId),
           }));
           
-          const filtered = filterGamesUserIsBringing(gamesWithoutUser, userName);
+          const filtered = filterGamesUserIsBringing(gamesWithoutUser, userId);
           
           // Property: Should return empty array
           expect(filtered).toEqual([]);
@@ -220,12 +228,12 @@ describe('Property 15: Print List Contains User\'s Games', () => {
     fc.assert(
       fc.property(
         gameListArbitrary,
-        userNameArbitrary,
-        (games, userName) => {
+        fc.uuid(),
+        (games, userId) => {
           // Deep copy to compare
           const originalGames = JSON.stringify(games);
           
-          filterGamesUserIsBringing(games, userName);
+          filterGamesUserIsBringing(games, userId);
           
           // Property: Original array should be unchanged
           expect(JSON.stringify(games)).toBe(originalGames);
@@ -240,9 +248,9 @@ describe('Property 15: Print List Contains User\'s Games', () => {
   it('should handle empty games list', () => {
     fc.assert(
       fc.property(
-        userNameArbitrary,
-        (userName) => {
-          const filtered = filterGamesUserIsBringing([], userName);
+        fc.uuid(),
+        (userId) => {
+          const filtered = filterGamesUserIsBringing([], userId);
           
           // Property: Empty input should return empty output
           expect(filtered).toEqual([]);

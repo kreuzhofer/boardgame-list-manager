@@ -9,11 +9,11 @@ import { Bringer } from '../types';
 
 interface BringerListProps {
   bringers: Bringer[];
-  currentUser: string;
+  currentUserId: string;
   showDuplicateHint?: boolean;
 }
 
-export function BringerList({ bringers, currentUser, showDuplicateHint = true }: BringerListProps) {
+export function BringerList({ bringers, currentUserId, showDuplicateHint = true }: BringerListProps) {
   if (bringers.length === 0) {
     return (
       <span className="text-gray-400 italic text-sm">
@@ -31,13 +31,13 @@ export function BringerList({ bringers, currentUser, showDuplicateHint = true }:
           <span key={bringer.id}>
             <span
               className={
-                bringer.name === currentUser
+                bringer.user.id === currentUserId
                   ? 'font-semibold text-blue-600'
                   : 'text-gray-700'
               }
-              title={bringer.name === currentUser ? 'Das bist du!' : undefined}
+              title={bringer.user.id === currentUserId ? 'Das bist du!' : undefined}
             >
-              {bringer.name}
+              {bringer.user.name}
             </span>
             {index < bringers.length - 1 && (
               <span className="text-gray-400">, </span>

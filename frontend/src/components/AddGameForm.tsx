@@ -10,13 +10,13 @@ import { gamesApi, ApiError } from '../api/client';
 import { Game } from '../types';
 
 interface AddGameFormProps {
-  /** Current user's name */
-  currentUser: string;
+  /** Current user's ID */
+  currentUserId: string;
   /** Callback when a game is successfully added */
   onGameAdded: (game: Game) => void;
 }
 
-export function AddGameForm({ currentUser, onGameAdded }: AddGameFormProps) {
+export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
   const [gameName, setGameName] = useState('');
   const [isBringing, setIsBringing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function AddGameForm({ currentUser, onGameAdded }: AddGameFormProps) {
 
       try {
         // Call API to create game using the API client
-        const response = await gamesApi.create(trimmedName, currentUser, isBringing);
+        const response = await gamesApi.create(trimmedName, currentUserId, isBringing);
         
         // Reset form
         setGameName('');
@@ -63,7 +63,7 @@ export function AddGameForm({ currentUser, onGameAdded }: AddGameFormProps) {
         setIsSubmitting(false);
       }
     },
-    [gameName, isBringing, currentUser, onGameAdded]
+    [gameName, isBringing, currentUserId, onGameAdded]
   );
 
   const handleInputChange = useCallback(

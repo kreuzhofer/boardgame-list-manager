@@ -12,15 +12,16 @@ export default defineConfig(({ mode }) => {
   // Also load Vite env for any VITE_ prefixed vars
   const viteEnv = loadEnv(mode, path.resolve(__dirname, '..'), 'VITE_');
   
-  const eventName = rootEnv.EVENT_NAME || viteEnv.VITE_EVENT_NAME || 'Brettspiel-Event';
-  const apiPort = rootEnv.API_PORT || '3006';
+  // Also check process.env for Docker build args
+  const eventName = process.env.VITE_EVENT_NAME || rootEnv.EVENT_NAME || viteEnv.VITE_EVENT_NAME || 'Brettspiel-Event';
+  const apiUrl = process.env.VITE_API_URL || viteEnv.VITE_API_URL || `http://localhost:${rootEnv.API_PORT || '3006'}`;
   
   return {
     plugins: [react()],
     define: {
       // Map root env vars to VITE_ prefixed vars for client access
       'import.meta.env.VITE_EVENT_NAME': JSON.stringify(eventName),
-      'import.meta.env.VITE_API_URL': JSON.stringify(`http://localhost:${apiPort}`),
+      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
     },
     resolve: {
       alias: {

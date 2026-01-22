@@ -33,12 +33,18 @@ function createGame(
     name,
     players: players.map((p, i) => ({
       id: `player-${id}-${i}`,
-      name: p,
+      user: {
+        id: `user-player-${id}-${i}`,
+        name: p,
+      },
       addedAt: new Date(),
     })),
     bringers: bringers.map((b, i) => ({
       id: `bringer-${id}-${i}`,
-      name: b,
+      user: {
+        id: `user-bringer-${id}-${i}`,
+        name: b,
+      },
       addedAt: new Date(),
     })),
     status: bringers.length > 0 ? 'verfuegbar' : 'wunsch',

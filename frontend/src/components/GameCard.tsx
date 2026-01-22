@@ -13,7 +13,7 @@ import { GameActions } from './GameActions';
 
 interface GameCardProps {
   game: Game;
-  currentUser: string;
+  currentUserId: string;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -22,7 +22,7 @@ interface GameCardProps {
 
 export function GameCard({
   game,
-  currentUser,
+  currentUserId,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -71,7 +71,7 @@ export function GameCard({
             Mitspieler
           </span>
           <div className="text-sm">
-            <PlayerList players={game.players} currentUser={currentUser} />
+            <PlayerList players={game.players} currentUserId={currentUserId} />
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export function GameCard({
             Bringt mit
           </span>
           <div className="text-sm">
-            <BringerList bringers={game.bringers} currentUser={currentUser} />
+            <BringerList bringers={game.bringers} currentUserId={currentUserId} />
           </div>
         </div>
       </div>
@@ -90,7 +90,7 @@ export function GameCard({
       <div className="pt-3 border-t border-gray-200">
         <GameActions
           game={game}
-          currentUser={currentUser}
+          currentUserId={currentUserId}
           onAddPlayer={onAddPlayer}
           onAddBringer={onAddBringer}
           onRemovePlayer={onRemovePlayer}

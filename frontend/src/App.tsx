@@ -7,19 +7,20 @@
  * Authentication flow:
  *   1. AuthGuard checks sessionStorage for auth state
  *   2. If not authenticated, shows PasswordScreen
- *   3. If authenticated, checks for stored user name
- *   4. If no name stored, shows NamePrompt
- *   5. If name stored, renders the app content
+ *   3. If authenticated, checks for stored user
+ *   4. If no user stored, shows UserSelectionModal
+ *   5. If user stored, renders the app content
  * 
- * Requirements: 1.1, 2.1, 2.2, 2.3, 2.4, 2.5
+ * Requirements: 1.1, 2.1, 2.2, 2.3, 2.4, 2.5, 5.1, 5.5, 5.6
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthGuard, Layout, NamePrompt } from './components';
-import { useUserName } from './hooks';
+import { AuthGuard, Layout, UserSelectionModal } from './components';
+import { useUser } from './hooks';
 import { HomePage } from './pages/HomePage';
 import { PrintPage } from './pages/PrintPage';
+import type { User } from './types';
 
 // Get event name from environment variable
 const eventName = import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
@@ -27,12 +28,9 @@ const eventName = import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
 function App() {
   // Track authentication state for passing to Layout
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // Track whether name change dialog is open
-  const [isNameChangeOpen, setIsNameChangeOpen] = useState(false);
 
-  // User name management via localStorage
-  const { userName, setUserName } = useUserName();
+  // User management via localStorage and API
+  const { user, isLoading, setUser } = useUser();
 
   // Set document title from environment variable
   useEffect(() => {
@@ -43,48 +41,36 @@ function App() {
     setIsAuthenticated(authenticated);
   }, []);
 
-  // Handle name submission from NamePrompt
-  const handleNameSubmitted = useCallback((name: string) => {
-    setUserName(name);
-    setIsNameChangeOpen(false);
-  }, [setUserName]);
+  // Handle user selection from UserSelectionModal
+  const handleUserSelected = useCallback((selectedUser: User) => {
+    setUser(selectedUser);
+  }, [setUser]);
 
-  // Handle name change button click in Header
-  const handleNameChange = useCallback(() => {
-    setIsNameChangeOpen(true);
-  }, []);
+  // Handle user update (e.g., name change)
+  const handleUserUpdated = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+  }, [setUser]);
 
-  // Handle cancel in name change dialog
-  const handleNameChangeCancel = useCallback(() => {
-    setIsNameChangeOpen(false);
-  }, []);
-
-  // Determine if we need to show the name prompt
-  // Show if authenticated but no name stored (first-time user)
-  const showNamePrompt = isAuthenticated && !userName;
+  // Determine if we need to show the user selection modal
+  // Show if authenticated but no user stored (first-time user or user deleted)
+  const showUserSelection = isAuthenticated && !isLoading && !user;
 
   return (
     <BrowserRouter>
       <AuthGuard onAuthChange={handleAuthChange}>
-        {/* Show NamePrompt for first-time users (no stored name) */}
-        {showNamePrompt && (
-          <NamePrompt onNameSubmitted={handleNameSubmitted} />
-        )}
+        {/* Show UserSelectionModal for users without a stored user */}
+        <UserSelectionModal
+          isOpen={showUserSelection}
+          onUserSelected={handleUserSelected}
+        />
 
-        {/* Show name change dialog when user clicks "Ändern" */}
-        {isNameChangeOpen && userName && (
-          <NamePrompt
-            onNameSubmitted={handleNameSubmitted}
-            initialName={userName}
-            showCancel
-            onCancel={handleNameChangeCancel}
-          />
-        )}
-
-        <Layout userName={userName ?? undefined} onNameChange={handleNameChange}>
+        <Layout 
+          user={user ?? undefined} 
+          onUserUpdated={handleUserUpdated}
+        >
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/print" element={<PrintPage />} />
+            <Route path="/" element={<HomePage user={user} />} />
+            <Route path="/print" element={<PrintPage user={user} />} />
           </Routes>
         </Layout>
       </AuthGuard>

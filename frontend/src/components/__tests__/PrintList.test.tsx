@@ -10,7 +10,7 @@ import { render, screen } from '@testing-library/react';
 import { PrintList, filterGamesUserIsBringing } from '../PrintList';
 import type { Game } from '../../types';
 
-// Helper to create test games
+// Helper to create test games with new user structure
 function createTestGame(overrides: Partial<Game> = {}): Game {
   return {
     id: crypto.randomUUID(),
@@ -23,12 +23,30 @@ function createTestGame(overrides: Partial<Game> = {}): Game {
   };
 }
 
+// Helper to create a bringer with user object
+function createBringer(id: string, userId: string, userName: string) {
+  return {
+    id,
+    user: { id: userId, name: userName },
+    addedAt: new Date(),
+  };
+}
+
+// Helper to create a player with user object
+function createPlayer(id: string, userId: string, userName: string) {
+  return {
+    id,
+    user: { id: userId, name: userName },
+    addedAt: new Date(),
+  };
+}
+
 describe('filterGamesUserIsBringing', () => {
   it('returns empty array when user is not a bringer of any game', () => {
     const games: Game[] = [
       createTestGame({
         name: 'Game 1',
-        bringers: [{ id: '1', name: 'Other User', addedAt: new Date() }],
+        bringers: [createBringer('1', 'other-user-id', 'Other User')],
       }),
       createTestGame({
         name: 'Game 2',
@@ -36,60 +54,68 @@ describe('filterGamesUserIsBringing', () => {
       }),
     ];
 
-    const result = filterGamesUserIsBringing(games, 'Test User');
+    const result = filterGamesUserIsBringing(games, 'test-user-id');
     expect(result).toEqual([]);
   });
 
   it('returns only games where user is a bringer', () => {
+    const testUserId = 'test-user-id';
     const game1 = createTestGame({
       name: 'Game 1',
-      bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+      bringers: [createBringer('1', testUserId, 'Test User')],
     });
     const game2 = createTestGame({
       name: 'Game 2',
-      bringers: [{ id: '2', name: 'Other User', addedAt: new Date() }],
+      bringers: [createBringer('2', 'other-user-id', 'Other User')],
     });
     const game3 = createTestGame({
       name: 'Game 3',
       bringers: [
-        { id: '3', name: 'Test User', addedAt: new Date() },
-        { id: '4', name: 'Another User', addedAt: new Date() },
+        createBringer('3', testUserId, 'Test User'),
+        createBringer('4', 'another-user-id', 'Another User'),
       ],
     });
 
-    const result = filterGamesUserIsBringing([game1, game2, game3], 'Test User');
+    const result = filterGamesUserIsBringing([game1, game2, game3], testUserId);
     
     expect(result).toHaveLength(2);
     expect(result.map(g => g.name)).toEqual(['Game 1', 'Game 3']);
   });
 
   it('returns empty array when games list is empty', () => {
-    const result = filterGamesUserIsBringing([], 'Test User');
+    const result = filterGamesUserIsBringing([], 'test-user-id');
     expect(result).toEqual([]);
   });
 
-  it('is case-sensitive for user names', () => {
+  it('matches by user ID, not user name', () => {
+    const testUserId = 'test-user-id';
     const game = createTestGame({
       name: 'Game 1',
-      bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+      bringers: [createBringer('1', testUserId, 'Test User')],
     });
 
-    expect(filterGamesUserIsBringing([game], 'Test User')).toHaveLength(1);
-    expect(filterGamesUserIsBringing([game], 'test user')).toHaveLength(0);
-    expect(filterGamesUserIsBringing([game], 'TEST USER')).toHaveLength(0);
+    // Should match by ID
+    expect(filterGamesUserIsBringing([game], testUserId)).toHaveLength(1);
+    // Should not match by name
+    expect(filterGamesUserIsBringing([game], 'Test User')).toHaveLength(0);
+    // Should not match different ID
+    expect(filterGamesUserIsBringing([game], 'different-id')).toHaveLength(0);
   });
 });
 
 describe('PrintList Component', () => {
+  const testUserId = 'test-user-id';
+  const testUserName = 'Max Mustermann';
+
   it('displays user name prominently in header', () => {
-    render(<PrintList userName="Max Mustermann" games={[]} />);
+    render(<PrintList userName={testUserName} userId={testUserId} games={[]} />);
     
-    expect(screen.getByText('Max Mustermann')).toBeInTheDocument();
+    expect(screen.getByText(testUserName)).toBeInTheDocument();
     expect(screen.getByText('Mitgebrachte Spiele')).toBeInTheDocument();
   });
 
   it('shows message when user has no games to bring', () => {
-    render(<PrintList userName="Test User" games={[]} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={[]} />);
     
     expect(screen.getByText('Sie bringen keine Spiele mit.')).toBeInTheDocument();
   });
@@ -98,15 +124,15 @@ describe('PrintList Component', () => {
     const games: Game[] = [
       createTestGame({
         name: 'Game 1',
-        bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('1', testUserId, 'Test User')],
       }),
       createTestGame({
         name: 'Game 2',
-        bringers: [{ id: '2', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('2', testUserId, 'Test User')],
       }),
     ];
 
-    render(<PrintList userName="Test User" games={games} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={games} />);
     
     // Check for the count in the summary text
     expect(screen.getByText(/Anzahl Spiele:/)).toBeInTheDocument();
@@ -119,15 +145,15 @@ describe('PrintList Component', () => {
     const games: Game[] = [
       createTestGame({
         name: 'Catan',
-        bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('1', testUserId, 'Test User')],
       }),
       createTestGame({
         name: 'Ticket to Ride',
-        bringers: [{ id: '2', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('2', testUserId, 'Test User')],
       }),
     ];
 
-    render(<PrintList userName="Test User" games={games} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={games} />);
     
     expect(screen.getByText('Catan')).toBeInTheDocument();
     expect(screen.getByText('Ticket to Ride')).toBeInTheDocument();
@@ -138,14 +164,14 @@ describe('PrintList Component', () => {
       createTestGame({
         name: 'Catan',
         players: [
-          { id: '1', name: 'Alice', addedAt: new Date() },
-          { id: '2', name: 'Bob', addedAt: new Date() },
+          createPlayer('1', 'alice-id', 'Alice'),
+          createPlayer('2', 'bob-id', 'Bob'),
         ],
-        bringers: [{ id: '3', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('3', testUserId, 'Test User')],
       }),
     ];
 
-    render(<PrintList userName="Test User" games={games} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={games} />);
     
     expect(screen.getByText('Alice, Bob')).toBeInTheDocument();
   });
@@ -155,11 +181,11 @@ describe('PrintList Component', () => {
       createTestGame({
         name: 'Catan',
         players: [],
-        bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('1', testUserId, 'Test User')],
       }),
     ];
 
-    render(<PrintList userName="Test User" games={games} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={games} />);
     
     expect(screen.getByText('—')).toBeInTheDocument();
   });
@@ -168,16 +194,16 @@ describe('PrintList Component', () => {
     const games: Game[] = [
       createTestGame({
         name: 'Game I Bring',
-        bringers: [{ id: '1', name: 'Test User', addedAt: new Date() }],
+        bringers: [createBringer('1', testUserId, 'Test User')],
       }),
       createTestGame({
         name: 'Game I Only Play',
-        players: [{ id: '2', name: 'Test User', addedAt: new Date() }],
-        bringers: [{ id: '3', name: 'Other User', addedAt: new Date() }],
+        players: [createPlayer('2', testUserId, 'Test User')],
+        bringers: [createBringer('3', 'other-user-id', 'Other User')],
       }),
     ];
 
-    render(<PrintList userName="Test User" games={games} />);
+    render(<PrintList userName="Test User" userId={testUserId} games={games} />);
     
     expect(screen.getByText('Game I Bring')).toBeInTheDocument();
     expect(screen.queryByText('Game I Only Play')).not.toBeInTheDocument();

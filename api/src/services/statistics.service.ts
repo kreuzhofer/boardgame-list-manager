@@ -30,10 +30,10 @@ export class StatisticsService {
     const uniqueParticipants = new Set<string>();
     for (const game of games) {
       for (const player of game.players) {
-        uniqueParticipants.add(player.userName);
+        uniqueParticipants.add(player.userId);
       }
       for (const bringer of game.bringers) {
-        uniqueParticipants.add(bringer.userName);
+        uniqueParticipants.add(bringer.userId);
       }
     }
     const totalParticipants = uniqueParticipants.size;

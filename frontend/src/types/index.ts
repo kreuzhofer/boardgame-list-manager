@@ -3,17 +3,23 @@
  * Matching the API data models from the design document
  */
 
+// User entity
+export interface User {
+  id: string;
+  name: string;
+}
+
 // Player who wants to play a game
 export interface Player {
   id: string;
-  name: string;
+  user: User;
   addedAt: Date;
 }
 
 // Bringer who will bring a game to the event
 export interface Bringer {
   id: string;
-  name: string;
+  user: User;
   addedAt: Date;
 }
 
@@ -58,16 +64,24 @@ export interface AuthVerifyResponse {
 
 export interface CreateGameRequest {
   name: string;
-  userName: string;
+  userId: string;
   isBringing: boolean;
 }
 
 export interface AddPlayerRequest {
-  userName: string;
+  userId: string;
 }
 
 export interface AddBringerRequest {
-  userName: string;
+  userId: string;
+}
+
+export interface CreateUserRequest {
+  name: string;
+}
+
+export interface UpdateUserRequest {
+  name: string;
 }
 
 export interface GamesResponse {
@@ -76,6 +90,14 @@ export interface GamesResponse {
 
 export interface GameResponse {
   game: Game;
+}
+
+export interface UsersResponse {
+  users: User[];
+}
+
+export interface UserResponse {
+  user: User;
 }
 
 // Error response from API

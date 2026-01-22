@@ -1,33 +1,41 @@
 import { gameRepository, GameRepository } from '../repositories';
-import type { Game, GameEntity, Player, Bringer } from '../types';
+import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
 
 /**
  * GameService handles business logic for game management.
  * Transforms database entities to API response format and derives game status.
  * 
- * Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
+ * Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1-4.6
  */
 export class GameService {
   constructor(private readonly repository: GameRepository = gameRepository) {}
 
   /**
    * Transforms a PlayerEntity to the API Player format
+   * Requirements: 4.6 - Include full user object (id and name) for each player
    */
-  private transformPlayer(player: { id: string; userName: string; addedAt: Date }): Player {
+  private transformPlayer(player: PlayerEntity): Player {
     return {
       id: player.id,
-      name: player.userName,
+      user: {
+        id: player.user.id,
+        name: player.user.name,
+      },
       addedAt: player.addedAt,
     };
   }
 
   /**
    * Transforms a BringerEntity to the API Bringer format
+   * Requirements: 4.6 - Include full user object (id and name) for each bringer
    */
-  private transformBringer(bringer: { id: string; userName: string; addedAt: Date }): Bringer {
+  private transformBringer(bringer: BringerEntity): Bringer {
     return {
       id: bringer.id,
-      name: bringer.userName,
+      user: {
+        id: bringer.user.id,
+        name: bringer.user.name,
+      },
       addedAt: bringer.addedAt,
     };
   }
@@ -67,14 +75,14 @@ export class GameService {
   /**
    * Create a new game
    * @param name - The game name
-   * @param userName - The user creating the game
+   * @param userId - The user ID of the user creating the game
    * @param isBringing - Whether the user is bringing the game
    * @returns The created game in API format
    * @throws Error with German message if game name is empty or already exists
    * 
-   * Requirements: 3.1, 3.3, 3.4
+   * Requirements: 3.1, 3.3, 3.4, 4.1
    */
-  async createGame(name: string, userName: string, isBringing: boolean): Promise<Game> {
+  async createGame(name: string, userId: string, isBringing: boolean): Promise<Game> {
     // Validate game name
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -90,7 +98,7 @@ export class GameService {
     try {
       const entity = await this.repository.create({
         name: trimmedName,
-        userName,
+        userId,
         isBringing,
       });
       return this.transformGame(entity);
@@ -106,15 +114,15 @@ export class GameService {
   /**
    * Add a player to a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to add as a player
+   * @param userId - The user's ID to add as a player
    * @returns The updated game in API format
    * @throws Error with German message if game not found or user already a player
    * 
-   * Requirements: 3.5
+   * Requirements: 3.5, 4.2
    */
-  async addPlayer(gameId: string, userName: string): Promise<Game> {
+  async addPlayer(gameId: string, userId: string): Promise<Game> {
     try {
-      const entity = await this.repository.addPlayer(gameId, userName);
+      const entity = await this.repository.addPlayer(gameId, userId);
       return this.transformGame(entity);
     } catch (error) {
       if (error instanceof Error) {
@@ -133,15 +141,15 @@ export class GameService {
   /**
    * Remove a player from a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to remove as a player
+   * @param userId - The user's ID to remove as a player
    * @returns The updated game in API format
    * @throws Error with German message if game not found or user not a player
    * 
-   * Requirements: 3.5
+   * Requirements: 3.5, 4.4
    */
-  async removePlayer(gameId: string, userName: string): Promise<Game> {
+  async removePlayer(gameId: string, userId: string): Promise<Game> {
     try {
-      const entity = await this.repository.removePlayer(gameId, userName);
+      const entity = await this.repository.removePlayer(gameId, userId);
       return this.transformGame(entity);
     } catch (error) {
       if (error instanceof Error) {
@@ -159,15 +167,15 @@ export class GameService {
   /**
    * Add a bringer to a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to add as a bringer
+   * @param userId - The user's ID to add as a bringer
    * @returns The updated game in API format
    * @throws Error with German message if game not found or user already a bringer
    * 
-   * Requirements: 3.6, 3.7
+   * Requirements: 3.6, 3.7, 4.3
    */
-  async addBringer(gameId: string, userName: string): Promise<Game> {
+  async addBringer(gameId: string, userId: string): Promise<Game> {
     try {
-      const entity = await this.repository.addBringer(gameId, userName);
+      const entity = await this.repository.addBringer(gameId, userId);
       return this.transformGame(entity);
     } catch (error) {
       if (error instanceof Error) {
@@ -186,15 +194,15 @@ export class GameService {
   /**
    * Remove a bringer from a game
    * @param gameId - The game's unique identifier
-   * @param userName - The user's name to remove as a bringer
+   * @param userId - The user's ID to remove as a bringer
    * @returns The updated game in API format
    * @throws Error with German message if game not found or user not a bringer
    * 
-   * Requirements: 3.6
+   * Requirements: 3.6, 4.5
    */
-  async removeBringer(gameId: string, userName: string): Promise<Game> {
+  async removeBringer(gameId: string, userId: string): Promise<Game> {
     try {
-      const entity = await this.repository.removeBringer(gameId, userName);
+      const entity = await this.repository.removeBringer(gameId, userId);
       return this.transformGame(entity);
     } catch (error) {
       if (error instanceof Error) {

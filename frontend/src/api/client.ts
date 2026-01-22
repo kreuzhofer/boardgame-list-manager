@@ -9,8 +9,12 @@ import type {
   CreateGameRequest,
   AddPlayerRequest,
   AddBringerRequest,
+  CreateUserRequest,
+  UpdateUserRequest,
   GamesResponse,
   GameResponse,
+  UsersResponse,
+  UserResponse,
   StatisticsData,
   ErrorResponse,
 } from '../types';
@@ -88,6 +92,39 @@ export const authApi = {
   },
 };
 
+// Users API
+export const usersApi = {
+  getAll: (): Promise<UsersResponse> => {
+    return fetchApi<UsersResponse>('/api/users');
+  },
+
+  getById: (id: string): Promise<UserResponse> => {
+    return fetchApi<UserResponse>(`/api/users/${id}`);
+  },
+
+  create: (name: string): Promise<UserResponse> => {
+    const body: CreateUserRequest = { name };
+    return fetchApi<UserResponse>('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  update: (id: string, name: string): Promise<UserResponse> => {
+    const body: UpdateUserRequest = { name };
+    return fetchApi<UserResponse>(`/api/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  delete: (id: string): Promise<{ success: boolean }> => {
+    return fetchApi<{ success: boolean }>(`/api/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // Games API
 export const gamesApi = {
   getAll: (): Promise<GamesResponse> => {
@@ -96,44 +133,44 @@ export const gamesApi = {
 
   create: (
     name: string,
-    userName: string,
+    userId: string,
     isBringing: boolean
   ): Promise<GameResponse> => {
-    const body: CreateGameRequest = { name, userName, isBringing };
+    const body: CreateGameRequest = { name, userId, isBringing };
     return fetchApi<GameResponse>('/api/games', {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  addPlayer: (gameId: string, userName: string): Promise<GameResponse> => {
-    const body: AddPlayerRequest = { userName };
+  addPlayer: (gameId: string, userId: string): Promise<GameResponse> => {
+    const body: AddPlayerRequest = { userId };
     return fetchApi<GameResponse>(`/api/games/${gameId}/players`, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  removePlayer: (gameId: string, userName: string): Promise<GameResponse> => {
+  removePlayer: (gameId: string, userId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(
-      `/api/games/${gameId}/players/${encodeURIComponent(userName)}`,
+      `/api/games/${gameId}/players/${userId}`,
       {
         method: 'DELETE',
       }
     );
   },
 
-  addBringer: (gameId: string, userName: string): Promise<GameResponse> => {
-    const body: AddBringerRequest = { userName };
+  addBringer: (gameId: string, userId: string): Promise<GameResponse> => {
+    const body: AddBringerRequest = { userId };
     return fetchApi<GameResponse>(`/api/games/${gameId}/bringers`, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  removeBringer: (gameId: string, userName: string): Promise<GameResponse> => {
+  removeBringer: (gameId: string, userId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(
-      `/api/games/${gameId}/bringers/${encodeURIComponent(userName)}`,
+      `/api/games/${gameId}/bringers/${userId}`,
       {
         method: 'DELETE',
       }
@@ -151,6 +188,7 @@ export const statisticsApi = {
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
+  users: usersApi,
   games: gamesApi,
   statistics: statisticsApi,
 };

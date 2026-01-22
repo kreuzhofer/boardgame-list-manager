@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  players   Player[]
+  bringers  Bringer[]
+
+  @@map("users")
+}
+
 model Game {
   id        String   @id @default(uuid())
   name      String   @unique
@@ -21,25 +32,27 @@ model Game {
 model Player {
   id       String   @id @default(uuid())
   gameId   String   @map("game_id")
-  userName String   @map("user_name")
+  userId   String   @map("user_id")
   addedAt  DateTime @default(now()) @map("added_at")
   game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([gameId, userName])
+  @@unique([gameId, userId])
   @@index([gameId])
-  @@index([userName])
+  @@index([userId])
   @@map("players")
 }
 
 model Bringer {
   id       String   @id @default(uuid())
   gameId   String   @map("game_id")
-  userName String   @map("user_name")
+  userId   String   @map("user_id")
   addedAt  DateTime @default(now()) @map("added_at")
   game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([gameId, userName])
+  @@unique([gameId, userId])
   @@index([gameId])
-  @@index([userName])
+  @@index([userId])
   @@map("bringers")
 }

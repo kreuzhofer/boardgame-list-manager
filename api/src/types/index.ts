@@ -1,3 +1,11 @@
+// User entity type
+export interface UserEntity {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Game entity types
 export interface GameEntity {
   id: string;
@@ -11,33 +19,40 @@ export interface GameEntity {
 export interface PlayerEntity {
   id: string;
   gameId: string;
-  userName: string;
+  userId: string;
   addedAt: Date;
+  user: UserEntity;
 }
 
 export interface BringerEntity {
   id: string;
   gameId: string;
-  userName: string;
+  userId: string;
   addedAt: Date;
+  user: UserEntity;
 }
 
 // DTOs
 export interface CreateGameDto {
   name: string;
-  userName: string;
+  userId: string;
   isBringing: boolean;
 }
 
 export interface CreatePlayerDto {
-  userName: string;
+  userId: string;
 }
 
 export interface CreateBringerDto {
-  userName: string;
+  userId: string;
 }
 
 // API Response types
+export interface User {
+  id: string;
+  name: string;
+}
+
 export interface Game {
   id: string;
   name: string;
@@ -49,13 +64,13 @@ export interface Game {
 
 export interface Player {
   id: string;
-  name: string;
+  user: User;
   addedAt: Date;
 }
 
 export interface Bringer {
   id: string;
-  name: string;
+  user: User;
   addedAt: Date;
 }
 

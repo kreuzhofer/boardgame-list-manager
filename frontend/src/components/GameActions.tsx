@@ -13,7 +13,7 @@ import { Game } from '../types';
 
 interface GameActionsProps {
   game: Game;
-  currentUser: string;
+  currentUserId: string;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -24,7 +24,7 @@ interface GameActionsProps {
 
 export function GameActions({
   game,
-  currentUser,
+  currentUserId,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -32,8 +32,8 @@ export function GameActions({
   isMobile = false,
 }: GameActionsProps) {
   // Check if current user is already a player or bringer
-  const isPlayer = game.players.some((p) => p.name === currentUser);
-  const isBringer = game.bringers.some((b) => b.name === currentUser);
+  const isPlayer = game.players.some((p) => p.user.id === currentUserId);
+  const isBringer = game.bringers.some((b) => b.user.id === currentUserId);
   const isWunsch = game.status === 'wunsch';
 
   const handleAddPlayer = () => {

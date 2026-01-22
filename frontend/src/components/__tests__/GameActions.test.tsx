@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { GameActions } from '../GameActions';
 import { Game } from '../../types';
 
-// Helper to create a test game
+// Helper to create a test game with new user structure
 function createTestGame(overrides: Partial<Game> = {}): Game {
   return {
     id: 'test-game-id',
@@ -16,28 +16,47 @@ function createTestGame(overrides: Partial<Game> = {}): Game {
   };
 }
 
+// Helper to create a player with user object
+function createPlayer(id: string, userId: string, userName: string) {
+  return {
+    id,
+    user: { id: userId, name: userName },
+    addedAt: new Date(),
+  };
+}
+
+// Helper to create a bringer with user object
+function createBringer(id: string, userId: string, userName: string) {
+  return {
+    id,
+    user: { id: userId, name: userName },
+    addedAt: new Date(),
+  };
+}
+
 describe('GameActions', () => {
-  const currentUser = 'Test User';
+  const currentUserId = 'test-user-id';
+  const currentUserName = 'Test User';
 
   describe('when user is not a player or bringer', () => {
     describe('for Wunsch games', () => {
       it('shows "Wunsch erfüllen" button', () => {
         const game = createTestGame({ status: 'wunsch' });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         expect(screen.getByRole('button', { name: /Wunsch erfüllen/i })).toBeInTheDocument();
       });
 
       it('shows "Möchte ich spielen" button', () => {
         const game = createTestGame({ status: 'wunsch' });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         expect(screen.getByRole('button', { name: /Möchte ich spielen/i })).toBeInTheDocument();
       });
 
       it('does not show regular "Bringe ich mit" button (Wunsch erfüllen is shown instead)', () => {
         const game = createTestGame({ status: 'wunsch' });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         // Should not have the regular "Bringe ich mit" button
         expect(screen.queryByRole('button', { name: /^📦 Bringe ich mit$/i })).not.toBeInTheDocument();
@@ -46,7 +65,7 @@ describe('GameActions', () => {
       it('calls onAddBringer when "Wunsch erfüllen" is clicked', () => {
         const game = createTestGame({ status: 'wunsch' });
         const onAddBringer = vi.fn();
-        render(<GameActions game={game} currentUser={currentUser} onAddBringer={onAddBringer} />);
+        render(<GameActions game={game} currentUserId={currentUserId} onAddBringer={onAddBringer} />);
         
         fireEvent.click(screen.getByRole('button', { name: /Wunsch erfüllen/i }));
         
@@ -58,9 +77,9 @@ describe('GameActions', () => {
       it('shows "Möchte ich spielen" button', () => {
         const game = createTestGame({ 
           status: 'verfuegbar',
-          bringers: [{ id: 'b1', name: 'Other User', addedAt: new Date() }]
+          bringers: [createBringer('b1', 'other-user-id', 'Other User')]
         });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         expect(screen.getByRole('button', { name: /Möchte ich spielen/i })).toBeInTheDocument();
       });
@@ -68,9 +87,9 @@ describe('GameActions', () => {
       it('shows "Bringe ich mit" button', () => {
         const game = createTestGame({ 
           status: 'verfuegbar',
-          bringers: [{ id: 'b1', name: 'Other User', addedAt: new Date() }]
+          bringers: [createBringer('b1', 'other-user-id', 'Other User')]
         });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         expect(screen.getByRole('button', { name: /Bringe ich mit/i })).toBeInTheDocument();
       });
@@ -78,9 +97,9 @@ describe('GameActions', () => {
       it('does not show "Wunsch erfüllen" button', () => {
         const game = createTestGame({ 
           status: 'verfuegbar',
-          bringers: [{ id: 'b1', name: 'Other User', addedAt: new Date() }]
+          bringers: [createBringer('b1', 'other-user-id', 'Other User')]
         });
-        render(<GameActions game={game} currentUser={currentUser} />);
+        render(<GameActions game={game} currentUserId={currentUserId} />);
         
         expect(screen.queryByRole('button', { name: /Wunsch erfüllen/i })).not.toBeInTheDocument();
       });
@@ -90,28 +109,28 @@ describe('GameActions', () => {
   describe('when user is already a player', () => {
     it('does not show "Möchte ich spielen" button', () => {
       const game = createTestGame({
-        players: [{ id: 'p1', name: currentUser, addedAt: new Date() }],
+        players: [createPlayer('p1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.queryByRole('button', { name: /Möchte ich spielen/i })).not.toBeInTheDocument();
     });
 
     it('shows "Nicht mehr spielen" remove button', () => {
       const game = createTestGame({
-        players: [{ id: 'p1', name: currentUser, addedAt: new Date() }],
+        players: [createPlayer('p1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.getByRole('button', { name: /Nicht mehr spielen/i })).toBeInTheDocument();
     });
 
     it('calls onRemovePlayer when remove button is clicked', () => {
       const game = createTestGame({
-        players: [{ id: 'p1', name: currentUser, addedAt: new Date() }],
+        players: [createPlayer('p1', currentUserId, currentUserName)],
       });
       const onRemovePlayer = vi.fn();
-      render(<GameActions game={game} currentUser={currentUser} onRemovePlayer={onRemovePlayer} />);
+      render(<GameActions game={game} currentUserId={currentUserId} onRemovePlayer={onRemovePlayer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Nicht mehr spielen/i }));
       
@@ -123,9 +142,9 @@ describe('GameActions', () => {
     it('does not show "Bringe ich mit" button', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.queryByRole('button', { name: /Bringe ich mit/i })).not.toBeInTheDocument();
     });
@@ -133,9 +152,9 @@ describe('GameActions', () => {
     it('does not show "Wunsch erfüllen" button even for Wunsch games', () => {
       const game = createTestGame({
         status: 'wunsch',
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.queryByRole('button', { name: /Wunsch erfüllen/i })).not.toBeInTheDocument();
     });
@@ -143,9 +162,9 @@ describe('GameActions', () => {
     it('shows "Nicht mehr mitbringen" remove button', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.getByRole('button', { name: /Nicht mehr mitbringen/i })).toBeInTheDocument();
     });
@@ -153,10 +172,10 @@ describe('GameActions', () => {
     it('calls onRemoveBringer when remove button is clicked', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
       const onRemoveBringer = vi.fn();
-      render(<GameActions game={game} currentUser={currentUser} onRemoveBringer={onRemoveBringer} />);
+      render(<GameActions game={game} currentUserId={currentUserId} onRemoveBringer={onRemoveBringer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Nicht mehr mitbringen/i }));
       
@@ -168,10 +187,10 @@ describe('GameActions', () => {
     it('shows both remove buttons', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        players: [{ id: 'p1', name: currentUser, addedAt: new Date() }],
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        players: [createPlayer('p1', currentUserId, currentUserName)],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.getByRole('button', { name: /Nicht mehr spielen/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Nicht mehr mitbringen/i })).toBeInTheDocument();
@@ -180,10 +199,10 @@ describe('GameActions', () => {
     it('does not show add buttons', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        players: [{ id: 'p1', name: currentUser, addedAt: new Date() }],
-        bringers: [{ id: 'b1', name: currentUser, addedAt: new Date() }],
+        players: [createPlayer('p1', currentUserId, currentUserName)],
+        bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
-      render(<GameActions game={game} currentUser={currentUser} />);
+      render(<GameActions game={game} currentUserId={currentUserId} />);
       
       expect(screen.queryByRole('button', { name: /Möchte ich spielen/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Bringe ich mit/i })).not.toBeInTheDocument();
@@ -195,7 +214,7 @@ describe('GameActions', () => {
     it('calls onAddPlayer when "Möchte ich spielen" is clicked', () => {
       const game = createTestGame();
       const onAddPlayer = vi.fn();
-      render(<GameActions game={game} currentUser={currentUser} onAddPlayer={onAddPlayer} />);
+      render(<GameActions game={game} currentUserId={currentUserId} onAddPlayer={onAddPlayer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Möchte ich spielen/i }));
       
@@ -205,10 +224,10 @@ describe('GameActions', () => {
     it('calls onAddBringer when "Bringe ich mit" is clicked', () => {
       const game = createTestGame({ 
         status: 'verfuegbar',
-        bringers: [{ id: 'b1', name: 'Other User', addedAt: new Date() }]
+        bringers: [createBringer('b1', 'other-user-id', 'Other User')]
       });
       const onAddBringer = vi.fn();
-      render(<GameActions game={game} currentUser={currentUser} onAddBringer={onAddBringer} />);
+      render(<GameActions game={game} currentUserId={currentUserId} onAddBringer={onAddBringer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Bringe ich mit/i }));
       

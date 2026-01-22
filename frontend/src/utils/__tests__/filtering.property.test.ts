@@ -19,7 +19,7 @@ import {
   filterMyGames,
 } from '../filtering';
 import { sortGamesByName, toggleSortOrder, type SortOrder } from '../sorting';
-import type { Game, Player, Bringer } from '../../types';
+import type { Game, Player, Bringer, User } from '../../types';
 
 // ============================================================================
 // Custom Arbitraries
@@ -38,20 +38,28 @@ const gameNameArbitrary = fc.string({ minLength: 1, maxLength: 100 })
   .filter(s => s.trim().length > 0);
 
 /**
- * Arbitrary for generating a Player object
+ * Arbitrary for generating a User object
+ */
+const userArbitrary: fc.Arbitrary<User> = fc.record({
+  id: fc.uuid(),
+  name: userNameArbitrary,
+});
+
+/**
+ * Arbitrary for generating a Player object with user
  */
 const playerArbitrary: fc.Arbitrary<Player> = fc.record({
   id: fc.uuid(),
-  name: userNameArbitrary,
+  user: userArbitrary,
   addedAt: fc.date(),
 });
 
 /**
- * Arbitrary for generating a Bringer object
+ * Arbitrary for generating a Bringer object with user
  */
 const bringerArbitrary: fc.Arbitrary<Bringer> = fc.record({
   id: fc.uuid(),
-  name: userNameArbitrary,
+  user: userArbitrary,
   addedAt: fc.date(),
 });
 
@@ -295,7 +303,7 @@ describe('Property 12: Search Filter Correctness', () => {
               // Property: Every returned game must have at least one player matching
               for (const game of filtered) {
                 const hasMatchingPlayer = game.players.some(
-                  p => p.name.toLowerCase().includes(query.toLowerCase().trim())
+                  p => p.user.name.toLowerCase().includes(query.toLowerCase().trim())
                 );
                 expect(hasMatchingPlayer).toBe(true);
               }
@@ -303,7 +311,7 @@ describe('Property 12: Search Filter Correctness', () => {
               // Property: No game with matching player should be excluded
               for (const game of games) {
                 const hasMatchingPlayer = game.players.some(
-                  p => p.name.toLowerCase().includes(query.toLowerCase().trim())
+                  p => p.user.name.toLowerCase().includes(query.toLowerCase().trim())
                 );
                 if (hasMatchingPlayer) {
                   expect(filtered).toContainEqual(game);
@@ -335,7 +343,7 @@ describe('Property 12: Search Filter Correctness', () => {
               // Property: Every returned game must have at least one bringer matching
               for (const game of filtered) {
                 const hasMatchingBringer = game.bringers.some(
-                  b => b.name.toLowerCase().includes(query.toLowerCase().trim())
+                  b => b.user.name.toLowerCase().includes(query.toLowerCase().trim())
                 );
                 expect(hasMatchingBringer).toBe(true);
               }
@@ -343,7 +351,7 @@ describe('Property 12: Search Filter Correctness', () => {
               // Property: No game with matching bringer should be excluded
               for (const game of games) {
                 const hasMatchingBringer = game.bringers.some(
-                  b => b.name.toLowerCase().includes(query.toLowerCase().trim())
+                  b => b.user.name.toLowerCase().includes(query.toLowerCase().trim())
                 );
                 if (hasMatchingBringer) {
                   expect(filtered).toContainEqual(game);
@@ -476,10 +484,10 @@ describe('Property 14: My Games Filter Correctness', () => {
           // Property: Every returned game must have user as player or bringer
           for (const game of filtered) {
             const isPlayer = game.players.some(
-              p => p.name.toLowerCase() === currentUser.toLowerCase()
+              p => p.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             const isBringer = game.bringers.some(
-              b => b.name.toLowerCase() === currentUser.toLowerCase()
+              b => b.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             expect(isPlayer || isBringer).toBe(true);
           }
@@ -502,10 +510,10 @@ describe('Property 14: My Games Filter Correctness', () => {
           // Property: All games where user is involved should be included
           for (const game of games) {
             const isPlayer = game.players.some(
-              p => p.name.toLowerCase() === currentUser.toLowerCase()
+              p => p.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             const isBringer = game.bringers.some(
-              b => b.name.toLowerCase() === currentUser.toLowerCase()
+              b => b.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             
             if (isPlayer || isBringer) {
@@ -573,10 +581,10 @@ describe('Property 14: My Games Filter Correctness', () => {
           for (const game of games) {
             const isInResult = filteredIds.has(game.id);
             const isPlayer = game.players.some(
-              p => p.name.toLowerCase() === currentUser.toLowerCase()
+              p => p.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             const isBringer = game.bringers.some(
-              b => b.name.toLowerCase() === currentUser.toLowerCase()
+              b => b.user.name.toLowerCase() === currentUser.toLowerCase()
             );
             const isInvolved = isPlayer || isBringer;
             

@@ -12,7 +12,7 @@ import { GameActions } from './GameActions';
 
 interface GameRowProps {
   game: Game;
-  currentUser: string;
+  currentUserId: string;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -21,7 +21,7 @@ interface GameRowProps {
 
 export function GameRow({
   game,
-  currentUser,
+  currentUserId,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -64,19 +64,19 @@ export function GameRow({
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
       <td className="px-4 py-3">
-        <PlayerList players={game.players} currentUser={currentUser} />
+        <PlayerList players={game.players} currentUserId={currentUserId} />
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
       <td className="px-4 py-3">
-        <BringerList bringers={game.bringers} currentUser={currentUser} />
+        <BringerList bringers={game.bringers} currentUserId={currentUserId} />
       </td>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
       <td className="px-4 py-3">
         <GameActions
           game={game}
-          currentUser={currentUser}
+          currentUserId={currentUserId}
           onAddPlayer={onAddPlayer}
           onAddBringer={onAddBringer}
           onRemovePlayer={onRemovePlayer}

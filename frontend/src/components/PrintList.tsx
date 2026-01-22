@@ -13,6 +13,8 @@ import type { Game } from '../types';
 export interface PrintListProps {
   /** The name of the user whose games are being printed */
   userName: string;
+  /** The ID of the user whose games are being printed */
+  userId: string;
   /** List of all games - will be filtered to show only games user is bringing */
   games: Game[];
 }
@@ -22,9 +24,9 @@ export interface PrintListProps {
  * Property 15: Print List Contains User's Games
  * Validates: Requirements 7.2
  */
-export function filterGamesUserIsBringing(games: Game[], userName: string): Game[] {
+export function filterGamesUserIsBringing(games: Game[], userId: string): Game[] {
   return games.filter(game => 
-    game.bringers.some(bringer => bringer.name === userName)
+    game.bringers.some(bringer => bringer.user.id === userId)
   );
 }
 
@@ -37,9 +39,9 @@ export function filterGamesUserIsBringing(games: Game[], userName: string): Game
  * - 7.3: Format suitable for table labels (user name prominently displayed)
  * - 7.4: Print-friendly CSS (no unnecessary colors, good contrast)
  */
-export function PrintList({ userName, games }: PrintListProps) {
+export function PrintList({ userName, userId, games }: PrintListProps) {
   // Filter to only games where user is a bringer (Requirement 7.2)
-  const userGames = filterGamesUserIsBringing(games, userName);
+  const userGames = filterGamesUserIsBringing(games, userId);
 
   return (
     <div className="print-list">
@@ -140,7 +142,7 @@ export function PrintList({ userName, games }: PrintListProps) {
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-gray-600">
                   {game.players.length > 0 
-                    ? game.players.map(p => p.name).join(', ')
+                    ? game.players.map(p => p.user.name).join(', ')
                     : '—'
                   }
                 </td>

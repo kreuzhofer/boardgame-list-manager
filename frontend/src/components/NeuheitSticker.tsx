@@ -29,7 +29,7 @@ export function NeuheitSticker({ yearPublished }: NeuheitStickerProps) {
   const shortYear = `'${String(yearPublished).slice(-2)}`;
 
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-600 text-white">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-600 text-white">
       Neu {shortYear}
     </span>
   );

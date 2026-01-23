@@ -167,7 +167,7 @@ export function GameCard({
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
       <div className="pt-2 border-t border-gray-200">
-        <div className="flex gap-3 flex-wrap items-center">
+        <div className="flex gap-3 items-center">
           <GameActions
             game={game}
             currentUserId={currentUserId}
@@ -221,8 +221,8 @@ export function GameCard({
             </div>
           )}
           
-          {/* Status Badge and Neuheit - Requirement 4.1, 4.2, 5.1, 5.4 - pushed to right */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* Status Badge and Neuheit - Requirement 4.1, 4.2, 5.1, 5.4 - column on right */}
+          <div className="ml-auto flex flex-col items-start gap-1">
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium text-center ${
                 isWunsch

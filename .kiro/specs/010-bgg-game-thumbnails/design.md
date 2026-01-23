@@ -18,7 +18,7 @@ This feature adds BoardGameGeek (BGG) game thumbnails to the search dropdown and
 flowchart TB
     subgraph Frontend
         LIC[LazyBggImage Component]
-        SD[Search Dropdown]
+        SD[Search Dropdowns<br>AutocompleteDropdown + UnifiedDropdown]
         GL[Game List]
     end
     

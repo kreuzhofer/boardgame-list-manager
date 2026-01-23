@@ -1,12 +1,13 @@
 /**
  * UnifiedDropdown component
  * Dual-section dropdown showing "Schon eingetragen" and "Von BGG" sections
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 9.3
+ * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 6.1, 6.2, 9.1, 9.3
  */
 
 import type { BggSearchResult } from '../types';
 import type { GameWithBringerInfo } from '../utils';
 import { BggRatingBadge } from './BggRatingBadge';
+import { LazyBggImage } from './LazyBggImage';
 
 /** Maximum items to show in In-Liste section */
 export const IN_LISTE_MAX_ITEMS = 3;
@@ -114,7 +115,7 @@ export function UnifiedDropdown({
                   <button
                     type="button"
                     onClick={() => onInListeClick(game.id)}
-                    className={`w-full px-3 py-3 text-left flex items-center justify-between gap-2 min-h-[44px] transition-colors ${
+                    className={`w-full px-3 py-3 text-left flex items-center gap-3 min-h-[44px] transition-colors ${
                       isSelected
                         ? 'bg-blue-100 text-blue-900'
                         : 'hover:bg-gray-100'
@@ -122,7 +123,18 @@ export function UnifiedDropdown({
                     role="option"
                     aria-selected={isSelected}
                   >
-                    <span className="font-medium text-gray-900 truncate">
+                    {/* Requirement 6.1: Display micro thumbnail as leading element */}
+                    {game.bggId && (
+                      <LazyBggImage
+                        bggId={game.bggId}
+                        size="micro"
+                        displaySize="small"
+                        alt={game.name}
+                        className="flex-shrink-0 rounded"
+                        enableZoom={false}
+                      />
+                    )}
+                    <span className="font-medium text-gray-900 truncate flex-1">
                       ✓ {game.name}
                     </span>
                     {game.bringerNames.length > 0 ? (
@@ -170,7 +182,7 @@ export function UnifiedDropdown({
                     <button
                       type="button"
                       onClick={() => onBggClick(result)}
-                      className={`w-full px-3 py-3 text-left flex items-center justify-between gap-2 min-h-[44px] transition-colors ${
+                      className={`w-full px-3 py-3 text-left flex items-center gap-3 min-h-[44px] transition-colors ${
                         isSelected
                           ? 'bg-blue-100 text-blue-900'
                           : 'hover:bg-gray-100'
@@ -178,7 +190,16 @@ export function UnifiedDropdown({
                       role="option"
                       aria-selected={isSelected}
                     >
-                      <span className="text-gray-900 truncate">
+                      {/* Requirement 6.1: Display micro thumbnail as leading element */}
+                      <LazyBggImage
+                        bggId={result.id}
+                        size="micro"
+                        displaySize="small"
+                        alt={result.name}
+                        className="flex-shrink-0 rounded"
+                        enableZoom={false}
+                      />
+                      <span className="text-gray-900 truncate flex-1">
                         {result.name}
                         {result.yearPublished && (
                           <span className="text-gray-500 ml-1">

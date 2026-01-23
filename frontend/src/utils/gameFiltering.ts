@@ -12,6 +12,7 @@ import { normalizeName } from './nameNormalization';
 export interface GameWithBringerInfo {
   id: string;
   name: string;
+  bggId: number | null;
   bringerNames: string[];
 }
 
@@ -115,6 +116,7 @@ export function getMatchingGamesWithBringers(
     .map((game) => ({
       id: game.id,
       name: game.name,
+      bggId: game.bggId,
       bringerNames: game.bringers.map((b) => b.user.name),
     }));
 }

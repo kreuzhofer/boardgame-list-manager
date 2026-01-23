@@ -114,6 +114,14 @@ This implementation adds BoardGameGeek game thumbnails to the search dropdown an
     - Test dropdown works when image API fails
     - _Requirements: 6.1, 9.1_
 
+  - [x] 7.3 Add thumbnails to UnifiedDropdown
+    - Update `frontend/src/components/UnifiedDropdown.tsx`
+    - Add `LazyBggImage` with `micro` size to "Schon eingetragen" section (for games with bggId)
+    - Add `LazyBggImage` with `micro` size to "Von BGG" section
+    - Update `GameWithBringerInfo` type to include `bggId`
+    - Ensure graceful degradation when images unavailable
+    - _Requirements: 6.1, 6.2, 9.1_
+
 - [x] 8. Frontend: Game List Integration (Desktop)
   - [x] 8.1 Add thumbnail column to GameRow (desktop)
     - Update `frontend/src/components/GameRow.tsx`

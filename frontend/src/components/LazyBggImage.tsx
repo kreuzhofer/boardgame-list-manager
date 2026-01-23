@@ -14,6 +14,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { ImageZoomOverlay } from './ImageZoomOverlay';
 
 export type ImageSize = 'micro' | 'square200';
+export type DisplaySize = 'small' | 'micro' | 'square200';
 
 export interface LazyBggImageProps {
   bggId: number;
@@ -21,6 +22,8 @@ export interface LazyBggImageProps {
   alt: string;
   className?: string;
   enableZoom?: boolean;
+  /** Display size override - renders at this size while fetching the `size` image */
+  displaySize?: DisplaySize;
   /** For testing: override touch detection */
   _forceTouch?: boolean;
 }
@@ -41,6 +44,7 @@ export function LazyBggImage({
   alt,
   className = '',
   enableZoom = true,
+  displaySize,
   _forceTouch,
 }: LazyBggImageProps) {
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
@@ -122,9 +126,16 @@ export function LazyBggImage({
     return containerRef.current?.getBoundingClientRect();
   }, []);
 
-  const dimensions = size === 'micro' 
-    ? { width: 64, height: 64 }
-    : { width: 200, height: 200 };
+  // Use displaySize if provided, otherwise use size
+  const effectiveDisplaySize = displaySize || size;
+  const dimensions = effectiveDisplaySize === 'small'
+    ? { width: 32, height: 32 }
+    : effectiveDisplaySize === 'micro' 
+      ? { width: 64, height: 64 }
+      : { width: 200, height: 200 };
+  
+  // Smaller icon for small display size
+  const iconSize = effectiveDisplaySize === 'small' ? 'w-4 h-4' : 'w-8 h-8';
 
   return (
     <>
@@ -152,7 +163,7 @@ export function LazyBggImage({
             data-testid="error-placeholder"
           >
             <svg 
-              className="w-8 h-8 text-gray-400" 
+              className={`${iconSize} text-gray-400`}
               viewBox="0 0 24 24" 
               fill="currentColor"
               aria-hidden="true"

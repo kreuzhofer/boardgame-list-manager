@@ -11,7 +11,7 @@ This feature adds BoardGameGeek (BGG) game thumbnails to the search dropdown and
 - **Image_Cache**: Local file storage for downloaded images (persistent volume in Docker)
 - **ScraperAPI**: Third-party service used to fetch BGG pages and download images without IP blocking
 - **Lazy_Image_Control**: Reusable React component that displays images with animated loading state
-- **Search_Dropdown**: Autocomplete dropdown showing game suggestions as user types
+- **Search_Dropdown**: Autocomplete dropdown showing game suggestions as user types (includes both AutocompleteDropdown and UnifiedDropdown components)
 - **Game_List**: Component displaying games in card or list format
 - **micro**: 64x64 pixel thumbnail size from BGG
 - **square200**: 200x200 pixel thumbnail size from BGG

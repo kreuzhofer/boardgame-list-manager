@@ -111,11 +111,6 @@ export function GameRow({
               {isWunsch ? 'Gesucht' : 'Verfügbar'}
             </span>
           </div>
-          
-          {/* Owner display - Requirement 2.3, 2.4 */}
-          <span className="text-xs text-gray-500">
-            Erstellt von: {game.owner?.name ?? 'Kein Besitzer'}
-          </span>
         </div>
       </td>
 

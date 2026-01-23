@@ -131,24 +131,17 @@ export function GameCard({
       ref={cardRef}
       className={getCardClassName()}
     >
-      {/* Game Name with Status Badge */}
+      {/* Game Name */}
       <div className="flex flex-col gap-1 mb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-gray-900 text-base leading-tight">
-              {game.name}
-            </h3>
-            {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
-            {game.yearPublished && (
-              <NeuheitSticker yearPublished={game.yearPublished} />
-            )}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-semibold text-gray-900 text-lg leading-tight">
+            {game.name}
+          </h3>
+          {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
+          {game.yearPublished && (
+            <NeuheitSticker yearPublished={game.yearPublished} />
+          )}
         </div>
-        
-        {/* Owner display - Requirement 2.3, 2.4 */}
-        <span className="text-xs text-gray-500">
-          Erstellt von: {game.owner?.name ?? 'Kein Besitzer'}
-        </span>
       </div>
 
       {/* Players and Bringers - Two column layout for mobile */}

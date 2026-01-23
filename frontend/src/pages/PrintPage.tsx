@@ -159,23 +159,34 @@ export function PrintPage({ user }: PrintPageProps) {
       <style>
         {`
           @media print {
-            /* Hide navigation, header, and other non-print elements */
+            /* Hide navigation, header, footer, and other non-print elements */
             .no-print,
             nav,
             header,
-            footer,
+            footer {
+              display: none !important;
+            }
+            
             .shadow {
               box-shadow: none !important;
             }
             
-            /* Make the print container full width */
-            body {
+            /* Make everything white background */
+            body,
+            html,
+            #root,
+            #root > div,
+            main {
               background: white !important;
+              background-color: white !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              min-height: auto !important;
             }
             
-            /* Remove padding from main container */
-            main {
-              padding: 0 !important;
+            /* Remove flex layout that causes extra space */
+            #root > div {
+              display: block !important;
             }
           }
         `}

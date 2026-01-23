@@ -28,7 +28,7 @@ export function Layout({ children, user, onUserUpdated, onLogout }: LayoutProps)
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 md:pb-6">
         {children}
       </main>
-      <footer className="bg-gray-200 text-gray-600 text-center py-4 text-sm mb-16 md:mb-0">
+      <footer className="no-print bg-gray-200 text-gray-600 text-center py-4 text-sm mb-16 md:mb-0">
         <p>© {new Date().getFullYear()} Daniel Kreuzhofer</p>
       </footer>
       {/* Mobile Bottom Tabs - only visible on mobile */}

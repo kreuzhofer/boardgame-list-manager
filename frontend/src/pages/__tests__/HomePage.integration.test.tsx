@@ -115,9 +115,9 @@ describe('HomePage Integration Tests', () => {
       const searchInput = screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i);
       fireEvent.change(searchInput, { target: { value: 'Catan' } });
 
-      // Should show dropdown with "In deiner Liste" section
+      // Should show dropdown with "Schon eingetragen" section
       await waitFor(() => {
-        expect(screen.getByText(/in deiner liste/i)).toBeInTheDocument();
+        expect(screen.getByText(/schon eingetragen/i)).toBeInTheDocument();
       });
     });
   });

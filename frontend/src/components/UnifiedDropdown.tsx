@@ -1,6 +1,6 @@
 /**
  * UnifiedDropdown component
- * Dual-section dropdown showing "In deiner Liste" and "Von BGG" sections
+ * Dual-section dropdown showing "Schon eingetragen" and "Von BGG" sections
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 9.3
  */
 
@@ -100,11 +100,11 @@ export function UnifiedDropdown({
       className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden"
       role="listbox"
     >
-      {/* In deiner Liste section */}
+      {/* Schon eingetragen section */}
       {hasInListeResults && (
         <div className="border-b border-gray-200">
           <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            📋 In deiner Liste
+            📋 Schon eingetragen
           </div>
           <ul>
             {matchingGames.map((game, index) => {

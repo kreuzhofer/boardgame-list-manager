@@ -12,6 +12,7 @@ import {
   IN_LISTE_MAX_ITEMS,
   BGG_INITIAL_ITEMS,
   BGG_EXPAND_INCREMENT,
+  hasNoResults,
 } from './UnifiedDropdown';
 import {
   checkDuplicate,
@@ -127,6 +128,15 @@ export function UnifiedSearchBar({
   // Total navigable items for keyboard navigation
   const totalNavigableItems = matchingGames.length + visibleBggResults.length;
 
+  // Check if there are no results to show inline message
+  const showNoResultsMessage = hasNoResults(
+    query,
+    matchingGames,
+    bggResults,
+    existingBggIds,
+    isBggLoading
+  );
+
   // Open dropdown when typing
   useEffect(() => {
     if (justSelectedRef.current) {
@@ -211,6 +221,25 @@ export function UnifiedSearchBar({
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Always prevent Enter from submitting the form - user must click the button
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Only allow Enter to select a dropdown item if one is highlighted
+      if (isDropdownOpen && selectedIndex >= 0) {
+        if (selectedIndex < matchingGames.length) {
+          // In-Liste item
+          handleInListeClick(matchingGames[selectedIndex].id);
+        } else {
+          // BGG item
+          const bggIndex = selectedIndex - matchingGames.length;
+          if (bggIndex < visibleBggResults.length) {
+            handleBggClick(visibleBggResults[bggIndex]);
+          }
+        }
+      }
+      return;
+    }
+
     if (!isDropdownOpen || totalNavigableItems === 0) {
       return;
     }
@@ -225,21 +254,6 @@ export function UnifiedSearchBar({
       case 'ArrowUp':
         e.preventDefault();
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
-        break;
-      case 'Enter':
-        if (selectedIndex >= 0) {
-          e.preventDefault();
-          if (selectedIndex < matchingGames.length) {
-            // In-Liste item
-            handleInListeClick(matchingGames[selectedIndex].id);
-          } else {
-            // BGG item
-            const bggIndex = selectedIndex - matchingGames.length;
-            if (bggIndex < visibleBggResults.length) {
-              handleBggClick(visibleBggResults[bggIndex]);
-            }
-          }
-        }
         break;
       case 'Escape':
         e.preventDefault();
@@ -259,17 +273,6 @@ export function UnifiedSearchBar({
     }
 
     if (addButtonState.state !== 'enabled') {
-      return;
-    }
-
-    // Only allow submission via button click, not Enter key without explicit selection
-    // Check if this was triggered by Enter key (not button click)
-    const isEnterKeySubmit = e.nativeEvent instanceof SubmitEvent && 
-      (e.nativeEvent.submitter === null || e.nativeEvent.submitter?.getAttribute('type') !== 'submit');
-    
-    // If Enter was pressed without a BGG item selected, don't submit
-    // User must click the button to confirm adding a custom game
-    if (isEnterKeySubmit && !selectedBggItem) {
       return;
     }
 
@@ -410,6 +413,13 @@ export function UnifiedSearchBar({
               onBggClick={handleBggClick}
               onShowMore={handleShowMore}
             />
+
+            {/* Inline no results message */}
+            {showNoResultsMessage && isDropdownOpen && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                Keine Treffer
+              </span>
+            )}
           </div>
 
           {/* Toggle buttons and add button row */}

@@ -46,6 +46,21 @@ export interface UnifiedDropdownProps {
   onShowMore: () => void;
 }
 
+/** Helper to check if there are no results for a given query */
+export function hasNoResults(
+  query: string,
+  matchingGames: GameWithBringerInfo[],
+  bggResults: BggSearchResult[],
+  existingBggIds: Set<number>,
+  isBggLoading: boolean
+): boolean {
+  if (!query.trim()) return false;
+  const filteredBggResults = bggResults.filter(r => !existingBggIds.has(r.id));
+  const hasInListeResults = matchingGames.length > 0;
+  const hasBggResults = filteredBggResults.length > 0 || isBggLoading;
+  return !hasInListeResults && !hasBggResults;
+}
+
 export function UnifiedDropdown({
   query,
   isOpen,
@@ -80,7 +95,7 @@ export function UnifiedDropdown({
   // Calculate selection indices
   const inListeCount = matchingGames.length;
 
-  return (
+  const dropdownContent = (
     <div
       className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden"
       role="listbox"
@@ -194,14 +209,16 @@ export function UnifiedDropdown({
         </div>
       )}
 
-      {/* No results message */}
-      {!hasAnyResults && !isBggLoading && (
-        <div className="px-3 py-4 text-sm text-gray-500 text-center">
-          Keine Treffer gefunden
-        </div>
-      )}
+      {/* No results - return null, parent will show inline message */}
     </div>
   );
+
+  // If no results at all, don't render the dropdown box
+  if (!hasAnyResults && !isBggLoading) {
+    return null;
+  }
+
+  return dropdownContent;
 }
 
 function LoadingSpinner() {

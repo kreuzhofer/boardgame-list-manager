@@ -1,4 +1,8 @@
 export { AuthService, authService } from './auth.service';
+export { BggCache, bggCache } from './bggCache';
+export type { BggGame } from './bggCache';
+export { BggService, bggService } from './bggService';
+export type { BggSearchResult } from './bggService';
 export { GameService, gameService } from './game.service';
 export { StatisticsService, statisticsService } from './statistics.service';
 export { UserService, userService } from './user.service';

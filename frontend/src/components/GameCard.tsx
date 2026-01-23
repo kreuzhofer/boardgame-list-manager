@@ -11,6 +11,8 @@ import { Game } from '../types';
 import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
 import { GameActions } from './GameActions';
+import { NeuheitSticker } from './NeuheitSticker';
+import { openBggPage } from './BggModal';
 
 interface GameCardProps {
   game: Game;
@@ -57,20 +59,53 @@ export function GameCard({
       {/* Game Name with Status Badge */}
       <div className="flex flex-col gap-2 mb-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-gray-900 text-base leading-tight">
-            {game.name}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-gray-900 text-base leading-tight">
+              {game.name}
+            </h3>
+            {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
+            {game.yearPublished && (
+              <NeuheitSticker yearPublished={game.yearPublished} />
+            )}
+          </div>
           
-          {/* Status Badge - Requirement 4.1, 4.2 */}
-          <span
-            className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
-              isWunsch
-                ? 'bg-yellow-200 text-yellow-800'
-                : 'bg-green-200 text-green-800'
-            }`}
-          >
-            {isWunsch ? 'Wunsch' : 'Verfügbar'}
-          </span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
+            {game.bggId && (
+              <button
+                onClick={() => openBggPage(game.bggId!)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+                title="BoardGameGeek Info (öffnet in neuem Tab)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                BGG
+              </button>
+            )}
+            
+            {/* Status Badge - Requirement 4.1, 4.2 */}
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                isWunsch
+                  ? 'bg-yellow-200 text-yellow-800'
+                  : 'bg-green-200 text-green-800'
+              }`}
+            >
+              {isWunsch ? 'Wunsch' : 'Verfügbar'}
+            </span>
+          </div>
         </div>
         
         {/* Owner display - Requirement 2.3, 2.4 */}

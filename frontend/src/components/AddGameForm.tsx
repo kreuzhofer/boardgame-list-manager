@@ -1,13 +1,16 @@
 /**
  * AddGameForm component
  * Form for adding a new game with toggle buttons for playing and bringing
+ * Includes BGG autocomplete functionality
  * All UI text in German (Requirement 9.1)
- * Requirements: 3.1, 3.2
+ * Requirements: 3.1, 3.2, 3.4, 3.5, 3.6
  */
 
-import { useState, useCallback, FormEvent, useRef } from 'react';
+import { useState, useCallback, FormEvent, useRef, useEffect } from 'react';
 import { gamesApi, ApiError } from '../api/client';
-import { Game } from '../types';
+import { useBggSearch } from '../hooks';
+import { AutocompleteDropdown } from './AutocompleteDropdown';
+import type { Game, BggSearchResult } from '../types';
 
 interface AddGameFormProps {
   /** Current user's ID */
@@ -23,6 +26,48 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // BGG autocomplete state
+  const [selectedBggId, setSelectedBggId] = useState<number | undefined>(undefined);
+  const [selectedYearPublished, setSelectedYearPublished] = useState<number | undefined>(undefined);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const justSelectedRef = useRef(false);
+
+  // Use BGG search hook with 300ms debounce
+  const { results, isLoading, hasMore } = useBggSearch(gameName, 300);
+
+  // Open dropdown when there are results and input has 1+ characters
+  // But not if user just selected an item
+  useEffect(() => {
+    if (justSelectedRef.current) {
+      // Don't reopen dropdown after selection
+      return;
+    }
+    if (gameName.length >= 1 && results.length > 0) {
+      setIsDropdownOpen(true);
+    } else if (gameName.length < 1) {
+      setIsDropdownOpen(false);
+    }
+  }, [gameName, results]);
+
+  // Reset selected index when results change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [results]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -37,15 +82,25 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
 
       setError(null);
       setIsSubmitting(true);
+      setIsDropdownOpen(false);
 
       try {
         // Call API to create game using the API client
-        const response = await gamesApi.create(trimmedName, currentUserId, isBringing, isPlaying);
+        const response = await gamesApi.create(
+          trimmedName,
+          currentUserId,
+          isBringing,
+          isPlaying,
+          selectedBggId,
+          selectedYearPublished
+        );
         
         // Reset form
         setGameName('');
         setIsBringing(false);
         setIsPlaying(false);
+        setSelectedBggId(undefined);
+        setSelectedYearPublished(undefined);
         inputRef.current?.focus();
         
         // Notify parent
@@ -60,19 +115,79 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         setIsSubmitting(false);
       }
     },
-    [gameName, isBringing, isPlaying, currentUserId, onGameAdded]
+    [gameName, isBringing, isPlaying, currentUserId, onGameAdded, selectedBggId, selectedYearPublished]
   );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setGameName(e.target.value);
+      const newValue = e.target.value;
+      setGameName(newValue);
+      
+      // User is typing, so allow dropdown to open again
+      justSelectedRef.current = false;
+      
+      // Clear BGG selection when user types (they might be changing their mind)
+      if (selectedBggId !== undefined) {
+        setSelectedBggId(undefined);
+        setSelectedYearPublished(undefined);
+      }
+      
       // Clear error when user starts typing
       if (error) {
         setError(null);
       }
     },
-    [error]
+    [error, selectedBggId]
   );
+
+  const handleSelectGame = useCallback((result: BggSearchResult) => {
+    // Mark that we just selected, so dropdown doesn't reopen
+    justSelectedRef.current = true;
+    // Requirement 3.4: Populate input with selected game name
+    setGameName(result.name);
+    // Requirement 3.5: Store BGG ID and yearPublished for submission
+    setSelectedBggId(result.id);
+    setSelectedYearPublished(result.yearPublished ?? undefined);
+    setIsDropdownOpen(false);
+    setSelectedIndex(-1);
+    inputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!isDropdownOpen) return;
+
+      const maxIndex = results.length - 1;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedIndex(prev => (prev < maxIndex ? prev + 1 : 0));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedIndex(prev => (prev > 0 ? prev - 1 : maxIndex));
+          break;
+        case 'Enter':
+          if (selectedIndex >= 0 && selectedIndex <= maxIndex) {
+            e.preventDefault();
+            handleSelectGame(results[selectedIndex]);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsDropdownOpen(false);
+          setSelectedIndex(-1);
+          break;
+      }
+    },
+    [isDropdownOpen, results, selectedIndex, handleSelectGame]
+  );
+
+  const handleCloseDropdown = useCallback(() => {
+    setIsDropdownOpen(false);
+    setSelectedIndex(-1);
+  }, []);
 
   // Button base classes
   const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px]';
@@ -85,29 +200,60 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
       
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4">
-          {/* Game name input */}
-          <div>
+          {/* Game name input with autocomplete */}
+          <div ref={containerRef} className="relative">
             <label
               htmlFor="game-name-input"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Spielname
             </label>
-            <input
-              ref={inputRef}
-              id="game-name-input"
-              type="text"
-              value={gameName}
-              onChange={handleInputChange}
-              placeholder="z.B. Catan, Azul, Wingspan..."
-              disabled={isSubmitting}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                error
-                  ? 'border-red-500 focus:ring-red-500'
-                  : 'border-gray-300'
-              }`}
-              aria-describedby={error ? 'game-name-error' : undefined}
-              aria-invalid={error ? 'true' : 'false'}
+            <div className="relative">
+              <input
+                ref={inputRef}
+                id="game-name-input"
+                type="text"
+                value={gameName}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  // Don't reopen if user just selected an item
+                  if (!justSelectedRef.current && gameName.length >= 1 && results.length > 0) {
+                    setIsDropdownOpen(true);
+                  }
+                }}
+                placeholder="z.B. Catan, Azul, Wingspan..."
+                disabled={isSubmitting}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="listbox"
+                aria-autocomplete="list"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                  error
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300'
+                }`}
+                aria-describedby={error ? 'game-name-error' : undefined}
+                aria-invalid={error ? 'true' : 'false'}
+              />
+              {/* BGG selection indicator */}
+              {selectedBggId !== undefined && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                  BGG
+                </span>
+              )}
+            </div>
+            
+            {/* Autocomplete dropdown */}
+            <AutocompleteDropdown
+              results={results}
+              isOpen={isDropdownOpen}
+              isLoading={isLoading}
+              selectedIndex={selectedIndex}
+              hasMore={hasMore}
+              onSelect={handleSelectGame}
+              onClose={handleCloseDropdown}
             />
           </div>
 

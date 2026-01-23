@@ -17,6 +17,7 @@ import type {
   UserResponse,
   StatisticsData,
   ErrorResponse,
+  BggSearchResponse,
 } from '../types';
 
 // Get API URL from environment variable
@@ -135,9 +136,11 @@ export const gamesApi = {
     name: string,
     userId: string,
     isBringing: boolean,
-    isPlaying: boolean
+    isPlaying: boolean,
+    bggId?: number,
+    yearPublished?: number
   ): Promise<GameResponse> => {
-    const body: CreateGameRequest = { name, userId, isBringing, isPlaying };
+    const body: CreateGameRequest = { name, userId, isBringing, isPlaying, bggId, yearPublished };
     return fetchApi<GameResponse>('/api/games', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -195,12 +198,20 @@ export const statisticsApi = {
   },
 };
 
+// BGG API
+export const bggApi = {
+  search: (query: string): Promise<BggSearchResponse> => {
+    return fetchApi<BggSearchResponse>(`/api/bgg/search?q=${encodeURIComponent(query)}`);
+  },
+};
+
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
   users: usersApi,
   games: gamesApi,
   statistics: statisticsApi,
+  bgg: bggApi,
 };
 
 export default api;

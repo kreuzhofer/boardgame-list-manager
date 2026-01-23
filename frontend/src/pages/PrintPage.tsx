@@ -106,7 +106,7 @@ export function PrintPage({ user }: PrintPageProps) {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
           <p className="text-gray-600 text-sm mt-1">
-            Liste der Spiele, die Sie mitbringen ({userGamesCount} {userGamesCount === 1 ? 'Spiel' : 'Spiele'})
+            Liste der Spiele, die Du mitbringst ({userGamesCount} {userGamesCount === 1 ? 'Spiel' : 'Spiele'})
           </p>
         </div>
         

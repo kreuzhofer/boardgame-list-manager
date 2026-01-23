@@ -15,3 +15,5 @@ export type { UseSortOrderReturn } from './useSortOrder';
 
 export { useGameFilters } from './useGameFilters';
 export type { UseGameFiltersReturn } from './useGameFilters';
+
+export { useBggSearch } from './useBggSearch';

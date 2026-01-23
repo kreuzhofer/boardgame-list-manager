@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
+import * as path from 'path';
 import authRoutes from './routes/auth.routes';
+import bggRoutes from './routes/bgg.routes';
 import gameRoutes from './routes/game.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import userRoutes from './routes/user.routes';
+import { bggCache } from './services';
 import { config } from './config';
 
 const app = express();
@@ -26,6 +29,7 @@ app.use((req, _res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/bgg', bggRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/users', userRoutes);
@@ -35,9 +39,25 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Initialize BGG cache at startup
+const initializeBggCache = async () => {
+  const csvPath = path.join(__dirname, '..', 'data', 'boardgames_ranks.csv');
+  console.log(`Loading BGG data from: ${csvPath}`);
+  await bggCache.initialize(csvPath);
+};
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`API server running on port ${PORT}`);
+initializeBggCache().then(() => {
+  app.listen(PORT, () => {
+    console.log(`API server running on port ${PORT}`);
+  });
+}).catch((error) => {
+  console.error('Failed to initialize BGG cache:', error);
+  // Start server anyway - graceful degradation
+  app.listen(PORT, () => {
+    console.log(`API server running on port ${PORT} (BGG cache failed to load)`);
+  });
 });
+
 
 export default app;

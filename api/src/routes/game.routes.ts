@@ -30,18 +30,18 @@ router.get('/', async (_req: Request, res: Response) => {
  * POST /api/games
  * Creates a new game with the user as owner (and optionally as player and/or bringer).
  * 
- * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean }
+ * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, bggId?: number, yearPublished?: number }
  * Response: { game: Game }
  * 
  * Error responses:
  *   - 400 if name is empty or userId is missing
  *   - 409 if game name already exists
  * 
- * Requirements: 3.1, 3.3, 3.4, 4.1
+ * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing, isPlaying } = req.body;
+    const { name, userId, isBringing, isPlaying, bggId, yearPublished } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -62,11 +62,17 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    // Validate optional BGG fields
+    const validBggId = bggId !== undefined && bggId !== null ? Number(bggId) : undefined;
+    const validYearPublished = yearPublished !== undefined && yearPublished !== null ? Number(yearPublished) : undefined;
+
     const game = await gameService.createGame(
       name,
       userId,
       Boolean(isBringing),
-      Boolean(isPlaying)
+      Boolean(isPlaying),
+      validBggId,
+      validYearPublished
     );
 
     return res.status(201).json({ game });

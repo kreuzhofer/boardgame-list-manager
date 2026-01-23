@@ -178,8 +178,8 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                 </div>
               )}
 
-              {/* Toggle to create form */}
-              {!showCreateForm && (
+              {/* Toggle to create form - only show when users exist */}
+              {!showCreateForm && users.length > 0 && (
                 <button
                   onClick={() => setShowCreateForm(true)}
                   className="mt-4 w-full py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"

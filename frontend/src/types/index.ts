@@ -31,6 +31,8 @@ export interface Game {
   id: string;
   name: string;
   owner: User | null;
+  bggId: number | null;
+  yearPublished: number | null;
   players: Player[];
   bringers: Bringer[];
   status: GameStatus;
@@ -68,6 +70,8 @@ export interface CreateGameRequest {
   userId: string;
   isBringing: boolean;
   isPlaying: boolean;
+  bggId?: number;
+  yearPublished?: number;
 }
 
 export interface AddPlayerRequest {
@@ -109,4 +113,16 @@ export interface ErrorResponse {
     message: string;
     details?: Record<string, unknown>;
   };
+}
+
+// BGG Search types
+export interface BggSearchResult {
+  id: number;
+  name: string;
+  yearPublished: number | null;
+}
+
+export interface BggSearchResponse {
+  results: BggSearchResult[];
+  hasMore: boolean;
 }

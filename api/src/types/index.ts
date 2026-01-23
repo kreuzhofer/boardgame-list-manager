@@ -11,6 +11,8 @@ export interface GameEntity {
   id: string;
   name: string;
   ownerId: string | null;
+  bggId: number | null;
+  yearPublished: number | null;
   createdAt: Date;
   updatedAt: Date;
   owner: UserEntity | null;
@@ -40,6 +42,8 @@ export interface CreateGameDto {
   userId: string;
   isBringing: boolean;
   isPlaying: boolean;
+  bggId?: number;
+  yearPublished?: number;
 }
 
 export interface CreatePlayerDto {
@@ -60,6 +64,8 @@ export interface Game {
   id: string;
   name: string;
   owner: User | null;
+  bggId: number | null;
+  yearPublished: number | null;
   players: Player[];
   bringers: Bringer[];
   status: 'wunsch' | 'verfuegbar';

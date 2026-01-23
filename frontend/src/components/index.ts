@@ -4,6 +4,8 @@
 
 export { AddGameForm } from './AddGameForm';
 export { AuthGuard, clearAuthentication, isUserAuthenticated } from './AuthGuard';
+export { AutocompleteDropdown } from './AutocompleteDropdown';
+export { BggModal, getBggUrl, openBggPage } from './BggModal';
 export { BringerList } from './BringerList';
 export { DeleteGameModal } from './DeleteGameModal';
 export { GameActions } from './GameActions';
@@ -13,6 +15,7 @@ export { GameTable } from './GameTable';
 export { Header } from './Header';
 export { Layout } from './Layout';
 export { NamePrompt } from './NamePrompt';
+export { NeuheitSticker, isNeuheit } from './NeuheitSticker';
 export { PasswordScreen } from './PasswordScreen';
 export { PlayerList } from './PlayerList';
 export { PrintList, filterGamesUserIsBringing } from './PrintList';

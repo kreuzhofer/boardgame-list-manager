@@ -52,12 +52,15 @@ export class GameService {
   /**
    * Transforms a GameEntity from the database to the API Game format
    * Requirements: 2.3, 2.4 - Include owner information
+   * Requirements: 4.3, 4.4 - Include bggId and yearPublished
    */
   private transformGame(entity: GameEntity): Game {
     return {
       id: entity.id,
       name: entity.name,
       owner: entity.owner ? { id: entity.owner.id, name: entity.owner.name } : null,
+      bggId: entity.bggId,
+      yearPublished: entity.yearPublished,
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -80,12 +83,21 @@ export class GameService {
    * @param userId - The user ID of the user creating the game
    * @param isBringing - Whether the user is bringing the game
    * @param isPlaying - Whether the user wants to play the game
+   * @param bggId - Optional BoardGameGeek ID
+   * @param yearPublished - Optional year the game was published
    * @returns The created game in API format
    * @throws Error with German message if game name is empty or already exists
    * 
-   * Requirements: 3.1, 3.3, 3.4, 4.1
+   * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
    */
-  async createGame(name: string, userId: string, isBringing: boolean, isPlaying: boolean): Promise<Game> {
+  async createGame(
+    name: string,
+    userId: string,
+    isBringing: boolean,
+    isPlaying: boolean,
+    bggId?: number,
+    yearPublished?: number
+  ): Promise<Game> {
     // Validate game name
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -104,6 +116,8 @@ export class GameService {
         userId,
         isBringing,
         isPlaying,
+        bggId,
+        yearPublished,
       });
       return this.transformGame(entity);
     } catch (error) {

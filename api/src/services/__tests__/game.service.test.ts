@@ -46,11 +46,15 @@ describe('GameService', () => {
     ownerId: string | null,
     ownerName: string | null,
     players: PlayerEntity[] = [],
-    bringers: BringerEntity[] = []
+    bringers: BringerEntity[] = [],
+    bggId: number | null = null,
+    yearPublished: number | null = null
   ): GameEntity => ({
     id,
     name,
     ownerId,
+    bggId,
+    yearPublished,
     owner: ownerId && ownerName ? createMockUserEntity(ownerId, ownerName) : null,
     players,
     bringers,
@@ -258,7 +262,55 @@ describe('GameService', () => {
         userId,
         isBringing: false,
         isPlaying: false,
+        bggId: undefined,
+        yearPublished: undefined,
       });
+    });
+
+    /**
+     * Test that createGame stores BGG data when provided
+     * Validates: Requirement 4.3
+     */
+    it('should create game with BGG data when provided', async () => {
+      const userId = 'user-123';
+      const gameName = 'Catan';
+      const bggId = 13;
+      const yearPublished = 1995;
+      const mockGame = createMockGameEntity('game-123', gameName, userId, 'User Name', [], [], bggId, yearPublished);
+      
+      mockRepository.findByName.mockResolvedValue(null);
+      mockRepository.create.mockResolvedValue(mockGame);
+
+      const result = await gameService.createGame(gameName, userId, false, false, bggId, yearPublished);
+
+      expect(result.bggId).toBe(bggId);
+      expect(result.yearPublished).toBe(yearPublished);
+      expect(mockRepository.create).toHaveBeenCalledWith({
+        name: gameName,
+        userId,
+        isBringing: false,
+        isPlaying: false,
+        bggId,
+        yearPublished,
+      });
+    });
+
+    /**
+     * Test that createGame stores null for BGG data when not provided
+     * Validates: Requirement 4.4
+     */
+    it('should create game with null BGG data when not provided', async () => {
+      const userId = 'user-123';
+      const gameName = 'Custom Game';
+      const mockGame = createMockGameEntity('game-123', gameName, userId, 'User Name', [], [], null, null);
+      
+      mockRepository.findByName.mockResolvedValue(null);
+      mockRepository.create.mockResolvedValue(mockGame);
+
+      const result = await gameService.createGame(gameName, userId, false, false);
+
+      expect(result.bggId).toBeNull();
+      expect(result.yearPublished).toBeNull();
     });
   });
 
@@ -278,6 +330,25 @@ describe('GameService', () => {
 
       expect(result[0].owner).toEqual({ id: 'owner-1', name: 'Owner 1' });
       expect(result[1].owner).toBeNull();
+    });
+
+    /**
+     * Test that getAllGames includes BGG data in response
+     * Validates: Requirement 4.3, 4.4
+     */
+    it('should include BGG data in game response', async () => {
+      const mockGames = [
+        createMockGameEntity('game-1', 'Catan', 'owner-1', 'Owner 1', [], [], 13, 1995),
+        createMockGameEntity('game-2', 'Custom Game', 'owner-2', 'Owner 2', [], [], null, null),
+      ];
+      mockRepository.findAll.mockResolvedValue(mockGames);
+
+      const result = await gameService.getAllGames();
+
+      expect(result[0].bggId).toBe(13);
+      expect(result[0].yearPublished).toBe(1995);
+      expect(result[1].bggId).toBeNull();
+      expect(result[1].yearPublished).toBeNull();
     });
   });
 });

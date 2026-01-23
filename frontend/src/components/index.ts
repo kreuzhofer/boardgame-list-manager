@@ -6,6 +6,7 @@ export { AddGameForm } from './AddGameForm';
 export { AuthGuard, clearAuthentication, isUserAuthenticated } from './AuthGuard';
 export { AutocompleteDropdown } from './AutocompleteDropdown';
 export { BggModal, getBggUrl, openBggPage } from './BggModal';
+export { BggRatingBadge } from './BggRatingBadge';
 export { BringerList } from './BringerList';
 export { DeleteGameModal } from './DeleteGameModal';
 export { GameActions } from './GameActions';

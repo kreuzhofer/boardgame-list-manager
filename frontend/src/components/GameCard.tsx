@@ -13,6 +13,7 @@ import { BringerList } from './BringerList';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
+import { BggRatingBadge } from './BggRatingBadge';
 
 interface GameCardProps {
   game: Game;
@@ -92,6 +93,9 @@ export function GameCard({
                   />
                 </svg>
                 BGG
+                {game.bggRating && (
+                  <BggRatingBadge rating={game.bggRating} />
+                )}
               </button>
             )}
             

@@ -41,7 +41,7 @@ router.get('/', async (_req: Request, res: Response) => {
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished } = req.body;
+    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -65,6 +65,7 @@ router.post('/', async (req: Request, res: Response) => {
     // Validate optional BGG fields
     const validBggId = bggId !== undefined && bggId !== null ? Number(bggId) : undefined;
     const validYearPublished = yearPublished !== undefined && yearPublished !== null ? Number(yearPublished) : undefined;
+    const validBggRating = bggRating !== undefined && bggRating !== null ? Number(bggRating) : undefined;
 
     const game = await gameService.createGame(
       name,
@@ -72,7 +73,8 @@ router.post('/', async (req: Request, res: Response) => {
       Boolean(isBringing),
       Boolean(isPlaying),
       validBggId,
-      validYearPublished
+      validYearPublished,
+      validBggRating
     );
 
     return res.status(201).json({ game });

@@ -63,7 +63,7 @@ export class GameRepository {
    * Requirements: 4.3, 4.4 - Store bggId and yearPublished if provided
    */
   async create(data: CreateGameDto): Promise<GameEntity> {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished } = data;
+    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating } = data;
 
     // Create game with the user as owner, and optionally as player and/or bringer
     const game = await prisma.game.create({
@@ -72,6 +72,7 @@ export class GameRepository {
         ownerId: userId,
         bggId: bggId ?? null,
         yearPublished: yearPublished ?? null,
+        bggRating: bggRating ?? null,
         ...(isPlaying && {
           players: {
             create: {

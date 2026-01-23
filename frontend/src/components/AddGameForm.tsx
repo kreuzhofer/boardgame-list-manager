@@ -31,6 +31,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
   // BGG autocomplete state
   const [selectedBggId, setSelectedBggId] = useState<number | undefined>(undefined);
   const [selectedYearPublished, setSelectedYearPublished] = useState<number | undefined>(undefined);
+  const [selectedBggRating, setSelectedBggRating] = useState<number | undefined>(undefined);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const justSelectedRef = useRef(false);
@@ -92,7 +93,8 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
           isBringing,
           isPlaying,
           selectedBggId,
-          selectedYearPublished
+          selectedYearPublished,
+          selectedBggRating
         );
         
         // Reset form
@@ -101,6 +103,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         setIsPlaying(false);
         setSelectedBggId(undefined);
         setSelectedYearPublished(undefined);
+        setSelectedBggRating(undefined);
         inputRef.current?.focus();
         
         // Notify parent
@@ -115,7 +118,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         setIsSubmitting(false);
       }
     },
-    [gameName, isBringing, isPlaying, currentUserId, onGameAdded, selectedBggId, selectedYearPublished]
+    [gameName, isBringing, isPlaying, currentUserId, onGameAdded, selectedBggId, selectedYearPublished, selectedBggRating]
   );
 
   const handleInputChange = useCallback(
@@ -130,6 +133,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
       if (selectedBggId !== undefined) {
         setSelectedBggId(undefined);
         setSelectedYearPublished(undefined);
+        setSelectedBggRating(undefined);
       }
       
       // Clear error when user starts typing
@@ -145,9 +149,10 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
     justSelectedRef.current = true;
     // Requirement 3.4: Populate input with selected game name
     setGameName(result.name);
-    // Requirement 3.5: Store BGG ID and yearPublished for submission
+    // Requirement 3.5: Store BGG ID, yearPublished, and rating for submission
     setSelectedBggId(result.id);
     setSelectedYearPublished(result.yearPublished ?? undefined);
+    setSelectedBggRating(result.rating ?? undefined);
     setIsDropdownOpen(false);
     setSelectedIndex(-1);
     inputRef.current?.focus();

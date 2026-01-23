@@ -11,6 +11,7 @@ export interface BggSearchResult {
   id: number;
   name: string;
   yearPublished: number | null;
+  rating: number | null;
 }
 
 export interface BggSearchResponse {
@@ -41,11 +42,12 @@ class BggService {
     const games = bggCache.search(query, MAX_RESULTS + 1);
     const hasMore = games.length > MAX_RESULTS;
     
-    // Transform to API response format (exclude rank), limit to MAX_RESULTS
+    // Transform to API response format (exclude rank)
     const results = games.slice(0, MAX_RESULTS).map(game => ({
       id: game.id,
       name: game.name,
       yearPublished: game.yearPublished,
+      rating: game.rating,
     }));
 
     return { results, hasMore };

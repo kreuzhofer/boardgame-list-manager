@@ -61,6 +61,7 @@ export class GameService {
       owner: entity.owner ? { id: entity.owner.id, name: entity.owner.name } : null,
       bggId: entity.bggId,
       yearPublished: entity.yearPublished,
+      bggRating: entity.bggRating,
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -96,7 +97,8 @@ export class GameService {
     isBringing: boolean,
     isPlaying: boolean,
     bggId?: number,
-    yearPublished?: number
+    yearPublished?: number,
+    bggRating?: number
   ): Promise<Game> {
     // Validate game name
     const trimmedName = name.trim();
@@ -118,6 +120,7 @@ export class GameService {
         isPlaying,
         bggId,
         yearPublished,
+        bggRating,
       });
       return this.transformGame(entity);
     } catch (error) {

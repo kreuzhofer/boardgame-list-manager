@@ -138,9 +138,10 @@ export const gamesApi = {
     isBringing: boolean,
     isPlaying: boolean,
     bggId?: number,
-    yearPublished?: number
+    yearPublished?: number,
+    bggRating?: number
   ): Promise<GameResponse> => {
-    const body: CreateGameRequest = { name, userId, isBringing, isPlaying, bggId, yearPublished };
+    const body: CreateGameRequest = { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating };
     return fetchApi<GameResponse>('/api/games', {
       method: 'POST',
       body: JSON.stringify(body),

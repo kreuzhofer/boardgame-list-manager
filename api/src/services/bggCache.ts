@@ -13,6 +13,7 @@ export interface BggGame {
   name: string;
   yearPublished: number | null;
   rank: number;
+  rating: number | null;
 }
 
 interface CsvRow {
@@ -21,6 +22,7 @@ interface CsvRow {
   yearpublished: string;
   rank: string;
   is_expansion: string;
+  average: string;
 }
 
 /**
@@ -68,18 +70,20 @@ class BggCache {
           const id = parseInt(row.id, 10);
           const rank = parseInt(row.rank, 10);
           const yearPublished = row.yearpublished ? parseInt(row.yearpublished, 10) : null;
+          const rating = row.average ? parseFloat(row.average) : null;
 
           // Skip invalid rows
           if (isNaN(id) || isNaN(rank)) {
             return;
           }
 
-          // Requirement 1.2: Store id, name, yearpublished
+          // Requirement 1.2: Store id, name, yearpublished, rating
           games.push({
             id,
             name: row.name,
             yearPublished: yearPublished && !isNaN(yearPublished) ? yearPublished : null,
             rank,
+            rating: rating && !isNaN(rating) ? Math.round(rating * 10) / 10 : null,
           });
         });
 

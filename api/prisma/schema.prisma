@@ -25,6 +25,7 @@ model Game {
   ownerId       String?  @map("owner_id")
   bggId         Int?     @map("bgg_id")
   yearPublished Int?     @map("year_published")
+  bggRating     Float?   @map("bgg_rating")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   owner         User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)

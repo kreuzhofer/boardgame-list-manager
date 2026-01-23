@@ -11,6 +11,7 @@ export { BringerList } from './BringerList';
 export { DeleteGameModal } from './DeleteGameModal';
 export { GameActions } from './GameActions';
 export { GameCard } from './GameCard';
+export { HelpBubble } from './HelpBubble';
 export { GameRow } from './GameRow';
 export { GameTable } from './GameTable';
 export { Header } from './Header';

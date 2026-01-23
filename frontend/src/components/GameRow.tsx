@@ -13,6 +13,7 @@ import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
+import { HelpBubble } from './HelpBubble';
 
 interface GameRowProps {
   game: Game;
@@ -165,7 +166,7 @@ export function GameRow({
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
       <td className="px-4 py-3">
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
           <GameActions
             game={game}
             currentUserId={currentUserId}
@@ -175,24 +176,30 @@ export function GameRow({
             onRemoveBringer={onRemoveBringer}
           />
           
-          {/* Delete button - only for owner, only when game is empty */}
+          {/* Delete button - only for owner, icon only to save space */}
           {isOwner && (
-            <button
-              onClick={() => onDeleteGame?.(game.id)}
-              disabled={!canDelete}
-              title={
-                canDelete
-                  ? 'Spiel löschen'
-                  : 'Entferne zuerst alle Mitspieler und Bringer'
-              }
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                canDelete
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              🗑️ Löschen
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => onDeleteGame?.(game.id)}
+                disabled={!canDelete}
+                aria-label="Spiel löschen"
+                className={`p-1.5 rounded transition-colors ${
+                  canDelete
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                🗑️
+              </button>
+              <HelpBubble
+                text={
+                  canDelete
+                    ? 'Spiel löschen'
+                    : 'Entferne zuerst alle Mitspieler und Bringer'
+                }
+                position="top-right"
+              />
+            </div>
           )}
         </div>
       </td>

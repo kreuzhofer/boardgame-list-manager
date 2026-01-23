@@ -14,6 +14,7 @@ import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
+import { HelpBubble } from './HelpBubble';
 
 interface GameCardProps {
   game: Game;
@@ -182,35 +183,43 @@ export function GameCard({
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
       <div className="pt-3 border-t border-gray-200">
-        <GameActions
-          game={game}
-          currentUserId={currentUserId}
-          onAddPlayer={onAddPlayer}
-          onAddBringer={onAddBringer}
-          onRemovePlayer={onRemovePlayer}
-          onRemoveBringer={onRemoveBringer}
-          isMobile={true}
-        />
-        
-        {/* Delete button - only for owner, only when game is empty */}
-        {isOwner && (
-          <button
-            onClick={() => onDeleteGame?.(game.id)}
-            disabled={!canDelete}
-            title={
-              canDelete
-                ? 'Spiel löschen'
-                : 'Entferne zuerst alle Mitspieler und Bringer'
-            }
-            className={`mt-3 w-full text-sm px-4 py-2 rounded transition-colors min-h-[44px] ${
-              canDelete
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            🗑️ Spiel löschen
-          </button>
-        )}
+        <div className="flex gap-3 flex-wrap items-center">
+          <GameActions
+            game={game}
+            currentUserId={currentUserId}
+            onAddPlayer={onAddPlayer}
+            onAddBringer={onAddBringer}
+            onRemovePlayer={onRemovePlayer}
+            onRemoveBringer={onRemoveBringer}
+            isMobile={true}
+          />
+          
+          {/* Delete button - only for owner, icon only to save space */}
+          {isOwner && (
+            <div className="relative">
+              <button
+                onClick={() => onDeleteGame?.(game.id)}
+                disabled={!canDelete}
+                aria-label="Spiel löschen"
+                className={`p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${
+                  canDelete
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                🗑️
+              </button>
+              <HelpBubble
+                text={
+                  canDelete
+                    ? 'Spiel löschen'
+                    : 'Entferne zuerst alle Mitspieler und Bringer'
+                }
+                position="top-right"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

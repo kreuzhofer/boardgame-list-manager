@@ -1,6 +1,12 @@
 import { userRepository, UserRepository, UserEntity } from '../repositories/user.repository';
 
 /**
+ * Maximum allowed length for usernames (after trimming whitespace)
+ * Requirements: 2.1, 2.2, 2.3, 3.1, 3.2
+ */
+export const MAX_USERNAME_LENGTH = 30;
+
+/**
  * API response type for User
  */
 export interface User {
@@ -28,16 +34,19 @@ export class UserService {
   }
 
   /**
-   * Validates that a name is not empty or whitespace-only
+   * Validates that a name is not empty or whitespace-only and does not exceed maximum length
    * @param name - The name to validate
-   * @throws Error with German message if name is empty or whitespace-only
+   * @throws Error with German message if name is empty, whitespace-only, or exceeds max length
    *
-   * Requirements: 3.5, 3.8
+   * Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.5, 3.8
    */
   private validateName(name: string): string {
     const trimmedName = name.trim();
     if (!trimmedName) {
       throw new Error('Bitte einen Namen eingeben.');
+    }
+    if (trimmedName.length > MAX_USERNAME_LENGTH) {
+      throw new Error('Der Name darf maximal 30 Zeichen lang sein.');
     }
     return trimmedName;
   }

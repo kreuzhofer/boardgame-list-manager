@@ -3,11 +3,14 @@
  * Modal dialog for first-time users or name changes
  * All UI text in German (Requirement 9.1)
  * Uses createPortal per workspace guidelines
- * Requirements: 2.1, 2.2, 2.4, 2.5
+ * Requirements: 2.1, 2.2, 2.4, 2.5, 1.1, 1.2, 1.3, 1.4 (009-username-length-limit)
  */
 
 import { useState, useCallback, FormEvent, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+
+/** Maximum allowed length for usernames (Requirements 3.1, 4.1) */
+export const MAX_USERNAME_LENGTH = 30;
 
 interface NamePromptProps {
   /** Callback when name is submitted */
@@ -46,6 +49,12 @@ export function NamePrompt({
         return;
       }
 
+      // Validate length limit (Requirement 1.2, 1.3)
+      if (trimmedName.length > MAX_USERNAME_LENGTH) {
+        setError('Der Name darf maximal 30 Zeichen lang sein.');
+        return;
+      }
+
       setError(null);
       onNameSubmitted(trimmedName);
     },
@@ -54,14 +63,30 @@ export function NamePrompt({
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setName(e.target.value);
-      // Clear error when user starts typing
-      if (error) {
+      const newValue = e.target.value;
+      setName(newValue);
+      
+      // Clear error when user starts typing, but show length error if exceeded (Requirement 1.4)
+      const trimmedLength = newValue.trim().length;
+      if (trimmedLength > MAX_USERNAME_LENGTH) {
+        setError('Der Name darf maximal 30 Zeichen lang sein.');
+      } else if (error) {
         setError(null);
       }
     },
     [error]
   );
+
+  // Determine if submit should be disabled (Requirement 1.3)
+  const isSubmitDisabled = !name.trim() || name.trim().length > MAX_USERNAME_LENGTH;
+
+  // Character counter color based on length (Requirement 1.1)
+  const getCounterColor = () => {
+    const length = name.length;
+    if (length > MAX_USERNAME_LENGTH) return 'text-red-600';
+    if (length >= MAX_USERNAME_LENGTH - 5) return 'text-yellow-600';
+    return 'text-gray-500';
+  };
 
   const modalContent = (
     <div
@@ -102,13 +127,22 @@ export function NamePrompt({
                   ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300'
               }`}
-              aria-describedby={error ? 'name-error' : undefined}
+              aria-describedby={error ? 'name-error' : 'char-counter'}
               aria-invalid={error ? 'true' : 'false'}
+              maxLength={MAX_USERNAME_LENGTH + 10} // Allow some overflow for UX
             />
+            {/* Character counter (Requirement 1.1) */}
+            <p
+              id="char-counter"
+              className={`mt-1 text-sm ${getCounterColor()}`}
+              aria-live="polite"
+            >
+              {name.length}/{MAX_USERNAME_LENGTH}
+            </p>
             {error && (
               <p
                 id="name-error"
-                className="mt-2 text-sm text-red-600"
+                className="mt-1 text-sm text-red-600"
                 role="alert"
               >
                 {error}
@@ -129,7 +163,12 @@ export function NamePrompt({
             )}
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              disabled={isSubmitDisabled}
+              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                isSubmitDisabled
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
               Speichern
             </button>

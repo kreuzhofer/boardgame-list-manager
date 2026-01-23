@@ -15,8 +15,8 @@ describe('UserRepository', () => {
   const createdUserIds: string[] = [];
   const createdGameIds: string[] = [];
 
-  // Test data prefix to identify test records
-  const TEST_PREFIX = 'TEST_USER_REPO_';
+  // Test data prefix to identify test records (short to fit within 30 char limit)
+  const TEST_PREFIX = 'UR_';
 
   beforeAll(() => {
     repository = userRepository;
@@ -42,9 +42,14 @@ describe('UserRepository', () => {
   });
 
   /**
-   * Helper to create a unique test user name
+   * Helper to create a unique test user name (max 30 chars for VARCHAR(30) constraint)
+   * Format: UR_{base}_{random} - keeps total under 30 chars
    */
-  const uniqueName = (base: string) => `${TEST_PREFIX}${base}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const uniqueName = (base: string) => {
+    const shortBase = base.slice(0, 10);
+    const random = Math.random().toString(36).slice(2, 8);
+    return `${TEST_PREFIX}${shortBase}_${random}`.slice(0, 30);
+  };
 
   describe('findAll', () => {
     /**
@@ -53,10 +58,11 @@ describe('UserRepository', () => {
      */
     it('should return all users sorted by name ascending', async () => {
       // Create test users with names that will sort in a specific order
-      const timestamp = Date.now();
-      const nameA = `${TEST_PREFIX}AAA_${timestamp}`;
-      const nameB = `${TEST_PREFIX}BBB_${timestamp}`;
-      const nameC = `${TEST_PREFIX}CCC_${timestamp}`;
+      // Use short random suffix to stay under 30 chars
+      const suffix = Math.random().toString(36).slice(2, 8);
+      const nameA = `UR_AAA_${suffix}`;
+      const nameB = `UR_BBB_${suffix}`;
+      const nameC = `UR_CCC_${suffix}`;
 
       // Create in non-alphabetical order
       const userB = await repository.create(nameB);
@@ -72,7 +78,7 @@ describe('UserRepository', () => {
       const users = await repository.findAll();
 
       // Filter to only our test users
-      const testUsers = users.filter((u) => u.name.startsWith(`${TEST_PREFIX}`) && u.name.includes(`${timestamp}`));
+      const testUsers = users.filter((u) => u.name.startsWith('UR_') && u.name.includes(suffix));
 
       // Verify they are sorted alphabetically
       expect(testUsers.length).toBe(3);

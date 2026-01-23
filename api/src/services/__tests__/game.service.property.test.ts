@@ -19,8 +19,9 @@ const gameNameArbitrary = fc
   .filter((s) => s.trim().length > 0)
   .map((s) => s.trim());
 
+// Username arbitrary limited to 15 chars to allow room for unique suffix (max 30 total)
 const userNameArbitrary = fc
-  .string({ minLength: 1, maxLength: 100 })
+  .string({ minLength: 1, maxLength: 15 })
   .filter((s) => s.trim().length > 0)
   .map((s) => s.trim());
 
@@ -61,10 +62,12 @@ describe('GameService Property Tests', () => {
   });
 
   /**
-   * Helper to create a unique user for testing
+   * Helper to create a unique user for testing (max 30 chars for VARCHAR(30) constraint)
    */
   const createTestUser = async (baseName: string) => {
-    const uniqueName = `${baseName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const shortBase = baseName.slice(0, 15);
+    const random = Math.random().toString(36).slice(2, 8);
+    const uniqueName = `${shortBase}_${random}`.slice(0, 30);
     const user = await userService.createUser(uniqueName);
     createdUserIds.push(user.id);
     return user;

@@ -104,6 +104,15 @@ router.post('/', async (req: Request, res: Response) => {
           },
         });
       }
+      // Handle name too long
+      if (error.message === 'Der Name darf maximal 30 Zeichen lang sein.') {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: error.message,
+          },
+        });
+      }
       // Handle duplicate name
       if (error.message === 'Ein Benutzer mit diesem Namen existiert bereits.') {
         return res.status(409).json({
@@ -159,6 +168,15 @@ router.patch('/:id', async (req: Request, res: Response) => {
     if (error instanceof Error) {
       // Handle empty/whitespace name
       if (error.message === 'Bitte einen Namen eingeben.') {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: error.message,
+          },
+        });
+      }
+      // Handle name too long
+      if (error.message === 'Der Name darf maximal 30 Zeichen lang sein.') {
         return res.status(400).json({
           error: {
             code: 'VALIDATION_ERROR',

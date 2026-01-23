@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { UserService } from '../user.service';
+import { UserService, MAX_USERNAME_LENGTH } from '../user.service';
 import { UserRepository, UserEntity } from '../../repositories/user.repository';
 
 /**
@@ -378,6 +378,116 @@ describe('UserService', () => {
       await expect(userService.deleteUser('user-id')).rejects.toThrow(
         'Benutzer nicht gefunden.'
       );
+    });
+  });
+
+  /**
+   * Unit tests for username length validation edge cases
+   * Tests boundary conditions and whitespace handling for the 30-character limit
+   *
+   * Validates: Requirements 2.3, 3.2, 3.3
+   */
+  describe('Username Length Validation Edge Cases', () => {
+    /**
+     * Test that a name with exactly 30 characters is accepted (boundary test)
+     * Validates: Requirement 3.3 (exactly 30 characters is valid)
+     */
+    it('should accept a name with exactly 30 characters', async () => {
+      const exactlyThirtyChars = 'A'.repeat(MAX_USERNAME_LENGTH); // 30 characters
+      expect(exactlyThirtyChars.length).toBe(30);
+
+      const mockEntity = createMockUserEntity('user-id', exactlyThirtyChars);
+      mockRepository.findByName.mockResolvedValue(null);
+      mockRepository.create.mockResolvedValue(mockEntity);
+
+      const result = await userService.createUser(exactlyThirtyChars);
+
+      expect(result).toEqual({ id: 'user-id', name: exactlyThirtyChars });
+      expect(mockRepository.create).toHaveBeenCalledWith(exactlyThirtyChars);
+    });
+
+    /**
+     * Test that a name with 31 characters is rejected (boundary test)
+     * Validates: Requirements 2.1, 2.2
+     */
+    it('should reject a name with 31 characters', async () => {
+      const thirtyOneChars = 'A'.repeat(MAX_USERNAME_LENGTH + 1); // 31 characters
+      expect(thirtyOneChars.length).toBe(31);
+
+      await expect(userService.createUser(thirtyOneChars)).rejects.toThrow(
+        'Der Name darf maximal 30 Zeichen lang sein.'
+      );
+      expect(mockRepository.findByName).not.toHaveBeenCalled();
+      expect(mockRepository.create).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test that whitespace padding with valid trimmed length is accepted
+     * Validates: Requirements 2.3, 3.2 (trimmed length validation)
+     */
+    it('should accept a name with whitespace padding that trims to valid length', async () => {
+      const validName = 'ValidName'; // 9 characters
+      const paddedName = `  ${validName}  `; // 13 characters total, but 9 after trim
+      expect(paddedName.trim().length).toBeLessThanOrEqual(MAX_USERNAME_LENGTH);
+
+      const mockEntity = createMockUserEntity('user-id', validName);
+      mockRepository.findByName.mockResolvedValue(null);
+      mockRepository.create.mockResolvedValue(mockEntity);
+
+      const result = await userService.createUser(paddedName);
+
+      expect(result).toEqual({ id: 'user-id', name: validName });
+      expect(mockRepository.create).toHaveBeenCalledWith(validName);
+    });
+
+    /**
+     * Test that whitespace padding with invalid trimmed length is rejected
+     * Validates: Requirements 2.3, 3.2 (trimmed length validation)
+     */
+    it('should reject a name with whitespace padding that trims to invalid length', async () => {
+      const invalidName = 'A'.repeat(MAX_USERNAME_LENGTH + 1); // 31 characters
+      const paddedName = `  ${invalidName}  `; // 35 characters total, 31 after trim
+      expect(paddedName.trim().length).toBe(31);
+
+      await expect(userService.createUser(paddedName)).rejects.toThrow(
+        'Der Name darf maximal 30 Zeichen lang sein.'
+      );
+      expect(mockRepository.findByName).not.toHaveBeenCalled();
+      expect(mockRepository.create).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test that updateUser also rejects names with 31 characters
+     * Validates: Requirement 2.2 (updateUser validation)
+     */
+    it('should reject updateUser with 31 characters', async () => {
+      const thirtyOneChars = 'A'.repeat(MAX_USERNAME_LENGTH + 1); // 31 characters
+
+      await expect(userService.updateUser('user-id', thirtyOneChars)).rejects.toThrow(
+        'Der Name darf maximal 30 Zeichen lang sein.'
+      );
+      expect(mockRepository.findById).not.toHaveBeenCalled();
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test that updateUser accepts names with exactly 30 characters
+     * Validates: Requirement 3.3 (exactly 30 characters is valid)
+     */
+    it('should accept updateUser with exactly 30 characters', async () => {
+      const exactlyThirtyChars = 'B'.repeat(MAX_USERNAME_LENGTH); // 30 characters
+      expect(exactlyThirtyChars.length).toBe(30);
+
+      const existingUser = createMockUserEntity('user-id', 'Old Name');
+      const updatedUser = createMockUserEntity('user-id', exactlyThirtyChars);
+      mockRepository.findById.mockResolvedValue(existingUser);
+      mockRepository.findByName.mockResolvedValue(null);
+      mockRepository.update.mockResolvedValue(updatedUser);
+
+      const result = await userService.updateUser('user-id', exactlyThirtyChars);
+
+      expect(result).toEqual({ id: 'user-id', name: exactlyThirtyChars });
+      expect(mockRepository.update).toHaveBeenCalledWith('user-id', exactlyThirtyChars);
     });
   });
 });

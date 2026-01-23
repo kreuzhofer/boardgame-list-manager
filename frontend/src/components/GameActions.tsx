@@ -81,7 +81,7 @@ export function GameActions({
     : 'Mitspielen: Tippe um anzugeben, dass du dieses Spiel spielen möchtest.';
 
   return (
-    <div className={`flex gap-2 flex-wrap ${isMobile ? 'gap-3' : ''}`}>
+    <div className={`flex ${isMobile ? 'gap-3 flex-wrap' : 'gap-2 flex-nowrap'}`}>
       {/* Bringer toggle button - always first */}
       <div className="relative">
         <button
@@ -95,7 +95,7 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
+              <img src="/package.svg" alt="Mitbringen" className="w-6 h-6" />
               {isBringer && <span className="ml-0.5">✓</span>}
             </>
           ) : (

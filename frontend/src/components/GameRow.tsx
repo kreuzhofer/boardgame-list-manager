@@ -126,7 +126,7 @@ export function GameRow({
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
       <td className="px-4 py-3">
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-2 flex-nowrap items-center">
           <GameActions
             game={game}
             currentUserId={currentUserId}

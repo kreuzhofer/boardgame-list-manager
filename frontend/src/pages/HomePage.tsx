@@ -92,7 +92,10 @@ export function HomePage({ user }: HomePageProps) {
   // Handle game added from UnifiedSearchBar
   const handleGameAdded = useCallback((game: Game) => {
     setGames((prev) => [...prev, game]);
-    setScrollToGameId(game.id);
+    // Small delay to ensure the new game is rendered in the DOM before scrolling
+    setTimeout(() => {
+      setScrollToGameId(game.id);
+    }, 100);
   }, []);
 
   // Handle scroll to game from dropdown click

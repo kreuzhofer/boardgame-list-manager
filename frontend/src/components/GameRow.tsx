@@ -44,11 +44,28 @@ export function GameRow({
   const isWunsch = game.status === 'wunsch';
   const isOwner = game.owner?.id === currentUserId;
   const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
+  const hasScrolledRef = useRef(false);
 
   useEffect(() => {
-    if (scrollIntoView && rowRef.current) {
-      rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      onScrolledIntoView?.();
+    // Reset the scroll flag when scrollIntoView becomes false
+    if (!scrollIntoView) {
+      hasScrolledRef.current = false;
+      return;
+    }
+
+    // Only scroll once per scrollIntoView=true
+    if (scrollIntoView && rowRef.current && !hasScrolledRef.current) {
+      hasScrolledRef.current = true;
+      
+      // Use requestAnimationFrame to ensure the element is fully rendered
+      requestAnimationFrame(() => {
+        rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Delay clearing the scroll target to allow the animation to complete
+        // and keep the visual highlight visible for a moment
+        setTimeout(() => {
+          onScrolledIntoView?.();
+        }, 1500);
+      });
     }
   }, [scrollIntoView, onScrolledIntoView]);
 

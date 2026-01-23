@@ -95,8 +95,15 @@ class BggCache {
         });
 
         parser.on('end', () => {
-          // Sort by rank for efficient search results
-          this.games = games.sort((a, b) => a.rank - b.rank);
+          // Sort by yearPublished descending (newest first), nulls last
+          this.games = games.sort((a, b) => {
+            // Null years go to the end
+            if (a.yearPublished === null && b.yearPublished === null) return 0;
+            if (a.yearPublished === null) return 1;
+            if (b.yearPublished === null) return -1;
+            // Descending order (newest first)
+            return b.yearPublished - a.yearPublished;
+          });
           this.loaded = true;
           console.log(`BGG cache loaded: ${this.games.length} games`);
           resolve();
@@ -156,9 +163,17 @@ class BggCache {
 
   /**
    * Load games directly (for testing purposes)
+   * Sorts by yearPublished descending (newest first), nulls last
    */
   loadGames(games: BggGame[]): void {
-    this.games = games.sort((a, b) => a.rank - b.rank);
+    this.games = games.sort((a, b) => {
+      // Null years go to the end
+      if (a.yearPublished === null && b.yearPublished === null) return 0;
+      if (a.yearPublished === null) return 1;
+      if (b.yearPublished === null) return -1;
+      // Descending order (newest first)
+      return b.yearPublished - a.yearPublished;
+    });
     this.loaded = true;
   }
 }

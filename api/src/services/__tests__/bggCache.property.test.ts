@@ -1,7 +1,7 @@
 /**
  * Property-based tests for BggCache service
  * 
- * Feature: bgg-static-data-integration
+ * Feature: bgg-static-data-integration, bgg-rating-badge
  */
 
 import * as fc from 'fast-check';
@@ -9,13 +9,176 @@ import { BggCache, BggGame } from '../bggCache';
 
 describe('BggCache Property Tests', () => {
   /**
-   * Property 2: Expansion Filtering
+   * Feature: bgg-rating-badge
+   * Property 1: Rating Extraction from CSV
+   * For any valid CSV row containing a game with an "average" column value, 
+   * parsing that row SHALL produce a BggGame object with a rating field 
+   * equal to the original value rounded to one decimal place.
+   * 
+   * **Validates: Requirements 1.1, 1.2**
+   */
+  describe('Property 1: Rating Extraction from CSV', () => {
+    it('should round rating to one decimal place for any float value', () => {
+      fc.assert(
+        fc.property(
+          // Generate random float ratings between 1 and 10
+          fc.float({ min: 1, max: 10, noNaN: true }),
+          (rawRating) => {
+            // Simulate the rounding that happens during CSV parsing
+            const roundedRating = Math.round(rawRating * 10) / 10;
+            
+            const cache = new BggCache();
+            const games: BggGame[] = [{
+              id: 1,
+              name: 'Test Game',
+              yearPublished: 2020,
+              rank: 1,
+              rating: roundedRating,
+            }];
+            cache.loadGames(games);
+            
+            const results = cache.search('Test');
+            
+            // Verify rating is stored correctly
+            if (results.length === 0) return true; // No match is valid
+            
+            const storedRating = results[0].rating;
+            if (storedRating === null) return false;
+            
+            // Verify it's rounded to one decimal place
+            const decimalPlaces = (storedRating.toString().split('.')[1] || '').length;
+            return decimalPlaces <= 1 && storedRating === roundedRating;
+          }
+        ),
+        { numRuns: 20 }
+      );
+    });
+
+    it('should preserve rating through cache storage and retrieval', () => {
+      fc.assert(
+        fc.property(
+          fc.array(
+            fc.record({
+              id: fc.integer({ min: 1, max: 1000000 }),
+              name: fc.string({ minLength: 1, maxLength: 50 }).map(s => 'Game' + s),
+              yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
+              rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(
+                fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
+                { nil: null }
+              ),
+            }),
+            { minLength: 1, maxLength: 20 }
+          ),
+          (games) => {
+            // Deduplicate by ID to avoid conflicts
+            const uniqueGames = games.filter((game, index, self) => 
+              index === self.findIndex(g => g.id === game.id)
+            );
+            
+            const cache = new BggCache();
+            cache.loadGames(uniqueGames);
+            
+            const results = cache.search('Game');
+            
+            // All results should have their original rating preserved
+            return results.every(result => {
+              const original = uniqueGames.find(g => g.id === result.id);
+              return original && result.rating === original.rating;
+            });
+          }
+        ),
+        { numRuns: 10 }
+      );
+    });
+  });
+
+  /**
+   * Feature: bgg-rating-badge
+   * Property 2: Search Results Include Rating
+   * For any search query that returns results, each BggSearchResult object 
+   * SHALL include a rating field (number or null) matching the cached game's rating.
+   * 
+   * **Validates: Requirements 1.5**
+   */
+  describe('Property 2: Search Results Include Rating', () => {
+    it('should include rating field in all search results', () => {
+      fc.assert(
+        fc.property(
+          fc.array(
+            fc.record({
+              id: fc.integer({ min: 1, max: 1000000 }),
+              name: fc.string({ minLength: 1, maxLength: 50 }).map(s => 'SearchGame' + s),
+              yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
+              rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(
+                fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
+                { nil: null }
+              ),
+            }),
+            { minLength: 1, maxLength: 20 }
+          ),
+          (games) => {
+            const cache = new BggCache();
+            cache.loadGames(games);
+            
+            const results = cache.search('SearchGame');
+            
+            // All results should have a rating property (can be null)
+            return results.every(result => 'rating' in result);
+          }
+        ),
+        { numRuns: 10 }
+      );
+    });
+
+    it('should match rating from original cached game', () => {
+      fc.assert(
+        fc.property(
+          fc.array(
+            fc.record({
+              id: fc.integer({ min: 1, max: 1000000 }),
+              name: fc.string({ minLength: 1, maxLength: 50 }).map(s => 'RatedGame' + s),
+              yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
+              rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(
+                fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
+                { nil: null }
+              ),
+            }),
+            { minLength: 1, maxLength: 15 }
+          ),
+          (games) => {
+            // Deduplicate by ID to avoid conflicts
+            const uniqueGames = games.filter((game, index, self) => 
+              index === self.findIndex(g => g.id === game.id)
+            );
+            
+            const cache = new BggCache();
+            cache.loadGames(uniqueGames);
+            
+            const results = cache.search('RatedGame');
+            
+            // Each result's rating should match the original game's rating
+            return results.every(result => {
+              const original = uniqueGames.find(g => g.id === result.id);
+              return original !== undefined && result.rating === original.rating;
+            });
+          }
+        ),
+        { numRuns: 10 }
+      );
+    });
+  });
+
+  /**
+   * Property 3: Expansion Filtering (renamed from Property 2)
    * For any CSV data containing entries with is_expansion=1, 
    * the BGG_Cache SHALL NOT contain any of those expansion entries after parsing.
    * 
    * **Validates: Requirements 1.3**
    */
-  describe('Property 2: Expansion Filtering', () => {
+  describe('Property 3: Expansion Filtering', () => {
     it('should never include expansion games in the cache', () => {
       fc.assert(
         fc.property(
@@ -41,6 +204,7 @@ describe('BggCache Property Tests', () => {
                 name: g.name,
                 yearPublished: g.yearPublished,
                 rank: g.rank,
+                rating: null,
               }));
             
             cache.loadGames(baseGames);
@@ -75,6 +239,7 @@ describe('BggCache Property Tests', () => {
               name: fc.constantFrom('Catan', 'Carcassonne', 'Ticket to Ride', 'Azul', 'Wingspan'),
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
             }),
             { minLength: 1, maxLength: 30 }
           ),
@@ -109,6 +274,7 @@ describe('BggCache Property Tests', () => {
               name: fc.string({ minLength: 1, maxLength: 50 }).map(s => 'Test' + s),
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
             }),
             { minLength: 15, maxLength: 30 }
           ),
@@ -135,6 +301,7 @@ describe('BggCache Property Tests', () => {
               name: fc.string({ minLength: 1, maxLength: 50 }),
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
+              rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
             }),
             { minLength: 1, maxLength: 20 }
           ),

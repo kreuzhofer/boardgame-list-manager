@@ -2,6 +2,7 @@
  * Unit tests for BggService
  * 
  * Requirements: 2.1, 2.4, 2.5
+ * Feature: bgg-static-data-integration, bgg-rating-badge
  */
 
 import { BggService } from '../bggService';
@@ -35,56 +36,107 @@ describe('BggService', () => {
      * Requirement 2.4: Return empty array for queries < 2 characters
      */
     it('should return empty array for empty query', () => {
-      const results = service.searchGames('');
+      const response = service.searchGames('');
       
-      expect(results).toEqual([]);
+      expect(response).toEqual({ results: [], hasMore: false });
       expect(mockBggCache.search).not.toHaveBeenCalled();
     });
 
     it('should return empty array for single character query', () => {
-      const results = service.searchGames('a');
+      const response = service.searchGames('a');
       
-      expect(results).toEqual([]);
+      expect(response).toEqual({ results: [], hasMore: false });
       expect(mockBggCache.search).not.toHaveBeenCalled();
     });
 
     /**
-     * Requirement 2.5: Response includes id, name, yearPublished
+     * Requirement 2.5: Response includes id, name, yearPublished, rating
      */
     it('should return results with correct structure for valid query', () => {
       mockBggCache.search.mockReturnValue([
-        { id: 123, name: 'Catan', yearPublished: 1995, rank: 50 },
-        { id: 456, name: 'Carcassonne', yearPublished: 2000, rank: 100 },
+        { id: 123, name: 'Catan', yearPublished: 1995, rank: 50, rating: 7.2 },
+        { id: 456, name: 'Carcassonne', yearPublished: 2000, rank: 100, rating: 7.4 },
       ]);
 
-      const results = service.searchGames('ca');
+      const response = service.searchGames('ca');
 
-      expect(results).toEqual([
-        { id: 123, name: 'Catan', yearPublished: 1995 },
-        { id: 456, name: 'Carcassonne', yearPublished: 2000 },
+      expect(response.results).toEqual([
+        { id: 123, name: 'Catan', yearPublished: 1995, rating: 7.2 },
+        { id: 456, name: 'Carcassonne', yearPublished: 2000, rating: 7.4 },
       ]);
-      expect(mockBggCache.search).toHaveBeenCalledWith('ca', 10);
+      expect(mockBggCache.search).toHaveBeenCalledWith('ca', 31);
     });
 
     it('should handle null yearPublished', () => {
       mockBggCache.search.mockReturnValue([
-        { id: 123, name: 'Test Game', yearPublished: null, rank: 50 },
+        { id: 123, name: 'Test Game', yearPublished: null, rank: 50, rating: 6.5 },
       ]);
 
-      const results = service.searchGames('test');
+      const response = service.searchGames('test');
 
-      expect(results).toEqual([
-        { id: 123, name: 'Test Game', yearPublished: null },
+      expect(response.results).toEqual([
+        { id: 123, name: 'Test Game', yearPublished: null, rating: 6.5 },
       ]);
     });
 
-    it('should return empty array when cache returns no matches', () => {
+    /**
+     * Feature: bgg-rating-badge
+     * Requirement 1.5: Search results include rating field
+     */
+    it('should include rating in search results', () => {
+      mockBggCache.search.mockReturnValue([
+        { id: 123, name: 'Catan', yearPublished: 1995, rank: 50, rating: 7.2 },
+      ]);
+
+      const response = service.searchGames('catan');
+
+      expect(response.results[0]).toHaveProperty('rating', 7.2);
+    });
+
+    it('should handle null rating in search results', () => {
+      mockBggCache.search.mockReturnValue([
+        { id: 123, name: 'Test Game', yearPublished: 2020, rank: 50, rating: null },
+      ]);
+
+      const response = service.searchGames('test');
+
+      expect(response.results[0]).toHaveProperty('rating', null);
+    });
+
+    it('should return empty results when cache returns no matches', () => {
       mockBggCache.search.mockReturnValue([]);
 
-      const results = service.searchGames('xyz');
+      const response = service.searchGames('xyz');
 
-      expect(results).toEqual([]);
-      expect(mockBggCache.search).toHaveBeenCalledWith('xyz', 10);
+      expect(response).toEqual({ results: [], hasMore: false });
+      expect(mockBggCache.search).toHaveBeenCalledWith('xyz', 31);
+    });
+
+    it('should set hasMore to true when more results exist', () => {
+      // Return 31 results to trigger hasMore
+      const manyResults = Array.from({ length: 31 }, (_, i) => ({
+        id: i + 1,
+        name: `Test Game ${i}`,
+        yearPublished: 2020,
+        rank: i + 1,
+        rating: 7.0,
+      }));
+      mockBggCache.search.mockReturnValue(manyResults);
+
+      const response = service.searchGames('test');
+
+      expect(response.hasMore).toBe(true);
+      expect(response.results.length).toBe(30);
+    });
+
+    it('should set hasMore to false when no more results exist', () => {
+      mockBggCache.search.mockReturnValue([
+        { id: 1, name: 'Test Game', yearPublished: 2020, rank: 1, rating: 7.0 },
+      ]);
+
+      const response = service.searchGames('test');
+
+      expect(response.hasMore).toBe(false);
     });
   });
 

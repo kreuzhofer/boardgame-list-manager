@@ -48,13 +48,15 @@ describe('GameService', () => {
     players: PlayerEntity[] = [],
     bringers: BringerEntity[] = [],
     bggId: number | null = null,
-    yearPublished: number | null = null
+    yearPublished: number | null = null,
+    bggRating: number | null = null
   ): GameEntity => ({
     id,
     name,
     ownerId,
     bggId,
     yearPublished,
+    bggRating,
     owner: ownerId && ownerName ? createMockUserEntity(ownerId, ownerName) : null,
     players,
     bringers,

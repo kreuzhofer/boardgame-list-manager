@@ -16,7 +16,7 @@ interface BggRatingBadgeProps {
  * 7: Light blue
  * 8-10: Green shades
  */
-function getRatingColor(rating: number): string {
+export function getRatingColor(rating: number): string {
   const roundedRating = Math.floor(rating);
   
   switch (roundedRating) {

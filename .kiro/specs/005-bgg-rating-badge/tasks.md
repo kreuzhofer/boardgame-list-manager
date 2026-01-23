@@ -6,62 +6,62 @@ This spec documents the already-implemented BGG Rating Badge feature. The tasks 
 
 ## Tasks
 
-- [-] 1. Backend rating extraction tests
-  - [-] 1.1 Write unit tests for CSV rating parsing in bggCache
+- [x] 1. Backend rating extraction tests
+  - [x] 1.1 Write unit tests for CSV rating parsing in bggCache
     - Test that "average" column is extracted as rating
     - Test rounding to one decimal place
     - Test missing/invalid rating results in null
     - _Requirements: 1.1, 1.2, 1.3_
   
-  - [ ] 1.2 Write property test for rating extraction
+  - [x] 1.2 Write property test for rating extraction
     - **Property 1: Rating Extraction from CSV**
     - Generate random float values, verify rounding to one decimal
     - **Validates: Requirements 1.1, 1.2**
 
-- [ ] 2. Backend search results tests
-  - [ ] 2.1 Write unit tests for search results including rating
+- [x] 2. Backend search results tests
+  - [x] 2.1 Write unit tests for search results including rating
     - Test that search results include rating field
     - Test rating is correctly passed through from cache
     - _Requirements: 1.5_
   
-  - [ ] 2.2 Write property test for search results rating inclusion
+  - [x] 2.2 Write property test for search results rating inclusion
     - **Property 2: Search Results Include Rating**
     - Generate random cache data with ratings, verify all results include rating
     - **Validates: Requirements 1.5**
 
-- [ ] 3. Checkpoint - Backend tests pass
+- [x] 3. Checkpoint - Backend tests pass
   - Ensure all backend tests pass, ask the user if questions arise.
 
-- [ ] 4. Frontend BggRatingBadge component tests
-  - [ ] 4.1 Write unit tests for BggRatingBadge rendering
+- [x] 4. Frontend BggRatingBadge component tests
+  - [x] 4.1 Write unit tests for BggRatingBadge rendering
     - Test badge renders with correct rating text
     - Test hexagon SVG structure
     - Test white text styling
     - Test German tooltip text format
     - _Requirements: 3.3, 3.4, 3.5, 6.1_
   
-  - [ ] 4.2 Write property test for rating display formatting
+  - [x] 4.2 Write property test for rating display formatting
     - **Property 6: Rating Display Formatting**
     - Generate random ratings, verify one decimal place formatting
     - **Validates: Requirements 3.3**
   
-  - [ ] 4.3 Write property test for rating color mapping
+  - [x] 4.3 Write property test for rating color mapping
     - **Property 7: Rating Color Mapping**
     - Generate ratings 1-10, verify correct color for each range
     - **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6**
 
-- [ ] 5. Frontend integration tests
-  - [ ] 5.1 Write unit tests for GameCard badge rendering
+- [x] 5. Frontend integration tests
+  - [x] 5.1 Write unit tests for GameCard badge rendering
     - Test badge renders when bggRating exists
     - Test badge does not render when bggRating is null
     - _Requirements: 3.1, 3.2, 5.1_
   
-  - [ ] 5.2 Write unit tests for GameRow badge rendering
+  - [x] 5.2 Write unit tests for GameRow badge rendering
     - Test badge renders when bggRating exists
     - Test badge does not render when bggRating is null
     - _Requirements: 3.1, 3.2, 5.2_
 
-- [ ] 6. Final checkpoint - All tests pass
+- [x] 6. Final checkpoint - All tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

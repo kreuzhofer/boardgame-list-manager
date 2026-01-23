@@ -212,8 +212,8 @@ export function UnifiedSearchBar({
 
   const handleInListeClick = useCallback((gameId: string) => {
     setIsDropdownOpen(false);
-    setQuery('');
-    setSelectedBggItem(null);
+    // Don't clear query here - parent will clear via clearTrigger after setting scroll target
+    // This ensures the list is unfiltered before scrolling
     onScrollToGame(gameId);
   }, [onScrollToGame]);
 
@@ -335,7 +335,7 @@ export function UnifiedSearchBar({
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4">
           {/* Search input with dropdown */}
-          <div ref={containerRef} className="relative">
+          <div ref={containerRef} className="relative max-w-xl">
             <label
               htmlFor="unified-search-input"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -434,7 +434,7 @@ export function UnifiedSearchBar({
 
             {/* Inline no results message */}
             {showNoResultsMessage && isDropdownOpen && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500">
                 Keine Treffer
               </span>
             )}

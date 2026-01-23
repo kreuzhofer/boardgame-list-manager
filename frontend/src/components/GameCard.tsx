@@ -6,7 +6,7 @@
  * Requirement 6.4: Touch-friendly interactions on mobile
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Game, Player, Bringer } from '../types';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
@@ -28,27 +28,29 @@ interface GameCardProps {
   isHighlighted?: boolean;
 }
 
-/** Compact list display for mobile - shows max 2 names with +X overflow indicator */
+/** Compact list display for mobile - shows max 2 names with +X overflow indicator, expandable */
 function CompactList({ 
   items, 
   currentUserId, 
-  emptyText 
+  emptyText,
+  expanded,
 }: { 
   items: (Player | Bringer)[]; 
   currentUserId: string; 
   emptyText: string;
+  expanded: boolean;
 }) {
   if (items.length === 0) {
     return <span className="text-gray-400 italic text-sm">{emptyText}</span>;
   }
 
-  const maxVisible = items.length > 2 ? 1 : 2;
+  const maxVisible = expanded ? items.length : 2;
   const visibleItems = items.slice(0, maxVisible);
   const overflowCount = items.length - maxVisible;
 
   return (
     <div className="text-sm">
-      {visibleItems.map((item, index) => (
+      {visibleItems.map((item) => (
         <div key={item.id} className="truncate">
           <span
             className={
@@ -59,13 +61,10 @@ function CompactList({
           >
             {item.user.name}
           </span>
-          {index < visibleItems.length - 1 && items.length <= 2 && (
-            <span className="text-gray-400">, </span>
-          )}
         </div>
       ))}
       {overflowCount > 0 && (
-        <span className="text-gray-500 text-xs">+{overflowCount} weitere</span>
+        <span className="text-blue-500 text-xs">+{overflowCount} weitere</span>
       )}
     </div>
   );
@@ -88,6 +87,16 @@ export function GameCard({
   const isOwner = game.owner?.id === currentUserId;
   const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
   const hasScrolledRef = useRef(false);
+  const [listsExpanded, setListsExpanded] = useState(false);
+  
+  // Check if either list has overflow (more than 2 items)
+  const hasOverflow = game.players.length > 2 || game.bringers.length > 2;
+
+  const handleListClick = () => {
+    if (hasOverflow) {
+      setListsExpanded(!listsExpanded);
+    }
+  };
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -138,8 +147,11 @@ export function GameCard({
         </h3>
       </div>
 
-      {/* Players and Bringers - Two column layout for mobile */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      {/* Players and Bringers - Two column layout for mobile, tappable to expand */}
+      <div 
+        className={`grid grid-cols-2 gap-3 mb-3 ${hasOverflow ? 'cursor-pointer' : ''}`}
+        onClick={handleListClick}
+      >
         {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
         <div className="min-w-0">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
@@ -149,6 +161,7 @@ export function GameCard({
             items={game.bringers} 
             currentUserId={currentUserId} 
             emptyText="Niemand"
+            expanded={listsExpanded}
           />
         </div>
 
@@ -161,6 +174,7 @@ export function GameCard({
             items={game.players} 
             currentUserId={currentUserId} 
             emptyText="Keine"
+            expanded={listsExpanded}
           />
         </div>
       </div>

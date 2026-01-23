@@ -102,8 +102,16 @@ export function HomePage({ user }: HomePageProps) {
   }, []);
 
   // Handle scroll to game from dropdown click
+  // Uses requestAnimationFrame to ensure the list is unfiltered before scrolling
   const handleScrollToGame = useCallback((gameId: string) => {
-    setScrollToGameId(gameId);
+    // Clear the search first
+    setSearchClearTrigger(prev => prev + 1);
+    // Wait for the next render cycle after filters are cleared, then scroll
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setScrollToGameId(gameId);
+      });
+    });
   }, []);
 
   // Clear scroll target after scroll

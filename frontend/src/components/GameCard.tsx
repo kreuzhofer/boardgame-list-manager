@@ -4,6 +4,7 @@
  * All UI text in German (Requirement 9.1)
  * Requirement 6.3: Mobile-optimized card/list layout for game list
  * Requirement 6.4: Touch-friendly interactions on mobile
+ * Requirement 8.1, 8.2, 8.3, 8.4: BGG game thumbnails with lazy loading
  */
 
 import { useRef, useEffect, useState } from 'react';
@@ -13,6 +14,7 @@ import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
+import { LazyBggImage } from './LazyBggImage';
 
 interface GameCardProps {
   game: Game;
@@ -142,11 +144,25 @@ export function GameCard({
       ref={cardRef}
       className={getCardClassName()}
     >
-      {/* Game Name */}
-      <div className="mb-2">
-        <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-          {game.name}
-        </h3>
+      {/* Game Name with Thumbnail - Requirement 8.1, 8.2, 8.3 */}
+      <div className="flex gap-3 mb-2">
+        {/* Thumbnail - micro size for mobile */}
+        {game.bggId && (
+          <div className="flex-shrink-0">
+            <LazyBggImage
+              bggId={game.bggId}
+              size="micro"
+              alt={game.name}
+              className="rounded"
+              enableZoom={true}
+            />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 text-lg leading-tight">
+            {game.name}
+          </h3>
+        </div>
       </div>
 
       {/* Players and Bringers - Two column layout for mobile, tappable to expand */}

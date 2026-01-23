@@ -1,6 +1,10 @@
 export { AuthService, authService } from './auth.service';
 export { BggCache, bggCache } from './bggCache';
 export type { BggGame } from './bggCache';
+export { BggFetchQueue, createBggFetchQueue } from './bggFetchQueue';
+export type { FetchFunction } from './bggFetchQueue';
+export { BggImageService, bggImageService } from './bggImageService';
+export type { ImageSize } from './bggImageService';
 export { BggService, bggService } from './bggService';
 export type { BggSearchResult } from './bggService';
 export { GameService, gameService } from './game.service';

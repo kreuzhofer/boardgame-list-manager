@@ -20,4 +20,9 @@ export const config = {
     port: parseInt(process.env.API_PORT || '3006', 10),
     corsOrigin: process.env.CORS_ORIGIN || `http://localhost:${process.env.FRONTEND_PORT || '8086'}`,
   },
+  bggImages: {
+    scraperApiKey: process.env.SCRAPER_API_KEY || '',
+    scrapeEnabled: process.env.BGG_SCRAPE_ENABLED !== 'false',
+    cacheDir: process.env.BGG_IMAGE_CACHE_DIR || '/app/cache/bgg-images',
+  },
 };

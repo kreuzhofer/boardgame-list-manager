@@ -26,6 +26,11 @@ services:
       - EVENT_NAME=${EVENT_NAME:-Brettspiel-Event}
       - API_PORT=3006
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8086}
+      - SCRAPER_API_KEY=${SCRAPER_API_KEY:-}
+      - BGG_SCRAPE_ENABLED=${BGG_SCRAPE_ENABLED:-true}
+      - BGG_IMAGE_CACHE_DIR=/app/cache/bgg-images
+    volumes:
+      - bgg_image_cache:/app/cache/bgg-images
     depends_on:
       postgresql:
         condition: service_healthy
@@ -48,3 +53,4 @@ services:
 
 volumes:
   postgres_data:
+  bgg_image_cache:

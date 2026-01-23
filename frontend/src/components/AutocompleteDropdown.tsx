@@ -3,10 +3,11 @@
  * Displays BGG search results in a dropdown below the input field
  * Shows 5 visible items with scroll support for up to 30 results
  * 
- * Requirements: 3.1, 3.3, 3.7, 3.8, 8.1
+ * Requirements: 3.1, 3.3, 3.7, 3.8, 6.1, 6.2, 8.1, 9.1
  */
 
 import type { BggSearchResult } from '../types';
+import { LazyBggImage } from './LazyBggImage';
 
 interface AutocompleteDropdownProps {
   /** Search results to display */
@@ -25,8 +26,8 @@ interface AutocompleteDropdownProps {
   onClose: () => void;
 }
 
-// Height for approximately 5 visible items (each item ~44px)
-const VISIBLE_HEIGHT = 220;
+// Height for approximately 5 visible items (each item ~80px with thumbnail)
+const VISIBLE_HEIGHT = 400;
 
 /**
  * Dropdown component showing BGG search results
@@ -103,15 +104,25 @@ export function AutocompleteDropdown({
               e.preventDefault();
             }}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900 truncate">
-                {result.name}
-              </span>
-              {result.yearPublished && (
-                <span className="ml-2 text-sm text-gray-500 flex-shrink-0">
-                  ({result.yearPublished})
+            <div className="flex items-center gap-3">
+              {/* Requirement 6.1: Display micro thumbnail as leading element */}
+              <LazyBggImage
+                bggId={result.id}
+                size="micro"
+                alt={result.name}
+                className="flex-shrink-0 rounded"
+                enableZoom={false}
+              />
+              <div className="flex items-center justify-between flex-1 min-w-0">
+                <span className="font-medium text-gray-900 truncate">
+                  {result.name}
                 </span>
-              )}
+                {result.yearPublished && (
+                  <span className="ml-2 text-sm text-gray-500 flex-shrink-0">
+                    ({result.yearPublished})
+                  </span>
+                )}
+              </div>
             </div>
           </button>
         ))}

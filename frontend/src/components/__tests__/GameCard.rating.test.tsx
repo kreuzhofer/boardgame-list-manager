@@ -66,8 +66,9 @@ describe('GameCard BggRatingBadge Integration', () => {
 
       render(<GameCard game={game} {...defaultProps} />);
 
-      // BGG button should exist but no rating badge
-      expect(screen.getByText('BGG')).toBeInTheDocument();
+      // When there's no rating, the BGG button with rating badge is not shown
+      // But the thumbnail should still be rendered (via LazyBggImage)
+      expect(screen.getByTestId('lazy-bgg-image-container')).toBeInTheDocument();
       expect(screen.queryByTitle(/BGG Bewertung/)).not.toBeInTheDocument();
     });
 

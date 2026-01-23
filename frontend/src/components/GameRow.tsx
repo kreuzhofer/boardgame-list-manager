@@ -14,6 +14,7 @@ import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
+import { LazyBggImage } from './LazyBggImage';
 
 interface GameRowProps {
   game: Game;
@@ -89,6 +90,25 @@ export function GameRow({
       ref={rowRef}
       className={getRowClassName()}
     >
+      {/* Thumbnail - Requirement 7.1: square200 thumbnail in first column (desktop) */}
+      <td className="px-2 py-2 w-16">
+        {game.bggId ? (
+          <LazyBggImage
+            bggId={game.bggId}
+            size="micro"
+            alt={game.name}
+            className="rounded"
+            enableZoom={true}
+          />
+        ) : (
+          <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C9.24 2 7 4.24 7 7c0 1.1.36 2.12.97 2.95L4 14.5V22h16v-7.5l-3.97-4.55c.61-.83.97-1.85.97-2.95 0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+            </svg>
+          </div>
+        )}
+      </td>
+
       {/* Game Name with Status Badge and Owner */}
       <td className="px-4 py-3">
         <div className="flex flex-col gap-1">

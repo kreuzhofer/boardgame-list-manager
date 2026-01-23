@@ -34,3 +34,5 @@ export { UnifiedDropdown, IN_LISTE_MAX_ITEMS, BGG_INITIAL_ITEMS, BGG_EXPAND_INCR
 export type { UnifiedDropdownProps } from './UnifiedDropdown';
 export { AdvancedFilters } from './AdvancedFilters';
 export type { AdvancedFiltersProps } from './AdvancedFilters';
+export { MobileBottomTabs } from './MobileBottomTabs';
+export { UserOptionsDialog } from './UserOptionsDialog';

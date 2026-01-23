@@ -90,7 +90,8 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
           setNewName(e.target.value);
           setError(null);
         }}
-        className="px-2 py-1 border border-white/30 bg-white/20 text-white rounded text-sm focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/50 caret-white"
+        className="px-2 py-1 border border-white/30 bg-white/20 text-white rounded text-base focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/50 caret-white"
+        style={{ fontSize: '16px' }} // Prevent iOS Safari auto-zoom
         autoFocus
         disabled={isSubmitting}
       />

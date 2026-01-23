@@ -20,6 +20,7 @@ import { AuthGuard, Layout, UserSelectionModal } from './components';
 import { useUser } from './hooks';
 import { HomePage } from './pages/HomePage';
 import { PrintPage } from './pages/PrintPage';
+import { StatisticsPage } from './pages/StatisticsPage';
 import type { User } from './types';
 
 // Get event name from environment variable
@@ -77,6 +78,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage user={user} />} />
             <Route path="/print" element={<PrintPage user={user} />} />
+            <Route path="/statistics" element={<StatisticsPage />} />
           </Routes>
         </Layout>
       </AuthGuard>

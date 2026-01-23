@@ -242,10 +242,11 @@ describe('App', () => {
       render(<App />);
       
       await waitFor(() => {
-        // Use getAllByText since "Spieleliste" appears in both nav and page title
+        // Use getAllByText since navigation text appears in both desktop nav and mobile bottom tabs
         const spielelisteElements = screen.getAllByText('Spieleliste');
         expect(spielelisteElements.length).toBeGreaterThanOrEqual(1);
-        expect(screen.getByText('Druckansicht')).toBeInTheDocument();
+        const druckansichtElements = screen.getAllByText('Druckansicht');
+        expect(druckansichtElements.length).toBeGreaterThanOrEqual(1);
       });
     });
 

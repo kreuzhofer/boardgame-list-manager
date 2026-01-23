@@ -8,6 +8,9 @@
  * - Added AdvancedFilters for player/bringer search
  * - Added game highlighting based on search query
  * - Kept Wunsch and Meine Spiele toggles visible
+ * 
+ * Updated for Spec 007:
+ * - Removed Statistics component (moved to dedicated StatisticsPage)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,7 +18,6 @@ import { gamesApi, ApiError } from '../api/client';
 import { GameTable } from '../components/GameTable';
 import { UnifiedSearchBar } from '../components/UnifiedSearchBar';
 import { AdvancedFilters } from '../components/AdvancedFilters';
-import { Statistics } from '../components/Statistics';
 import { DeleteGameModal } from '../components/DeleteGameModal';
 import { useGameFilters } from '../hooks';
 import { getHighlightedGameIds } from '../utils';
@@ -34,9 +36,6 @@ export function HomePage({ user }: HomePageProps) {
   
   // Sort state
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  
-  // Statistics refresh trigger
-  const [statsRefreshTrigger, setStatsRefreshTrigger] = useState(0);
   
   // Track game to scroll to (newly added or clicked from dropdown)
   const [scrollToGameId, setScrollToGameId] = useState<string | null>(null);
@@ -90,17 +89,11 @@ export function HomePage({ user }: HomePageProps) {
     fetchGames();
   }, [fetchGames]);
 
-  // Refresh statistics when games change
-  const refreshStats = useCallback(() => {
-    setStatsRefreshTrigger((prev) => prev + 1);
-  }, []);
-
   // Handle game added from UnifiedSearchBar
   const handleGameAdded = useCallback((game: Game) => {
     setGames((prev) => [...prev, game]);
     setScrollToGameId(game.id);
-    refreshStats();
-  }, [refreshStats]);
+  }, []);
 
   // Handle scroll to game from dropdown click
   const handleScrollToGame = useCallback((gameId: string) => {
@@ -126,7 +119,6 @@ export function HomePage({ user }: HomePageProps) {
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
-      refreshStats();
     } catch (err) {
       console.error('Failed to add player:', err);
       if (err instanceof ApiError) {
@@ -135,7 +127,7 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Hinzufügen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, refreshStats]);
+  }, [currentUserId]);
 
   // Handle add bringer action
   const handleAddBringer = useCallback(async (gameId: string) => {
@@ -145,7 +137,6 @@ export function HomePage({ user }: HomePageProps) {
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
-      refreshStats();
     } catch (err) {
       console.error('Failed to add bringer:', err);
       if (err instanceof ApiError) {
@@ -154,7 +145,7 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Hinzufügen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, refreshStats]);
+  }, [currentUserId]);
 
   // Handle remove player action
   const handleRemovePlayer = useCallback(async (gameId: string) => {
@@ -164,7 +155,6 @@ export function HomePage({ user }: HomePageProps) {
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
-      refreshStats();
     } catch (err) {
       console.error('Failed to remove player:', err);
       if (err instanceof ApiError) {
@@ -173,7 +163,7 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Entfernen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, refreshStats]);
+  }, [currentUserId]);
 
   // Handle remove bringer action
   const handleRemoveBringer = useCallback(async (gameId: string) => {
@@ -183,7 +173,6 @@ export function HomePage({ user }: HomePageProps) {
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
-      refreshStats();
     } catch (err) {
       console.error('Failed to remove bringer:', err);
       if (err instanceof ApiError) {
@@ -192,7 +181,7 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Entfernen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, refreshStats]);
+  }, [currentUserId]);
 
   // Handle delete game - opens confirmation modal
   const handleDeleteGameClick = useCallback((gameId: string) => {
@@ -211,7 +200,6 @@ export function HomePage({ user }: HomePageProps) {
     try {
       await gamesApi.delete(gameToDelete.id, currentUserId);
       setGames((prev) => prev.filter((g) => g.id !== gameToDelete.id));
-      refreshStats();
       setDeleteModalOpen(false);
       setGameToDelete(null);
     } catch (err) {
@@ -224,7 +212,7 @@ export function HomePage({ user }: HomePageProps) {
     } finally {
       setIsDeleting(false);
     }
-  }, [gameToDelete, currentUserId, refreshStats]);
+  }, [gameToDelete, currentUserId]);
 
   // Handle delete modal cancel
   const handleDeleteModalCancel = useCallback(() => {
@@ -325,8 +313,6 @@ export function HomePage({ user }: HomePageProps) {
           </button>
         )}
       </div>
-
-      <Statistics refreshTrigger={statsRefreshTrigger} />
 
       {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
       {user && (

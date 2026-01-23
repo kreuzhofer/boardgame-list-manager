@@ -1,6 +1,9 @@
 /**
  * Integration tests for HomePage with unified search flow
  * **Validates: Requirements 1.2, 3.3, 4.1**
+ * 
+ * Updated for Spec 007:
+ * - Removed Statistics component mock (Statistics moved to StatisticsPage)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -28,11 +31,6 @@ vi.mock('../../api/client', () => ({
       this.name = 'ApiError';
     }
   },
-}));
-
-// Mock the statistics API
-vi.mock('../../components/Statistics', () => ({
-  Statistics: () => <div data-testid="statistics">Statistics</div>,
 }));
 
 import { gamesApi, bggApi } from '../../api/client';
@@ -222,6 +220,30 @@ describe('HomePage Integration Tests', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/fehler beim laden/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Statistics Removal (Spec 007)', () => {
+    it('does not render Statistics component (Requirement 7.1)', async () => {
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Spieleliste' })).toBeInTheDocument();
+      });
+
+      // Statistics component should not be rendered
+      expect(screen.queryByText('Statistiken')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('statistics')).not.toBeInTheDocument();
+    });
+
+    it('retains game list functionality (Requirement 7.2)', async () => {
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        // Game list should still render
+        expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Azul').length).toBeGreaterThan(0);
       });
     });
   });

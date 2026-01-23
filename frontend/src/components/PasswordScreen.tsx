@@ -73,7 +73,7 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
             {eventName}
           </h1>
           <p className="text-gray-600">
-            Bitte melden Sie sich an, um fortzufahren.
+            Bitte melde Dich an, um fortzufahren.
           </p>
         </div>
 

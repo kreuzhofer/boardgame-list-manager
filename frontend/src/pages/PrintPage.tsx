@@ -144,7 +144,7 @@ export function PrintPage({ user }: PrintPageProps) {
       {userGamesCount === 0 && (
         <div className="no-print bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
-            Sie bringen derzeit keine Spiele mit. Fügen Sie sich als Bringer bei Spielen hinzu, 
+            Du bringst derzeit keine Spiele mit. Fügen Dich als Mitbringer bei Spielen hinzu, 
             um eine Druckliste zu erstellen.
           </p>
         </div>

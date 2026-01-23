@@ -40,11 +40,14 @@ describe('GameActions', () => {
 
   describe('when user is not a player or bringer', () => {
     describe('for Wunsch games', () => {
-      it('shows "Wunsch erfüllen" button', () => {
+      it('shows "Bringe ich mit" button with yellow styling for Wunsch games', () => {
         const game = createTestGame({ status: 'wunsch' });
         render(<GameActions game={game} currentUserId={currentUserId} />);
         
-        expect(screen.getByRole('button', { name: /Wunsch erfüllen/i })).toBeInTheDocument();
+        // For Wunsch games, the bring button is styled yellow and has a special tooltip
+        const bringButton = screen.getByRole('button', { name: /Bringe ich mit/i });
+        expect(bringButton).toBeInTheDocument();
+        expect(bringButton).toHaveAttribute('title', 'Dieses Spiel mitbringen und den Wunsch erfüllen');
       });
 
       it('shows "Möchte ich spielen" button', () => {
@@ -54,20 +57,21 @@ describe('GameActions', () => {
         expect(screen.getByRole('button', { name: /Möchte ich spielen/i })).toBeInTheDocument();
       });
 
-      it('does not show regular "Bringe ich mit" button (Wunsch erfüllen is shown instead)', () => {
+      it('shows bring button with yellow styling for Wunsch games', () => {
         const game = createTestGame({ status: 'wunsch' });
         render(<GameActions game={game} currentUserId={currentUserId} />);
         
-        // Should not have the regular "Bringe ich mit" button
-        expect(screen.queryByRole('button', { name: /^📦 Bringe ich mit$/i })).not.toBeInTheDocument();
+        // The bring button should have yellow styling for Wunsch games
+        const bringButton = screen.getByRole('button', { name: /Bringe ich mit/i });
+        expect(bringButton).toHaveClass('bg-yellow-500');
       });
 
-      it('calls onAddBringer when "Wunsch erfüllen" is clicked', () => {
+      it('calls onAddBringer when "Bringe ich mit" is clicked on Wunsch game', () => {
         const game = createTestGame({ status: 'wunsch' });
         const onAddBringer = vi.fn();
         render(<GameActions game={game} currentUserId={currentUserId} onAddBringer={onAddBringer} />);
         
-        fireEvent.click(screen.getByRole('button', { name: /Wunsch erfüllen/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Bringe ich mit/i }));
         
         expect(onAddBringer).toHaveBeenCalledWith('test-game-id');
       });
@@ -94,14 +98,16 @@ describe('GameActions', () => {
         expect(screen.getByRole('button', { name: /Bringe ich mit/i })).toBeInTheDocument();
       });
 
-      it('does not show "Wunsch erfüllen" button', () => {
+      it('shows bring button with green styling for Verfügbar games', () => {
         const game = createTestGame({ 
           status: 'verfuegbar',
           bringers: [createBringer('b1', 'other-user-id', 'Other User')]
         });
         render(<GameActions game={game} currentUserId={currentUserId} />);
         
-        expect(screen.queryByRole('button', { name: /Wunsch erfüllen/i })).not.toBeInTheDocument();
+        // For Verfügbar games, the bring button should have green styling
+        const bringButton = screen.getByRole('button', { name: /Bringe ich mit/i });
+        expect(bringButton).toHaveClass('bg-green-500');
       });
     });
   });
@@ -149,14 +155,14 @@ describe('GameActions', () => {
       expect(screen.queryByRole('button', { name: /Bringe ich mit/i })).not.toBeInTheDocument();
     });
 
-    it('does not show "Wunsch erfüllen" button even for Wunsch games', () => {
+    it('does not show "Bringe ich mit" button when user is already a bringer', () => {
       const game = createTestGame({
         status: 'wunsch',
         bringers: [createBringer('b1', currentUserId, currentUserName)],
       });
       render(<GameActions game={game} currentUserId={currentUserId} />);
       
-      expect(screen.queryByRole('button', { name: /Wunsch erfüllen/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Bringe ich mit/i })).not.toBeInTheDocument();
     });
 
     it('shows "Nicht mehr mitbringen" remove button', () => {
@@ -206,7 +212,6 @@ describe('GameActions', () => {
       
       expect(screen.queryByRole('button', { name: /Möchte ich spielen/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Bringe ich mit/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Wunsch erfüllen/i })).not.toBeInTheDocument();
     });
   });
 

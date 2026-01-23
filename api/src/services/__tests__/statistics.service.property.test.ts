@@ -96,7 +96,8 @@ describe('StatisticsService Property Tests', () => {
     const creator = await createTestUser(config.creatorName);
     const participantIds = new Set<string>([creator.id]);
     
-    const game = await gameService.createGame(uniqueName, creator.id, config.isBringing);
+    // Create game with isPlaying=true so creator is counted as participant
+    const game = await gameService.createGame(uniqueName, creator.id, config.isBringing, true);
     createdGameIds.push(game.id);
 
     // Add additional players

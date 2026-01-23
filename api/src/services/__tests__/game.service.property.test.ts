@@ -75,11 +75,11 @@ describe('GameService Property Tests', () => {
    * **Validates: Requirements 3.3**
    * 
    * *For any* valid game name and user, when creating a game with the
-   * "Bringe ich mit" flag enabled, the resulting game SHALL have the user
-   * in both the players list and the bringers list.
+   * "Bringe ich mit" flag enabled and isPlaying enabled, the resulting game 
+   * SHALL have the user in both the players list and the bringers list.
    */
   describe('Property 3: Game Creation with Bringer Flag', () => {
-    it('should add user to both players and bringers lists when isBringing is true', async () => {
+    it('should add user to both players and bringers lists when isBringing and isPlaying are true', async () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
@@ -91,8 +91,8 @@ describe('GameService Property Tests', () => {
             // Generate unique game name to avoid conflicts between test runs
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Create game with bringer flag enabled
-            const game = await gameService.createGame(uniqueGameName, user.id, true);
+            // Create game with bringer flag and playing flag enabled
+            const game = await gameService.createGame(uniqueGameName, user.id, true, true);
             createdGameIds.push(game.id);
 
             // Property: User should be in players list (check by user.id)
@@ -131,7 +131,8 @@ describe('GameService Property Tests', () => {
           gameNameArbitrary,
           userNameArbitrary,
           fc.boolean(),
-          async (gameName, userName, isBringing) => {
+          fc.boolean(),
+          async (gameName, userName, isBringing, isPlaying) => {
             // Create a user first
             const user = await createTestUser(userName);
 
@@ -139,7 +140,7 @@ describe('GameService Property Tests', () => {
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
             // Create game
-            const game = await gameService.createGame(uniqueGameName, user.id, isBringing);
+            const game = await gameService.createGame(uniqueGameName, user.id, isBringing, isPlaying);
             createdGameIds.push(game.id);
 
             // Property: All players should have complete user objects
@@ -195,8 +196,8 @@ describe('GameService Property Tests', () => {
             // Generate unique game name
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Create game without bringer
-            let game = await gameService.createGame(uniqueGameName, creator.id, false);
+            // Create game without bringer or player (just owner)
+            let game = await gameService.createGame(uniqueGameName, creator.id, false, false);
             createdGameIds.push(game.id);
 
             // Add additional user as player
@@ -206,7 +207,7 @@ describe('GameService Property Tests', () => {
             game = await gameService.addBringer(game.id, additionalUser.id);
 
             // Property: All players should have complete user objects
-            expect(game.players.length).toBe(2);
+            expect(game.players.length).toBe(1);
             for (const player of game.players) {
               expect(player.user).toBeDefined();
               expect(player.user.id).toMatch(UUID_REGEX);
@@ -233,12 +234,12 @@ describe('GameService Property Tests', () => {
    * Property 5: Game Creation without Bringer Flag
    * **Validates: Requirements 3.4**
    * 
-   * *For any* valid game name and user, when creating a game without the
-   * "Bringe ich mit" flag, the resulting game SHALL have the user only in the
-   * players list and NOT in the bringers list.
+   * *For any* valid game name and user, when creating a game with isPlaying true
+   * but without the "Bringe ich mit" flag, the resulting game SHALL have the user 
+   * only in the players list and NOT in the bringers list.
    */
   describe('Property 5: Game Creation without Bringer Flag', () => {
-    it('should add user only to players list and NOT to bringers list when isBringing is false', async () => {
+    it('should add user only to players list and NOT to bringers list when isBringing is false but isPlaying is true', async () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
@@ -250,8 +251,8 @@ describe('GameService Property Tests', () => {
             // Generate unique game name to avoid conflicts between test runs
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Create game without bringer flag (isBringing = false)
-            const game = await gameService.createGame(uniqueGameName, user.id, false);
+            // Create game without bringer flag (isBringing = false) but with isPlaying = true
+            const game = await gameService.createGame(uniqueGameName, user.id, false, true);
             createdGameIds.push(game.id);
 
             // Property: User should be in players list
@@ -292,7 +293,8 @@ describe('GameService Property Tests', () => {
           userNameArbitrary,
           userNameArbitrary,
           fc.boolean(),
-          async (gameName, creatorName, newPlayerName, creatorIsBringing) => {
+          fc.boolean(),
+          async (gameName, creatorName, newPlayerName, creatorIsBringing, creatorIsPlaying) => {
             // Create users
             const creator = await createTestUser(creatorName);
             const newPlayer = await createTestUser(newPlayerName);
@@ -300,8 +302,8 @@ describe('GameService Property Tests', () => {
             // Generate unique game name to avoid conflicts between test runs
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Step 1: Create a game (with or without bringers based on random flag)
-            const createdGame = await gameService.createGame(uniqueGameName, creator.id, creatorIsBringing);
+            // Step 1: Create a game (with or without bringers/players based on random flags)
+            const createdGame = await gameService.createGame(uniqueGameName, creator.id, creatorIsBringing, creatorIsPlaying);
             createdGameIds.push(createdGame.id);
 
             // Step 2: Record the initial bringers list
@@ -342,7 +344,8 @@ describe('GameService Property Tests', () => {
           userNameArbitrary,
           userNameArbitrary,
           fc.boolean(),
-          async (gameName, creatorName, newBringerName, creatorIsBringing) => {
+          fc.boolean(),
+          async (gameName, creatorName, newBringerName, creatorIsBringing, creatorIsPlaying) => {
             // Create users
             const creator = await createTestUser(creatorName);
             const newBringer = await createTestUser(newBringerName);
@@ -350,8 +353,8 @@ describe('GameService Property Tests', () => {
             // Generate unique game name to avoid conflicts between test runs
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            // Step 1: Create a game (with some players)
-            const createdGame = await gameService.createGame(uniqueGameName, creator.id, creatorIsBringing);
+            // Step 1: Create a game (with some players based on random flag)
+            const createdGame = await gameService.createGame(uniqueGameName, creator.id, creatorIsBringing, creatorIsPlaying);
             createdGameIds.push(createdGame.id);
 
             // Step 2: Record the initial players list

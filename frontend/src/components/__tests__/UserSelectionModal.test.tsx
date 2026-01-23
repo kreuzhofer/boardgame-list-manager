@@ -123,10 +123,10 @@ describe('UserSelectionModal', () => {
 
   describe('User selection', () => {
     /**
-     * Test that clicking a user calls onUserSelected
+     * Test that clicking a user shows confirmation and then calls onUserSelected
      * Validates: Requirement 5.2
      */
-    it('should call onUserSelected when a user is clicked', async () => {
+    it('should show confirmation and call onUserSelected when confirmed', async () => {
       const mockUsers = [
         { id: 'user-1', name: 'Alice' },
         { id: 'user-2', name: 'Bob' },
@@ -141,9 +141,54 @@ describe('UserSelectionModal', () => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
       });
 
+      // Click on the user to select them
       fireEvent.click(screen.getByText('Alice'));
 
+      // Should show confirmation dialog
+      await waitFor(() => {
+        expect(screen.getByText(/Du meldest Dich als/)).toBeInTheDocument();
+        expect(screen.getByText('Alice')).toBeInTheDocument();
+      });
+
+      // Click "Ja" to confirm
+      fireEvent.click(screen.getByText('Ja'));
+
       expect(mockOnUserSelected).toHaveBeenCalledWith({ id: 'user-1', name: 'Alice' });
+    });
+
+    it('should go back to user list when clicking "Nein, nochmal zurück"', async () => {
+      const mockUsers = [
+        { id: 'user-1', name: 'Alice' },
+        { id: 'user-2', name: 'Bob' },
+      ];
+      mockUsersApi.getAll.mockResolvedValue({ users: mockUsers });
+
+      render(
+        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Alice')).toBeInTheDocument();
+      });
+
+      // Click on the user to select them
+      fireEvent.click(screen.getByText('Alice'));
+
+      // Should show confirmation dialog
+      await waitFor(() => {
+        expect(screen.getByText(/Du meldest Dich als/)).toBeInTheDocument();
+      });
+
+      // Click "Nein, nochmal zurück" to go back
+      fireEvent.click(screen.getByText('Nein, nochmal zurück'));
+
+      // Should be back to user list
+      await waitFor(() => {
+        expect(screen.getByText('Alice')).toBeInTheDocument();
+        expect(screen.getByText('Bob')).toBeInTheDocument();
+      });
+
+      expect(mockOnUserSelected).not.toHaveBeenCalled();
     });
   });
 

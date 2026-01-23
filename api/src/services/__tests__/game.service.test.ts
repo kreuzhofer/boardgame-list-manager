@@ -64,7 +64,7 @@ describe('GameService', () => {
       findAll: jest.fn<() => Promise<GameEntity[]>>(),
       findById: jest.fn<(id: string) => Promise<GameEntity | null>>(),
       findByName: jest.fn<(name: string) => Promise<GameEntity | null>>(),
-      create: jest.fn<(data: { name: string; userId: string; isBringing: boolean }) => Promise<GameEntity>>(),
+      create: jest.fn<(data: { name: string; userId: string; isBringing: boolean; isPlaying: boolean }) => Promise<GameEntity>>(),
       addPlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       removePlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       addBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
@@ -250,13 +250,14 @@ describe('GameService', () => {
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false);
+      const result = await gameService.createGame(gameName, userId, false, false);
 
       expect(result.owner).toEqual({ id: userId, name: 'User Name' });
       expect(mockRepository.create).toHaveBeenCalledWith({
         name: gameName,
         userId,
         isBringing: false,
+        isPlaying: false,
       });
     });
   });

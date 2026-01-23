@@ -124,6 +124,14 @@ describe('App', () => {
       // Click on the user to select them
       fireEvent.click(screen.getByText('Test User'));
       
+      // Should show confirmation dialog
+      await waitFor(() => {
+        expect(screen.getByText(/Du meldest Dich als/)).toBeInTheDocument();
+      });
+      
+      // Click "Ja" to confirm
+      fireEvent.click(screen.getByText('Ja'));
+      
       await waitFor(() => {
         // Modal should close and user should be displayed in header
         expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
@@ -254,7 +262,7 @@ describe('App', () => {
       render(<App />);
       
       await waitFor(() => {
-        expect(screen.getByText(/Koordination/)).toBeInTheDocument();
+        expect(screen.getByText(/Daniel Kreuzhofer/)).toBeInTheDocument();
       });
     });
 

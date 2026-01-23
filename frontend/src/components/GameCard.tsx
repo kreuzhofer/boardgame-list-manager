@@ -132,16 +132,10 @@ export function GameCard({
       className={getCardClassName()}
     >
       {/* Game Name */}
-      <div className="flex flex-col gap-1 mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-            {game.name}
-          </h3>
-          {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
-          {game.yearPublished && (
-            <NeuheitSticker yearPublished={game.yearPublished} />
-          )}
-        </div>
+      <div className="mb-2">
+        <h3 className="font-semibold text-gray-900 text-lg leading-tight">
+          {game.name}
+        </h3>
       </div>
 
       {/* Players and Bringers - Two column layout for mobile */}
@@ -227,16 +221,21 @@ export function GameCard({
             </div>
           )}
           
-          {/* Status Badge - Requirement 4.1, 4.2 - pushed to right */}
-          <span
-            className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium text-center ${
-              isWunsch
-                ? 'bg-yellow-200 text-yellow-800'
-                : 'bg-green-200 text-green-800'
-            }`}
-          >
-            {isWunsch ? 'Gesucht' : 'Verfügbar'}
-          </span>
+          {/* Status Badge and Neuheit - Requirement 4.1, 4.2, 5.1, 5.4 - pushed to right */}
+          <div className="ml-auto flex items-center gap-2">
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium text-center ${
+                isWunsch
+                  ? 'bg-yellow-200 text-yellow-800'
+                  : 'bg-green-200 text-green-800'
+              }`}
+            >
+              {isWunsch ? 'Gesucht' : 'Verfügbar'}
+            </span>
+            {game.yearPublished && (
+              <NeuheitSticker yearPublished={game.yearPublished} />
+            )}
+          </div>
         </div>
       </div>
     </div>

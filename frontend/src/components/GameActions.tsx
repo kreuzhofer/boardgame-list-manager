@@ -62,10 +62,10 @@ export function GameActions({
 
   // Base button classes - larger touch targets on mobile (Requirement 6.4)
   // Mobile: icon-only with fixed width to prevent layout shift
-  // Desktop: full text with icon
+  // Desktop: full text with icon, whitespace-nowrap prevents checkmark wrapping
   const baseButtonClasses = isMobile
     ? 'w-[52px] h-[44px] text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
-    : 'px-3 py-1.5 text-xs font-medium rounded-md min-w-[6.5rem] transition-colors';
+    : 'px-3 py-1.5 text-xs font-medium rounded-md min-w-[6.5rem] whitespace-nowrap transition-colors';
 
   // Bringer button text (desktop only)
   const bringerText = 'Mitbringen';

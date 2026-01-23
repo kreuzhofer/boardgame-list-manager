@@ -10,6 +10,8 @@ import { createPortal } from 'react-dom';
 import { usersApi, ApiError } from '../api/client';
 import type { User } from '../types';
 
+const MAX_USERNAME_LENGTH = 30;
+
 interface UserSelectionModalProps {
   isOpen: boolean;
   onUserSelected: (user: User) => void;
@@ -199,10 +201,16 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                       type="text"
                       value={newUserName}
                       onChange={(e) => {
-                        setNewUserName(e.target.value);
-                        setCreateError(null);
+                        const newValue = e.target.value;
+                        setNewUserName(newValue);
+                        if (newValue.trim().length >= MAX_USERNAME_LENGTH) {
+                          setCreateError('Der Name darf maximal 30 Zeichen lang sein.');
+                        } else {
+                          setCreateError(null);
+                        }
                       }}
                       placeholder="Dein Name"
+                      maxLength={MAX_USERNAME_LENGTH}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       autoFocus
                       disabled={isCreating}

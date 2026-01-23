@@ -92,14 +92,8 @@ export function GameRow({
       {/* Game Name with Status Badge and Owner */}
       <td className="px-4 py-3">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-900">{game.name}</span>
-            
-            {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
-            {game.yearPublished && (
-              <NeuheitSticker yearPublished={game.yearPublished} />
-            )}
-            
+          <span className="font-medium text-gray-900">{game.name}</span>
+          <div className="flex items-center gap-2">
             {/* Status Badge - Requirement 4.1, 4.2 */}
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium min-w-[4.5rem] text-center ${
@@ -110,6 +104,11 @@ export function GameRow({
             >
               {isWunsch ? 'Gesucht' : 'Verfügbar'}
             </span>
+            
+            {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
+            {game.yearPublished && (
+              <NeuheitSticker yearPublished={game.yearPublished} />
+            )}
           </div>
         </div>
       </td>

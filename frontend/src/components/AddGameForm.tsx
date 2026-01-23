@@ -282,7 +282,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              🎮 {isPlaying ? 'Mitspielen ✓' : 'Mitspielen'}
+              <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {isPlaying ? 'Mitspielen ✓' : 'Mitspielen'}
             </button>
 
             {/* "Mitbringen" toggle button */}
@@ -296,7 +296,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              📦 {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
+              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
             </button>
 
             {/* Submit button */}

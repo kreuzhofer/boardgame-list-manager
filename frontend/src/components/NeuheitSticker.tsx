@@ -1,6 +1,6 @@
 /**
  * NeuheitSticker component
- * Displays "Neuheit {year}" badge for games released in current or previous year
+ * Displays "Neu 'YY" badge for games released in current or previous year
  * Requirements: 5.1, 5.2, 5.3, 8.2
  */
 
@@ -25,9 +25,12 @@ export function NeuheitSticker({ yearPublished }: NeuheitStickerProps) {
     return null;
   }
 
+  // Format year as 'YY (e.g., 2025 -> '25)
+  const shortYear = `'${String(yearPublished).slice(-2)}`;
+
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white shadow-sm">
-      Neuheit {yearPublished}
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-600 text-white">
+      Neu {shortYear}
     </span>
   );
 }

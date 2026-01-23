@@ -126,8 +126,8 @@ export function UnifiedDropdown({
                       ✓ {game.name}
                     </span>
                     {game.bringerNames.length > 0 && (
-                      <span className="text-sm text-green-700 flex-shrink-0">
-                        📦 {game.bringerNames.join(', ')}
+                      <span className="text-sm text-green-700 flex-shrink-0 flex items-center gap-1">
+                        <img src="/package.svg" alt="" className="w-3.5 h-3.5" /> {game.bringerNames.join(', ')}
                       </span>
                     )}
                   </button>

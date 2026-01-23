@@ -43,6 +43,9 @@ export function HomePage({ user }: HomePageProps) {
   // Search query for highlighting (from UnifiedSearchBar)
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Clear trigger for UnifiedSearchBar (incremented to trigger clear)
+  const [searchClearTrigger, setSearchClearTrigger] = useState(0);
+  
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
@@ -307,9 +310,12 @@ export function HomePage({ user }: HomePageProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Spieleliste</h2>
-        {hasActiveFilters && (
+        {(hasActiveFilters || searchQuery) && (
           <button
-            onClick={resetFilters}
+            onClick={() => {
+              resetFilters();
+              setSearchClearTrigger(prev => prev + 1);
+            }}
             className="text-sm text-blue-600 hover:text-blue-800 underline"
           >
             Filter zurücksetzen
@@ -325,6 +331,7 @@ export function HomePage({ user }: HomePageProps) {
           onGameAdded={handleGameAdded}
           onSearchQueryChange={handleSearchQueryChange}
           onScrollToGame={handleScrollToGame}
+          clearTrigger={searchClearTrigger}
         />
       )}
 

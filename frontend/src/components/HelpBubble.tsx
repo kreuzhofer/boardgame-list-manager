@@ -53,6 +53,10 @@ export function HelpBubble({
     }
   }, []);
 
+  // Track horizontal offset to keep bubble in viewport (use ref to avoid re-render loops)
+  const horizontalOffsetRef = useRef(0);
+  const [, forceUpdate] = useState(0);
+
   // Adjust bubble position after it renders to ensure it stays in viewport
   useLayoutEffect(() => {
     if (isVisible && bubbleRef.current) {
@@ -62,21 +66,27 @@ export function HelpBubble({
       const padding = 8; // Keep some padding from edges
 
       let newPosition = actualPosition;
-      let needsUpdate = false;
+      let needsPositionUpdate = false;
 
-      // Check horizontal overflow
-      if (bubbleRect.right > viewportWidth - padding) {
-        // Flip to left
-        if (actualPosition.endsWith('right')) {
-          newPosition = actualPosition.replace('right', 'left') as Position;
-          needsUpdate = true;
-        }
-      } else if (bubbleRect.left < padding) {
-        // Flip to right
-        if (actualPosition.endsWith('left')) {
-          newPosition = actualPosition.replace('left', 'right') as Position;
-          needsUpdate = true;
-        }
+      // Check horizontal overflow - adjust offset to keep in viewport
+      // Account for current offset when checking bounds
+      const currentOffset = horizontalOffsetRef.current;
+      const actualLeft = bubbleRect.left;
+      const actualRight = bubbleRect.right;
+      
+      let newOffset = currentOffset;
+      if (actualLeft < padding) {
+        // Bubble overflows left edge - shift it right
+        newOffset = currentOffset + (padding - actualLeft);
+      } else if (actualRight > viewportWidth - padding) {
+        // Bubble overflows right edge - shift it left
+        newOffset = currentOffset + ((viewportWidth - padding) - actualRight);
+      }
+
+      // Only update if offset changed significantly (avoid floating point issues)
+      if (Math.abs(newOffset - currentOffset) > 0.5) {
+        horizontalOffsetRef.current = newOffset;
+        forceUpdate(n => n + 1); // Trigger re-render to apply new offset
       }
 
       // Check vertical overflow
@@ -84,17 +94,17 @@ export function HelpBubble({
         // Flip to bottom
         if (newPosition.startsWith('top')) {
           newPosition = newPosition.replace('top', 'bottom') as Position;
-          needsUpdate = true;
+          needsPositionUpdate = true;
         }
       } else if (bubbleRect.bottom > viewportHeight - padding) {
         // Flip to top
         if (newPosition.startsWith('bottom')) {
           newPosition = newPosition.replace('bottom', 'top') as Position;
-          needsUpdate = true;
+          needsPositionUpdate = true;
         }
       }
 
-      if (needsUpdate) {
+      if (needsPositionUpdate) {
         setActualPosition(newPosition);
       }
     }
@@ -106,6 +116,7 @@ export function HelpBubble({
     
     clearTimeouts();
     setActualPosition(preferredPosition); // Start with preferred, will adjust in useLayoutEffect
+    horizontalOffsetRef.current = 0; // Reset offset
     setIsFadingOut(false);
     setIsVisible(true);
 
@@ -176,12 +187,19 @@ export function HelpBubble({
     const isTop = actualPosition.startsWith('top');
     const isRight = actualPosition.endsWith('right');
     
-    return {
+    const style: React.CSSProperties = {
       position: 'absolute',
       [isTop ? 'bottom' : 'top']: '100%',
       [isRight ? 'right' : 'left']: 0,
       [isTop ? 'marginBottom' : 'marginTop']: '8px',
     };
+
+    // Apply horizontal offset to keep bubble in viewport
+    if (horizontalOffsetRef.current !== 0) {
+      style.transform = `translateX(${horizontalOffsetRef.current}px)`;
+    }
+
+    return style;
   };
 
   // Arrow/tip position classes

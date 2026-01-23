@@ -7,9 +7,7 @@
  */
 
 import { useRef, useEffect } from 'react';
-import { Game } from '../types';
-import { PlayerList } from './PlayerList';
-import { BringerList } from './BringerList';
+import { Game, Player, Bringer } from '../types';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
 import { openBggPage } from './BggModal';
@@ -28,6 +26,49 @@ interface GameCardProps {
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
   isHighlighted?: boolean;
+}
+
+/** Compact list display for mobile - shows max 2 names with +X overflow indicator */
+function CompactList({ 
+  items, 
+  currentUserId, 
+  emptyText 
+}: { 
+  items: (Player | Bringer)[]; 
+  currentUserId: string; 
+  emptyText: string;
+}) {
+  if (items.length === 0) {
+    return <span className="text-gray-400 italic text-sm">{emptyText}</span>;
+  }
+
+  const maxVisible = items.length > 2 ? 1 : 2;
+  const visibleItems = items.slice(0, maxVisible);
+  const overflowCount = items.length - maxVisible;
+
+  return (
+    <div className="text-sm">
+      {visibleItems.map((item, index) => (
+        <div key={item.id} className="truncate">
+          <span
+            className={
+              item.user.id === currentUserId
+                ? 'font-semibold text-blue-600'
+                : 'text-gray-700'
+            }
+          >
+            {item.user.name}
+          </span>
+          {index < visibleItems.length - 1 && items.length <= 2 && (
+            <span className="text-gray-400">, </span>
+          )}
+        </div>
+      ))}
+      {overflowCount > 0 && (
+        <span className="text-gray-500 text-xs">+{overflowCount} weitere</span>
+      )}
+    </div>
+  );
 }
 
 export function GameCard({
@@ -91,7 +132,7 @@ export function GameCard({
       className={getCardClassName()}
     >
       {/* Game Name with Status Badge */}
-      <div className="flex flex-col gap-2 mb-3">
+      <div className="flex flex-col gap-1 mb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-gray-900 text-base leading-tight">
@@ -102,87 +143,43 @@ export function GameCard({
               <NeuheitSticker yearPublished={game.yearPublished} />
             )}
           </div>
-          
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-            {game.bggId && (
-              <button
-                onClick={() => openBggPage(game.bggId!)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
-                title="BoardGameGeek Info (öffnet in neuem Tab)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                BGG
-                {game.bggRating && (
-                  <BggRatingBadge rating={game.bggRating} />
-                )}
-              </button>
-            )}
-            
-            {/* Status Badge - Requirement 4.1, 4.2 */}
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                isWunsch
-                  ? 'bg-yellow-200 text-yellow-800'
-                  : 'bg-green-200 text-green-800'
-              }`}
-            >
-              {isWunsch ? 'Wunsch' : 'Verfügbar'}
-            </span>
-          </div>
         </div>
         
         {/* Owner display - Requirement 2.3, 2.4 */}
         <span className="text-xs text-gray-500">
           Erstellt von: {game.owner?.name ?? 'Kein Besitzer'}
         </span>
-        
-        {/* "Wird gesucht!" badge for Wunsch games - Requirement 4.3 */}
-        {isWunsch && (
-          <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded inline-block w-fit font-medium">
-            🔍 Wird gesucht!
-          </span>
-        )}
       </div>
 
-      {/* Players and Bringers sections */}
-      <div className="space-y-3 mb-4">
-        {/* Players (Mitspieler) - Requirement 3.9 */}
-        <div>
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
-            Mitspieler
-          </span>
-          <div className="text-sm">
-            <PlayerList players={game.players} currentUserId={currentUserId} />
-          </div>
-        </div>
-
-        {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-        <div>
+      {/* Players and Bringers - Two column layout for mobile */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
+        <div className="min-w-0">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
             Bringt mit
           </span>
-          <div className="text-sm">
-            <BringerList bringers={game.bringers} currentUserId={currentUserId} />
-          </div>
+          <CompactList 
+            items={game.bringers} 
+            currentUserId={currentUserId} 
+            emptyText="Niemand"
+          />
+        </div>
+
+        {/* Players (Mitspieler) - Second column to match Mitspielen button */}
+        <div className="min-w-0">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
+            Mitspieler
+          </span>
+          <CompactList 
+            items={game.players} 
+            currentUserId={currentUserId} 
+            emptyText="Keine"
+          />
         </div>
       </div>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
-      <div className="pt-3 border-t border-gray-200">
+      <div className="pt-2 border-t border-gray-200">
         <div className="flex gap-3 flex-wrap items-center">
           <GameActions
             game={game}
@@ -193,6 +190,23 @@ export function GameCard({
             onRemoveBringer={onRemoveBringer}
             isMobile={true}
           />
+          
+          {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
+          {game.bggId && game.bggRating && (
+            <div className="relative">
+              <button
+                onClick={() => openBggPage(game.bggId!)}
+                className="p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
+                aria-label="BoardGameGeek Info"
+              >
+                <BggRatingBadge rating={game.bggRating} />
+              </button>
+              <HelpBubble
+                text="BoardGameGeek Seite öffnen (neuer Tab)"
+                position="top-right"
+              />
+            </div>
+          )}
           
           {/* Delete button - only for owner, icon only to save space */}
           {isOwner && (
@@ -207,7 +221,7 @@ export function GameCard({
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                🗑️
+                <img src="/trash.svg" alt="" className="w-5 h-5" />
               </button>
               <HelpBubble
                 text={
@@ -219,6 +233,17 @@ export function GameCard({
               />
             </div>
           )}
+          
+          {/* Status Badge - Requirement 4.1, 4.2 - pushed to right */}
+          <span
+            className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium text-center ${
+              isWunsch
+                ? 'bg-yellow-200 text-yellow-800'
+                : 'bg-green-200 text-green-800'
+            }`}
+          >
+            {isWunsch ? 'Gesucht' : 'Verfügbar'}
+          </span>
         </div>
       </div>
     </div>

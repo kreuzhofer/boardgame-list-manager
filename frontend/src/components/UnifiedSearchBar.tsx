@@ -33,6 +33,8 @@ export interface UnifiedSearchBarProps {
   onSearchQueryChange: (query: string) => void;
   /** Callback when user clicks an in-list game (for scrolling) */
   onScrollToGame: (gameId: string) => void;
+  /** When this value changes, clear the search input and selection */
+  clearTrigger?: number;
 }
 
 /**
@@ -80,6 +82,7 @@ export function UnifiedSearchBar({
   onGameAdded,
   onSearchQueryChange,
   onScrollToGame,
+  clearTrigger,
 }: UnifiedSearchBarProps) {
   // Input state
   const [query, setQuery] = useState('');
@@ -102,6 +105,21 @@ export function UnifiedSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const justSelectedRef = useRef(false);
+  const lastClearTrigger = useRef(clearTrigger);
+
+  // Clear search when clearTrigger changes
+  useEffect(() => {
+    if (clearTrigger !== undefined && clearTrigger !== lastClearTrigger.current) {
+      lastClearTrigger.current = clearTrigger;
+      setQuery('');
+      setSelectedBggItem(null);
+      setIsDropdownOpen(false);
+      setIsBringing(false);
+      setIsPlaying(false);
+      setError(null);
+      onSearchQueryChange('');
+    }
+  }, [clearTrigger, onSearchQueryChange]);
 
   // BGG search with debounce
   const { results: bggResults, isLoading: isBggLoading, hasMore: hasMoreBgg } = useBggSearch(query, 300);
@@ -310,7 +328,7 @@ export function UnifiedSearchBar({
     }
   }, [query, addButtonState.state, currentUserId, isBringing, isPlaying, selectedBggItem, onGameAdded]);
 
-  const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px]';
+  const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px] min-w-[7.5rem]';
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -425,20 +443,6 @@ export function UnifiedSearchBar({
           {/* Toggle buttons and add button row */}
           {addButtonState.state !== 'hidden' && (
             <div className="flex flex-wrap gap-2 items-center">
-              {/* Mitspielen toggle */}
-              <button
-                type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={isSubmitting}
-                className={`${toggleButtonBase} ${
-                  isPlaying
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                🎮 {isPlaying ? 'Mitspielen ✓' : 'Mitspielen'}
-              </button>
-
               {/* Mitbringen toggle */}
               <button
                 type="button"
@@ -450,7 +454,21 @@ export function UnifiedSearchBar({
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                📦 {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
+                <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitbringen<span className="inline-block w-3 text-left">{isBringing ? ' ✓' : ''}</span>
+              </button>
+
+              {/* Mitspielen toggle */}
+              <button
+                type="button"
+                onClick={() => setIsPlaying(!isPlaying)}
+                disabled={isSubmitting}
+                className={`${toggleButtonBase} ${
+                  isPlaying
+                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitspielen<span className="inline-block w-3 text-left">{isPlaying ? ' ✓' : ''}</span>
               </button>
 
               {/* Add button */}

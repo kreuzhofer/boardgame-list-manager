@@ -100,43 +100,15 @@ export function GameRow({
               <NeuheitSticker yearPublished={game.yearPublished} />
             )}
             
-            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-            {game.bggId && (
-              <button
-                onClick={() => openBggPage(game.bggId!)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
-                title="BoardGameGeek Info (öffnet in neuem Tab)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                BGG
-                {game.bggRating && (
-                  <BggRatingBadge rating={game.bggRating} />
-                )}
-              </button>
-            )}
-            
             {/* Status Badge - Requirement 4.1, 4.2 */}
             <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              className={`text-xs px-2 py-0.5 rounded-full font-medium min-w-[4.5rem] text-center ${
                 isWunsch
                   ? 'bg-yellow-200 text-yellow-800'
                   : 'bg-green-200 text-green-800'
               }`}
             >
-              {isWunsch ? 'Wunsch' : 'Verfügbar'}
+              {isWunsch ? 'Gesucht' : 'Verfügbar'}
             </span>
           </div>
           
@@ -144,13 +116,6 @@ export function GameRow({
           <span className="text-xs text-gray-500">
             Erstellt von: {game.owner?.name ?? 'Kein Besitzer'}
           </span>
-          
-          {/* "Wird gesucht!" badge for Wunsch games - Requirement 4.3 */}
-          {isWunsch && (
-            <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded inline-block w-fit font-medium">
-              🔍 Wird gesucht!
-            </span>
-          )}
         </div>
       </td>
 
@@ -176,6 +141,23 @@ export function GameRow({
             onRemoveBringer={onRemoveBringer}
           />
           
+          {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
+          {game.bggId && game.bggRating && (
+            <div className="relative">
+              <button
+                onClick={() => openBggPage(game.bggId!)}
+                className="p-1 rounded flex items-center hover:bg-gray-100 transition-colors"
+                aria-label="BoardGameGeek Info"
+              >
+                <BggRatingBadge rating={game.bggRating} />
+              </button>
+              <HelpBubble
+                text="BoardGameGeek Seite öffnen (neuer Tab)"
+                position="top-right"
+              />
+            </div>
+          )}
+          
           {/* Delete button - only for owner, icon only to save space */}
           {isOwner && (
             <div className="relative">
@@ -189,7 +171,7 @@ export function GameRow({
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                🗑️
+                <img src="/trash.svg" alt="" className="w-4 h-4" />
               </button>
               <HelpBubble
                 text={

@@ -10,6 +10,7 @@
  */
 
 import { Game } from '../types';
+import { HelpBubble } from './HelpBubble';
 
 interface GameActionsProps {
   game: Game;
@@ -34,7 +35,6 @@ export function GameActions({
   // Check if current user is already a player or bringer
   const isPlayer = game.players.some((p) => p.user.id === currentUserId);
   const isBringer = game.bringers.some((b) => b.user.id === currentUserId);
-  const isWunsch = game.status === 'wunsch';
 
   const handleAddPlayer = () => {
     if (onAddPlayer) {
@@ -61,34 +61,29 @@ export function GameActions({
   };
 
   // Base button classes - larger touch targets on mobile (Requirement 6.4)
-  // Mobile: min-h-[44px] for touch-friendly 44px minimum touch target
+  // Mobile: icon-only with fixed width to prevent layout shift
+  // Desktop: full text with icon
   const baseButtonClasses = isMobile
-    ? 'px-4 py-2.5 text-sm font-medium rounded-lg min-h-[44px] active:scale-95 transition-all'
-    : 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors';
+    ? 'w-[52px] h-[44px] text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
+    : 'px-3 py-1.5 text-xs font-medium rounded-md min-w-[6.5rem] transition-colors';
 
-  // Bringer button text (consistent regardless of state)
-  const bringerText = isMobile ? 'Mitbringen' : 'Mitbringen';
-  // Player button text (consistent regardless of state)
-  const playerText = isMobile ? 'Mitspielen' : 'Mitspielen';
+  // Bringer button text (desktop only)
+  const bringerText = 'Mitbringen';
+  // Player button text (desktop only)
+  const playerText = 'Mitspielen';
+
+  // Help text for buttons
+  const bringerHelpText = isBringer 
+    ? 'Mitbringen: Du bringst dieses Spiel mit. Tippe um dich auszutragen.' 
+    : 'Mitbringen: Tippe um anzugeben, dass du dieses Spiel mitbringst.';
+  const playerHelpText = isPlayer 
+    ? 'Mitspielen: Du möchtest dieses Spiel spielen. Tippe um dich auszutragen.' 
+    : 'Mitspielen: Tippe um anzugeben, dass du dieses Spiel spielen möchtest.';
 
   return (
     <div className={`flex gap-2 flex-wrap ${isMobile ? 'gap-3' : ''}`}>
       {/* Bringer toggle button - always first */}
-      {isWunsch ? (
-        // Wunsch game: green when active, gray when inactive
-        <button
-          onClick={isBringer ? handleRemoveBringer : handleAddBringer}
-          className={`${baseButtonClasses} ${
-            isBringer
-              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen und den Wunsch erfüllen'}
-        >
-          📦 {bringerText}{isBringer ? ' ✓' : ''}
-        </button>
-      ) : (
-        // Normal game: toggle between green (active) and gray (inactive)
+      <div className="relative">
         <button
           onClick={isBringer ? handleRemoveBringer : handleAddBringer}
           className={`${baseButtonClasses} ${
@@ -98,22 +93,44 @@ export function GameActions({
           }`}
           title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
         >
-          📦 {bringerText}{isBringer ? ' ✓' : ''}
+          {isMobile ? (
+            <>
+              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
+              {isBringer && <span className="ml-0.5">✓</span>}
+            </>
+          ) : (
+            <>
+              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {bringerText}<span className="inline-block w-3 text-left">{isBringer ? ' ✓' : ''}</span>
+            </>
+          )}
         </button>
-      )}
+        {isMobile && <HelpBubble text={bringerHelpText} position="top-right" />}
+      </div>
 
       {/* Player toggle button - always second */}
-      <button
-        onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
-        className={`${baseButtonClasses} ${
-          isPlayer
-            ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
-        title={isPlayer ? 'Mich als Mitspieler austragen' : 'Als Mitspieler eintragen'}
-      >
-        🎮 {playerText}{isPlayer ? ' ✓' : ''}
-      </button>
+      <div className="relative">
+        <button
+          onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
+          className={`${baseButtonClasses} ${
+            isPlayer
+              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          title={isPlayer ? 'Mich als Mitspieler austragen' : 'Als Mitspieler eintragen'}
+        >
+          {isMobile ? (
+            <>
+              <img src="/meeple.svg" alt="Mitspielen" className="w-5 h-5" />
+              {isPlayer && <span className="ml-0.5">✓</span>}
+            </>
+          ) : (
+            <>
+              <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {playerText}<span className="inline-block w-3 text-left">{isPlayer ? ' ✓' : ''}</span>
+            </>
+          )}
+        </button>
+        {isMobile && <HelpBubble text={playerHelpText} position="top-right" />}
+      </div>
     </div>
   );
 }

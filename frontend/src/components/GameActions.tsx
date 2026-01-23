@@ -66,62 +66,54 @@ export function GameActions({
     ? 'px-4 py-2.5 text-sm font-medium rounded-lg min-h-[44px] active:scale-95 transition-all'
     : 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors';
 
+  // Bringer button text (consistent regardless of state)
+  const bringerText = isMobile ? 'Mitbringen' : 'Mitbringen';
+  // Player button text (consistent regardless of state)
+  const playerText = isMobile ? 'Mitspielen' : 'Mitspielen';
+
   return (
     <div className={`flex gap-2 flex-wrap ${isMobile ? 'gap-3' : ''}`}>
-      {/* "Wunsch erfüllen" quick action for Wunsch games - Requirement 4.4 */}
-      {isWunsch && !isBringer && (
+      {/* Bringer toggle button - always first */}
+      {isWunsch ? (
+        // Wunsch game: green when active, gray when inactive
         <button
-          onClick={handleAddBringer}
-          className={`${baseButtonClasses} bg-yellow-500 text-white hover:bg-yellow-600 shadow-sm`}
-          title="Dieses Spiel mitbringen und den Wunsch erfüllen"
+          onClick={isBringer ? handleRemoveBringer : handleAddBringer}
+          className={`${baseButtonClasses} ${
+            isBringer
+              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen und den Wunsch erfüllen'}
         >
-          📦 {isMobile ? 'Mitbringen' : 'Bringe ich mit'}
+          📦 {bringerText}{isBringer ? ' ✓' : ''}
+        </button>
+      ) : (
+        // Normal game: toggle between green (active) and gray (inactive)
+        <button
+          onClick={isBringer ? handleRemoveBringer : handleAddBringer}
+          className={`${baseButtonClasses} ${
+            isBringer
+              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
+        >
+          📦 {bringerText}{isBringer ? ' ✓' : ''}
         </button>
       )}
 
-      {/* "Möchte ich spielen" button - Requirement 3.5 */}
-      {!isPlayer && (
-        <button
-          onClick={handleAddPlayer}
-          className={`${baseButtonClasses} bg-blue-500 text-white hover:bg-blue-600 shadow-sm`}
-          title="Als Mitspieler eintragen"
-        >
-          🎮 {isMobile ? 'Mitspielen' : 'Möchte ich spielen'}
-        </button>
-      )}
-
-      {/* "Bringe ich mit" button - Requirement 3.6 */}
-      {!isBringer && !isWunsch && (
-        <button
-          onClick={handleAddBringer}
-          className={`${baseButtonClasses} bg-green-500 text-white hover:bg-green-600 shadow-sm`}
-          title="Dieses Spiel mitbringen"
-        >
-          📦 {isMobile ? 'Mitbringen' : 'Bringe ich mit'}
-        </button>
-      )}
-
-      {/* Remove player button - Requirement 4.5 */}
-      {isPlayer && (
-        <button
-          onClick={handleRemovePlayer}
-          className={`${baseButtonClasses} bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700`}
-          title="Mich als Mitspieler austragen"
-        >
-          ❌ {isMobile ? 'Nicht spielen' : 'Nicht mehr spielen'}
-        </button>
-      )}
-
-      {/* Remove bringer button - Requirement 4.5 */}
-      {isBringer && (
-        <button
-          onClick={handleRemoveBringer}
-          className={`${baseButtonClasses} bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700`}
-          title="Mich als Bringer austragen"
-        >
-          ❌ {isMobile ? 'Nicht mitbringen' : 'Nicht mehr mitbringen'}
-        </button>
-      )}
+      {/* Player toggle button - always second */}
+      <button
+        onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
+        className={`${baseButtonClasses} ${
+          isPlayer
+            ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+        title={isPlayer ? 'Mich als Mitspieler austragen' : 'Als Mitspieler eintragen'}
+      >
+        🎮 {playerText}{isPlayer ? ' ✓' : ''}
+      </button>
     </div>
   );
 }

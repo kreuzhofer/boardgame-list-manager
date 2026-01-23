@@ -28,7 +28,7 @@ interface GameCardProps {
   isHighlighted?: boolean;
 }
 
-/** Compact list display for mobile - shows max 2 names with +X overflow indicator, expandable */
+/** Compact list display for mobile - shows up to 3 names, or 2 names + "+X" if more than 3 */
 function CompactList({ 
   items, 
   currentUserId, 
@@ -44,9 +44,11 @@ function CompactList({
     return <span className="text-gray-400 italic text-sm">{emptyText}</span>;
   }
 
-  const maxVisible = expanded ? items.length : 2;
+  // When expanded: show all. When collapsed: show 2 + "+X" if >3, otherwise show all (up to 3)
+  const hasOverflow = !expanded && items.length > 3;
+  const maxVisible = expanded ? items.length : (hasOverflow ? 2 : items.length);
   const visibleItems = items.slice(0, maxVisible);
-  const overflowCount = items.length - maxVisible;
+  const overflowCount = items.length - 2; // +X shows total - 2
 
   return (
     <div className="text-sm">
@@ -63,7 +65,7 @@ function CompactList({
           </span>
         </div>
       ))}
-      {overflowCount > 0 && (
+      {hasOverflow && (
         <span className="text-blue-500 text-xs">+{overflowCount} weitere</span>
       )}
     </div>
@@ -89,8 +91,8 @@ export function GameCard({
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
   
-  // Check if either list has overflow (more than 2 items)
-  const hasOverflow = game.players.length > 2 || game.bringers.length > 2;
+  // Check if either list has overflow (more than 3 items)
+  const hasOverflow = game.players.length > 3 || game.bringers.length > 3;
 
   const handleListClick = () => {
     if (hasOverflow) {

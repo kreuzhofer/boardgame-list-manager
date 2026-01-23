@@ -1,20 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import gameRoutes from './routes/game.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import userRoutes from './routes/user.routes';
-
-// Load environment variables
-dotenv.config();
+import { config } from './config';
 
 const app = express();
-const PORT = process.env.API_PORT || 3001;
+const PORT = config.server.port;
 
 // Middleware
-// CORS configuration - permissive for local network access
-app.use(cors());
+// CORS configuration - uses CORS_ORIGIN from env, supports comma-separated origins
+const corsOrigins = config.server.corsOrigin.split(',').map(o => o.trim());
+app.use(cors({
+  origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
+  credentials: true,
+}));
 app.use(express.json());
 
 // Request logging for debugging

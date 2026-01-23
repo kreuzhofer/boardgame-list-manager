@@ -23,10 +23,16 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
-  // Fetch existing users when modal opens
+  // Fetch existing users and reset state when modal opens
   useEffect(() => {
     if (isOpen) {
+      // Reset state when modal opens
+      setShowCreateForm(false);
+      setNewUserName('');
+      setCreateError(null);
+      setPendingUser(null);
       fetchUsers();
     }
   }, [isOpen]);
@@ -48,7 +54,17 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
   };
 
   const handleSelectUser = (user: User) => {
-    onUserSelected(user);
+    setPendingUser(user);
+  };
+
+  const handleConfirmUser = () => {
+    if (pendingUser) {
+      onUserSelected(pendingUser);
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setPendingUser(null);
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -95,7 +111,28 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
-          {isLoading ? (
+          {/* Confirmation view */}
+          {pendingUser ? (
+            <div className="text-center py-4">
+              <p className="text-lg text-gray-900 mb-6">
+                Du meldest Dich als <span className="font-semibold">{pendingUser.name}</span> an
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelConfirm}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Nein, nochmal zurück
+                </button>
+                <button
+                  onClick={handleConfirmUser}
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Ja
+                </button>
+              </div>
+            </div>
+          ) : isLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
@@ -115,19 +152,29 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
               {users.length > 0 && !showCreateForm && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">
-                    Bestehende Benutzer:
+                    Bestehende Benutzer ({users.length}):
                   </h3>
-                  <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
-                    {users.map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => handleSelectUser(user)}
-                        className="w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
-                      >
-                        <span className="text-gray-900">{user.name}</span>
-                      </button>
-                    ))}
+                  <div className="relative">
+                    <div className="max-h-48 overflow-y-auto border rounded-lg divide-y scroll-smooth">
+                      {users.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => handleSelectUser(user)}
+                          className="w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                        >
+                          <span className="text-gray-900">{user.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {users.length > 4 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-lg" />
+                    )}
                   </div>
+                  {users.length > 4 && (
+                    <p className="text-xs text-gray-500 text-center">
+                      ↓ Scrolle für mehr
+                    </p>
+                  )}
                 </div>
               )}
 

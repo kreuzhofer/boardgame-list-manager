@@ -5,6 +5,7 @@
 export { AddGameForm } from './AddGameForm';
 export { AuthGuard, clearAuthentication, isUserAuthenticated } from './AuthGuard';
 export { BringerList } from './BringerList';
+export { DeleteGameModal } from './DeleteGameModal';
 export { GameActions } from './GameActions';
 export { GameCard } from './GameCard';
 export { GameRow } from './GameRow';

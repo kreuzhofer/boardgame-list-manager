@@ -6,6 +6,7 @@
  * Requirement 6.4: Touch-friendly interactions on mobile
  */
 
+import { useRef, useEffect } from 'react';
 import { Game } from '../types';
 import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
@@ -18,6 +19,9 @@ interface GameCardProps {
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
+  onDeleteGame?: (gameId: string) => void;
+  scrollIntoView?: boolean;
+  onScrolledIntoView?: () => void;
 }
 
 export function GameCard({
@@ -27,14 +31,28 @@ export function GameCard({
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
+  onDeleteGame,
+  scrollIntoView,
+  onScrolledIntoView,
 }: GameCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
+  const isOwner = game.owner?.id === currentUserId;
+  const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
+
+  useEffect(() => {
+    if (scrollIntoView && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      onScrolledIntoView?.();
+    }
+  }, [scrollIntoView, onScrolledIntoView]);
 
   return (
     <div
+      ref={cardRef}
       className={`p-4 ${
         isWunsch ? 'bg-yellow-50' : 'bg-white'
-      }`}
+      } ${scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : ''}`}
     >
       {/* Game Name with Status Badge */}
       <div className="flex flex-col gap-2 mb-3">
@@ -54,6 +72,11 @@ export function GameCard({
             {isWunsch ? 'Wunsch' : 'Verfügbar'}
           </span>
         </div>
+        
+        {/* Owner display - Requirement 2.3, 2.4 */}
+        <span className="text-xs text-gray-500">
+          Erstellt von: {game.owner?.name ?? 'Kein Besitzer'}
+        </span>
         
         {/* "Wird gesucht!" badge for Wunsch games - Requirement 4.3 */}
         {isWunsch && (
@@ -97,6 +120,26 @@ export function GameCard({
           onRemoveBringer={onRemoveBringer}
           isMobile={true}
         />
+        
+        {/* Delete button - only for owner, only when game is empty */}
+        {isOwner && (
+          <button
+            onClick={() => onDeleteGame?.(game.id)}
+            disabled={!canDelete}
+            title={
+              canDelete
+                ? 'Spiel löschen'
+                : 'Entferne zuerst alle Mitspieler und Bringer'
+            }
+            className={`mt-3 w-full text-sm px-4 py-2 rounded transition-colors min-h-[44px] ${
+              canDelete
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            🗑️ Spiel löschen
+          </button>
+        )}
       </div>
     </div>
   );

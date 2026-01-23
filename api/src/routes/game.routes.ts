@@ -28,9 +28,9 @@ router.get('/', async (_req: Request, res: Response) => {
 
 /**
  * POST /api/games
- * Creates a new game with the user as a player (and optionally as a bringer).
+ * Creates a new game with the user as owner (and optionally as player and/or bringer).
  * 
- * Request body: { name: string, userId: string, isBringing: boolean }
+ * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean }
  * Response: { game: Game }
  * 
  * Error responses:
@@ -41,7 +41,7 @@ router.get('/', async (_req: Request, res: Response) => {
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing } = req.body;
+    const { name, userId, isBringing, isPlaying } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -65,7 +65,8 @@ router.post('/', async (req: Request, res: Response) => {
     const game = await gameService.createGame(
       name,
       userId,
-      Boolean(isBringing)
+      Boolean(isBringing),
+      Boolean(isPlaying)
     );
 
     return res.status(201).json({ game });
@@ -311,6 +312,79 @@ router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
       }
     }
     console.error('Error removing bringer:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
+/**
+ * DELETE /api/games/:id
+ * Deletes a game. Only the owner can delete, and only if the game has no players or bringers.
+ * 
+ * Request headers: x-user-id (required)
+ * Response: { success: true }
+ * 
+ * Error responses:
+ *   - 400 if userId header is missing or game has players/bringers
+ *   - 403 if user is not the owner
+ *   - 404 if game not found
+ * 
+ * Requirements: 3.2, 3.5, 3.6, 3.7
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string;
+
+    // Validate required header
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Benutzer-ID erforderlich.',
+        },
+      });
+    }
+
+    await gameService.deleteGame(id, userId);
+    return res.json({ success: true });
+  } catch (error) {
+    if (error instanceof Error) {
+      const errorWithCode = error as Error & { code?: string };
+      
+      // Handle game not found
+      if (errorWithCode.code === 'GAME_NOT_FOUND') {
+        return res.status(404).json({
+          error: {
+            code: 'GAME_NOT_FOUND',
+            message: error.message,
+          },
+        });
+      }
+      // Handle forbidden (not owner)
+      if (errorWithCode.code === 'FORBIDDEN') {
+        return res.status(403).json({
+          error: {
+            code: 'FORBIDDEN',
+            message: error.message,
+          },
+        });
+      }
+      // Handle game not empty
+      if (errorWithCode.code === 'GAME_NOT_EMPTY') {
+        return res.status(400).json({
+          error: {
+            code: 'GAME_NOT_EMPTY',
+            message: error.message,
+          },
+        });
+      }
+    }
+    console.error('Error deleting game:', error);
     return res.status(500).json({
       error: {
         code: 'INTERNAL_ERROR',

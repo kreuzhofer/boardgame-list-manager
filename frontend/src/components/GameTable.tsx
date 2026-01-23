@@ -22,6 +22,9 @@ interface GameTableProps {
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
+  onDeleteGame?: (gameId: string) => void;
+  scrollToGameId?: string | null;
+  onScrolledToGame?: () => void;
 }
 
 export function GameTable({
@@ -33,6 +36,9 @@ export function GameTable({
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
+  onDeleteGame,
+  scrollToGameId,
+  onScrolledToGame,
 }: GameTableProps) {
   // Sort games alphabetically by name (Requirements 5.2, 5.3)
   const sortedGames = useMemo(() => {
@@ -126,6 +132,9 @@ export function GameTable({
               onAddBringer={onAddBringer}
               onRemovePlayer={onRemovePlayer}
               onRemoveBringer={onRemoveBringer}
+              onDeleteGame={onDeleteGame}
+              scrollIntoView={game.id === scrollToGameId}
+              onScrolledIntoView={onScrolledToGame}
             />
           ))}
         </div>
@@ -161,6 +170,9 @@ export function GameTable({
                   onAddBringer={onAddBringer}
                   onRemovePlayer={onRemovePlayer}
                   onRemoveBringer={onRemoveBringer}
+                  onDeleteGame={onDeleteGame}
+                  scrollIntoView={game.id === scrollToGameId}
+                  onScrolledIntoView={onScrolledToGame}
                 />
               ))}
             </tbody>

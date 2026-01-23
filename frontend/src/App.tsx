@@ -30,7 +30,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // User management via localStorage and API
-  const { user, isLoading, setUser } = useUser();
+  const { user, isLoading, setUser, clearUser } = useUser();
 
   // Set document title from environment variable
   useEffect(() => {
@@ -51,6 +51,11 @@ function App() {
     setUser(updatedUser);
   }, [setUser]);
 
+  // Handle logout - clears user from localStorage and shows user selection
+  const handleLogout = useCallback(() => {
+    clearUser();
+  }, [clearUser]);
+
   // Determine if we need to show the user selection modal
   // Show if authenticated but no user stored (first-time user or user deleted)
   const showUserSelection = isAuthenticated && !isLoading && !user;
@@ -67,6 +72,7 @@ function App() {
         <Layout 
           user={user ?? undefined} 
           onUserUpdated={handleUserUpdated}
+          onLogout={handleLogout}
         >
           <Routes>
             <Route path="/" element={<HomePage user={user} />} />

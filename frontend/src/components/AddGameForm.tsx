@@ -1,11 +1,11 @@
 /**
  * AddGameForm component
- * Form for adding a new game with optional "Bringe ich mit" checkbox
+ * Form for adding a new game with toggle buttons for playing and bringing
  * All UI text in German (Requirement 9.1)
  * Requirements: 3.1, 3.2
  */
 
-import { useState, useCallback, FormEvent, useRef, useEffect } from 'react';
+import { useState, useCallback, FormEvent, useRef } from 'react';
 import { gamesApi, ApiError } from '../api/client';
 import { Game } from '../types';
 
@@ -19,14 +19,10 @@ interface AddGameFormProps {
 export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
   const [gameName, setGameName] = useState('');
   const [isBringing, setIsBringing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -44,11 +40,12 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
 
       try {
         // Call API to create game using the API client
-        const response = await gamesApi.create(trimmedName, currentUserId, isBringing);
+        const response = await gamesApi.create(trimmedName, currentUserId, isBringing, isPlaying);
         
         // Reset form
         setGameName('');
         setIsBringing(false);
+        setIsPlaying(false);
         inputRef.current?.focus();
         
         // Notify parent
@@ -63,7 +60,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         setIsSubmitting(false);
       }
     },
-    [gameName, isBringing, currentUserId, onGameAdded]
+    [gameName, isBringing, isPlaying, currentUserId, onGameAdded]
   );
 
   const handleInputChange = useCallback(
@@ -77,12 +74,8 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
     [error]
   );
 
-  const handleCheckboxChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setIsBringing(e.target.checked);
-    },
-    []
-  );
+  // Button base classes
+  const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px]';
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -91,9 +84,9 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
       </h3>
       
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-4">
           {/* Game name input */}
-          <div className="flex-1">
+          <div>
             <label
               htmlFor="game-name-input"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -118,28 +111,41 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
             />
           </div>
 
-          {/* "Bringe ich mit" checkbox - Requirement 3.2 */}
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 cursor-pointer select-none py-2">
-              <input
-                type="checkbox"
-                checked={isBringing}
-                onChange={handleCheckboxChange}
-                disabled={isSubmitting}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Bringe ich mit
-              </span>
-            </label>
-          </div>
+          {/* Toggle buttons row */}
+          <div className="flex flex-wrap gap-2">
+            {/* "Mitspielen" toggle button */}
+            <button
+              type="button"
+              onClick={() => setIsPlaying(!isPlaying)}
+              disabled={isSubmitting}
+              className={`${toggleButtonBase} ${
+                isPlaying
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              🎮 {isPlaying ? 'Mitspielen ✓' : 'Mitspielen'}
+            </button>
 
-          {/* Submit button */}
-          <div className="flex items-end">
+            {/* "Mitbringen" toggle button */}
+            <button
+              type="button"
+              onClick={() => setIsBringing(!isBringing)}
+              disabled={isSubmitting}
+              className={`${toggleButtonBase} ${
+                isBringing
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              📦 {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
+            </button>
+
+            {/* Submit button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
             >
               {isSubmitting ? (
                 <>

@@ -51,11 +51,13 @@ export class GameService {
 
   /**
    * Transforms a GameEntity from the database to the API Game format
+   * Requirements: 2.3, 2.4 - Include owner information
    */
   private transformGame(entity: GameEntity): Game {
     return {
       id: entity.id,
       name: entity.name,
+      owner: entity.owner ? { id: entity.owner.id, name: entity.owner.name } : null,
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -77,12 +79,13 @@ export class GameService {
    * @param name - The game name
    * @param userId - The user ID of the user creating the game
    * @param isBringing - Whether the user is bringing the game
+   * @param isPlaying - Whether the user wants to play the game
    * @returns The created game in API format
    * @throws Error with German message if game name is empty or already exists
    * 
    * Requirements: 3.1, 3.3, 3.4, 4.1
    */
-  async createGame(name: string, userId: string, isBringing: boolean): Promise<Game> {
+  async createGame(name: string, userId: string, isBringing: boolean, isPlaying: boolean): Promise<Game> {
     // Validate game name
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -100,6 +103,7 @@ export class GameService {
         name: trimmedName,
         userId,
         isBringing,
+        isPlaying,
       });
       return this.transformGame(entity);
     } catch (error) {
@@ -215,6 +219,45 @@ export class GameService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Delete a game
+   * @param gameId - The game's unique identifier
+   * @param userId - The user's ID requesting deletion (must be owner)
+   * @throws Error with German message if:
+   *   - Game not found (404)
+   *   - User is not the owner (403)
+   *   - Game has players or bringers (400)
+   * 
+   * Requirements: 3.2, 3.5, 3.6, 3.7
+   */
+  async deleteGame(gameId: string, userId: string): Promise<void> {
+    // Find the game
+    const entity = await this.repository.findById(gameId);
+    
+    if (!entity) {
+      const error = new Error('Spiel nicht gefunden.');
+      (error as Error & { code: string }).code = 'GAME_NOT_FOUND';
+      throw error;
+    }
+
+    // Check ownership - user must be the owner
+    if (entity.ownerId !== userId) {
+      const error = new Error('Du bist nicht berechtigt, dieses Spiel zu löschen.');
+      (error as Error & { code: string }).code = 'FORBIDDEN';
+      throw error;
+    }
+
+    // Check if game has players or bringers
+    if (entity.players.length > 0 || entity.bringers.length > 0) {
+      const error = new Error('Das Spiel kann nicht gelöscht werden, solange noch Mitspieler oder Bringer eingetragen sind.');
+      (error as Error & { code: string }).code = 'GAME_NOT_EMPTY';
+      throw error;
+    }
+
+    // Delete the game
+    await this.repository.delete(gameId);
   }
 }
 

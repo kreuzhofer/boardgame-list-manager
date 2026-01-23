@@ -75,7 +75,7 @@ export function GameActions({
           className={`${baseButtonClasses} bg-yellow-500 text-white hover:bg-yellow-600 shadow-sm`}
           title="Dieses Spiel mitbringen und den Wunsch erfüllen"
         >
-          ✨ Wunsch erfüllen
+          📦 {isMobile ? 'Mitbringen' : 'Bringe ich mit'}
         </button>
       )}
 
@@ -86,7 +86,7 @@ export function GameActions({
           className={`${baseButtonClasses} bg-blue-500 text-white hover:bg-blue-600 shadow-sm`}
           title="Als Mitspieler eintragen"
         >
-          🎮 Möchte ich spielen
+          🎮 {isMobile ? 'Mitspielen' : 'Möchte ich spielen'}
         </button>
       )}
 
@@ -97,7 +97,7 @@ export function GameActions({
           className={`${baseButtonClasses} bg-green-500 text-white hover:bg-green-600 shadow-sm`}
           title="Dieses Spiel mitbringen"
         >
-          📦 Bringe ich mit
+          📦 {isMobile ? 'Mitbringen' : 'Bringe ich mit'}
         </button>
       )}
 
@@ -108,7 +108,7 @@ export function GameActions({
           className={`${baseButtonClasses} bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700`}
           title="Mich als Mitspieler austragen"
         >
-          ❌ Nicht mehr spielen
+          ❌ {isMobile ? 'Nicht spielen' : 'Nicht mehr spielen'}
         </button>
       )}
 
@@ -119,7 +119,7 @@ export function GameActions({
           className={`${baseButtonClasses} bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700`}
           title="Mich als Bringer austragen"
         >
-          ❌ Nicht mehr mitbringen
+          ❌ {isMobile ? 'Nicht mitbringen' : 'Nicht mehr mitbringen'}
         </button>
       )}
     </div>

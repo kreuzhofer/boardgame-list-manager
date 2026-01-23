@@ -4,7 +4,7 @@
  * Requirements: 1.1, 1.2, 1.3, 9.1
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, useRef, useEffect, FormEvent } from 'react';
 import { authApi, ApiError } from '../api/client';
 
 interface PasswordScreenProps {
@@ -20,8 +20,13 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const eventName = getEventName();
+
+  useEffect(() => {
+    passwordInputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -82,6 +87,7 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
               Passwort eingeben
             </label>
             <input
+              ref={passwordInputRef}
               type="password"
               id="password"
               value={password}
@@ -89,7 +95,6 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Passwort"
               disabled={isLoading}
-              autoFocus
             />
           </div>
 

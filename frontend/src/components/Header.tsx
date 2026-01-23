@@ -13,6 +13,7 @@ import type { User } from '../types';
 interface HeaderProps {
   user?: User;
   onUserUpdated?: (user: User) => void;
+  onLogout?: () => void;
 }
 
 // Get event name from environment variable
@@ -20,7 +21,7 @@ const getEventName = (): string => {
   return import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
 };
 
-export function Header({ user, onUserUpdated }: HeaderProps) {
+export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
   const eventName = getEventName();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -84,6 +85,15 @@ export function Header({ user, onUserUpdated }: HeaderProps) {
               <div className="bg-white/10 px-3 py-1 rounded">
                 <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
               </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                  aria-label="Abmelden"
+                >
+                  Abmelden
+                </button>
+              )}
             </div>
           )}
 
@@ -163,6 +173,18 @@ export function Header({ user, onUserUpdated }: HeaderProps) {
                 <div className="flex flex-col gap-2">
                   <span className="text-white/70 text-xs">Angemeldet als</span>
                   <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
+                  {onLogout && (
+                    <button
+                      onClick={() => {
+                        closeMobileMenu();
+                        onLogout();
+                      }}
+                      className="mt-2 w-full text-white/90 hover:text-white text-sm px-4 py-2 rounded bg-white/10 hover:bg-white/20 transition-colors min-h-[44px]"
+                      aria-label="Abmelden"
+                    >
+                      Abmelden
+                    </button>
+                  )}
                 </div>
               </div>
             )}

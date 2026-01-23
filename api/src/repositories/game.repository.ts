@@ -11,8 +11,10 @@ export class GameRepository {
   /**
    * Include clause for fetching related players and bringers with user data
    * Requirements: 4.6 - Include full user object for each player and bringer
+   * Requirements: 2.3 - Include owner relation
    */
   private readonly includeRelations = {
+    owner: true,
     players: {
       include: {
         user: true,
@@ -54,22 +56,26 @@ export class GameRepository {
 
   /**
    * Create a new game with optional player and bringer entries
-   * @param data - Game creation data including name, userId, and isBringing flag
+   * @param data - Game creation data including name, userId, isBringing, and isPlaying flags
    * @returns The created game with related data
    * Requirements: 4.1 - Accept userId instead of userName
+   * Requirements: 2.2 - Set ownerId to the creating user's ID
    */
   async create(data: CreateGameDto): Promise<GameEntity> {
-    const { name, userId, isBringing } = data;
+    const { name, userId, isBringing, isPlaying } = data;
 
-    // Create game with the user as a player, and optionally as a bringer
+    // Create game with the user as owner, and optionally as player and/or bringer
     const game = await prisma.game.create({
       data: {
         name,
-        players: {
-          create: {
-            userId,
+        ownerId: userId,
+        ...(isPlaying && {
+          players: {
+            create: {
+              userId,
+            },
           },
-        },
+        }),
         ...(isBringing && {
           bringers: {
             create: {
@@ -247,6 +253,23 @@ export class GameRepository {
       include: this.includeRelations,
     });
     return game;
+  }
+
+  /**
+   * Delete a game by ID
+   * @param id - The game's unique identifier
+   * @returns true if deleted, false if not found
+   * Requirements: 3.5 - Remove the game from the database
+   */
+  async delete(id: string): Promise<boolean> {
+    try {
+      await prisma.game.delete({
+        where: { id },
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

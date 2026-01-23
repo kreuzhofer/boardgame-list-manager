@@ -6,7 +6,7 @@
  * Task 14.1: Wire frontend to backend API
  * - Fetches games from API on mount
  * - Displays GameTable, AddGameForm, SearchFilters, Statistics
- * - Handles all game actions (add player, add bringer, remove player, remove bringer)
+ * - Handles all game actions (add player, add bringer, remove player, remove bringer, delete game)
  * - Shows loading states and error messages in German
  */
 
@@ -16,6 +16,7 @@ import { GameTable } from '../components/GameTable';
 import { AddGameForm } from '../components/AddGameForm';
 import { SearchFilters } from '../components/SearchFilters';
 import { Statistics } from '../components/Statistics';
+import { DeleteGameModal } from '../components/DeleteGameModal';
 import { useGameFilters } from '../hooks';
 import type { Game, User } from '../types';
 import type { SortOrder } from '../utils';
@@ -35,6 +36,14 @@ export function HomePage({ user }: HomePageProps) {
   
   // Statistics refresh trigger
   const [statsRefreshTrigger, setStatsRefreshTrigger] = useState(0);
+  
+  // Track newly added game for scroll-to behavior
+  const [newlyAddedGameId, setNewlyAddedGameId] = useState<string | null>(null);
+  
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Filter state from hook
   const {
@@ -85,8 +94,14 @@ export function HomePage({ user }: HomePageProps) {
   // Handle game added
   const handleGameAdded = useCallback((game: Game) => {
     setGames((prev) => [...prev, game]);
+    setNewlyAddedGameId(game.id);
     refreshStats();
   }, [refreshStats]);
+
+  // Clear newly added game ID after scroll
+  const handleScrolledToGame = useCallback(() => {
+    setNewlyAddedGameId(null);
+  }, []);
 
   // Handle add player action
   const handleAddPlayer = useCallback(async (gameId: string) => {
@@ -163,6 +178,44 @@ export function HomePage({ user }: HomePageProps) {
       }
     }
   }, [currentUserId, refreshStats]);
+
+  // Handle delete game - opens confirmation modal
+  const handleDeleteGameClick = useCallback((gameId: string) => {
+    const game = games.find((g) => g.id === gameId);
+    if (game) {
+      setGameToDelete(game);
+      setDeleteModalOpen(true);
+    }
+  }, [games]);
+
+  // Handle delete game confirmation
+  const handleDeleteGameConfirm = useCallback(async () => {
+    if (!gameToDelete || !currentUserId) return;
+    
+    setIsDeleting(true);
+    try {
+      await gamesApi.delete(gameToDelete.id, currentUserId);
+      setGames((prev) => prev.filter((g) => g.id !== gameToDelete.id));
+      refreshStats();
+      setDeleteModalOpen(false);
+      setGameToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete game:', err);
+      if (err instanceof ApiError) {
+        alert(err.message);
+      } else {
+        alert('Fehler beim Löschen des Spiels. Bitte erneut versuchen.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [gameToDelete, currentUserId, refreshStats]);
+
+  // Handle delete modal cancel
+  const handleDeleteModalCancel = useCallback(() => {
+    setDeleteModalOpen(false);
+    setGameToDelete(null);
+  }, []);
 
   // Apply filters to games
   const filteredGames = filterGames(games, currentUserName);
@@ -291,6 +344,18 @@ export function HomePage({ user }: HomePageProps) {
         onAddBringer={handleAddBringer}
         onRemovePlayer={handleRemovePlayer}
         onRemoveBringer={handleRemoveBringer}
+        onDeleteGame={handleDeleteGameClick}
+        scrollToGameId={newlyAddedGameId}
+        onScrolledToGame={handleScrolledToGame}
+      />
+
+      {/* Delete confirmation modal */}
+      <DeleteGameModal
+        isOpen={deleteModalOpen}
+        gameName={gameToDelete?.name ?? ''}
+        onConfirm={handleDeleteGameConfirm}
+        onCancel={handleDeleteModalCancel}
+        isDeleting={isDeleting}
       />
     </div>
   );

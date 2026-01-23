@@ -387,5 +387,96 @@ describe('UserRepository', () => {
       expect(await prisma.player.findUnique({ where: { id: player.id } })).toBeNull();
       expect(await prisma.bringer.findUnique({ where: { id: bringer.id } })).toBeNull();
     });
+
+    /**
+     * Test SetNull behavior - deleting user should set ownerId to null for owned games
+     * Validates: Requirement 4.1, 4.2 - Games persist when owner is deleted
+     */
+    it('should set ownerId to null for owned games when user is deleted', async () => {
+      const userName = uniqueName('ownerSetNull');
+      const gameName = uniqueName('ownedGame');
+
+      // Create user
+      const user = await repository.create(userName);
+
+      // Create a game owned by this user
+      const game = await prisma.game.create({
+        data: { 
+          name: gameName,
+          ownerId: user.id,
+        },
+      });
+      createdGameIds.push(game.id);
+
+      // Verify game has owner
+      const gameBefore = await prisma.game.findUnique({
+        where: { id: game.id },
+      });
+      expect(gameBefore).not.toBeNull();
+      expect(gameBefore!.ownerId).toBe(user.id);
+
+      // Delete the user
+      await repository.delete(user.id);
+
+      // Verify game still exists but ownerId is null
+      const gameAfter = await prisma.game.findUnique({
+        where: { id: game.id },
+      });
+      expect(gameAfter).not.toBeNull();
+      expect(gameAfter!.ownerId).toBeNull();
+      expect(gameAfter!.name).toBe(gameName);
+    });
+
+    /**
+     * Test combined cascade and SetNull behavior
+     * Validates: Requirement 4.1, 4.4 - Player/Bringer cascade delete + Game ownership SetNull
+     */
+    it('should cascade delete Player/Bringer and set ownerId to null for owned games', async () => {
+      const userName = uniqueName('combinedCascade');
+      const gameName = uniqueName('combinedGame');
+
+      // Create user
+      const user = await repository.create(userName);
+
+      // Create a game owned by this user with the user as player and bringer
+      const game = await prisma.game.create({
+        data: { 
+          name: gameName,
+          ownerId: user.id,
+          players: {
+            create: { userId: user.id },
+          },
+          bringers: {
+            create: { userId: user.id },
+          },
+        },
+        include: {
+          players: true,
+          bringers: true,
+        },
+      });
+      createdGameIds.push(game.id);
+
+      // Verify initial state
+      expect(game.ownerId).toBe(user.id);
+      expect(game.players.length).toBe(1);
+      expect(game.bringers.length).toBe(1);
+
+      // Delete the user
+      await repository.delete(user.id);
+
+      // Verify game still exists with null owner and no players/bringers
+      const gameAfter = await prisma.game.findUnique({
+        where: { id: game.id },
+        include: {
+          players: true,
+          bringers: true,
+        },
+      });
+      expect(gameAfter).not.toBeNull();
+      expect(gameAfter!.ownerId).toBeNull();
+      expect(gameAfter!.players.length).toBe(0);
+      expect(gameAfter!.bringers.length).toBe(0);
+    });
   });
 });

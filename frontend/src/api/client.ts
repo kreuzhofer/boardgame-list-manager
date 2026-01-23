@@ -134,12 +134,22 @@ export const gamesApi = {
   create: (
     name: string,
     userId: string,
-    isBringing: boolean
+    isBringing: boolean,
+    isPlaying: boolean
   ): Promise<GameResponse> => {
-    const body: CreateGameRequest = { name, userId, isBringing };
+    const body: CreateGameRequest = { name, userId, isBringing, isPlaying };
     return fetchApi<GameResponse>('/api/games', {
       method: 'POST',
       body: JSON.stringify(body),
+    });
+  },
+
+  delete: (gameId: string, userId: string): Promise<{ success: boolean }> => {
+    return fetchApi<{ success: boolean }>(`/api/games/${gameId}`, {
+      method: 'DELETE',
+      headers: {
+        'x-user-id': userId,
+      },
     });
   },
 

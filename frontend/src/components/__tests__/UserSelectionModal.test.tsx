@@ -116,7 +116,7 @@ describe('UserSelectionModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Fehler beim Laden der Benutzer.')).toBeInTheDocument();
+        expect(screen.getByText('Fehler beim Laden der Benutzer: Network error')).toBeInTheDocument();
       });
     });
   });

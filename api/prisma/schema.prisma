@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  players   Player[]
-  bringers  Bringer[]
+  id         String   @id @default(uuid())
+  name       String   @unique
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  players    Player[]
+  bringers   Bringer[]
+  ownedGames Game[]
 
   @@map("users")
 }
@@ -21,11 +22,14 @@ model User {
 model Game {
   id        String   @id @default(uuid())
   name      String   @unique
+  ownerId   String?  @map("owner_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  owner     User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   players   Player[]
   bringers  Bringer[]
 
+  @@index([ownerId])
   @@map("games")
 }
 

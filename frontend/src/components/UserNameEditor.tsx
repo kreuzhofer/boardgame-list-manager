@@ -90,7 +90,7 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
           setNewName(e.target.value);
           setError(null);
         }}
-        className="px-2 py-1 border border-white/30 bg-white/20 text-white rounded text-sm focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/50"
+        className="px-2 py-1 border border-white/30 bg-white/20 text-white rounded text-sm focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/50 caret-white"
         autoFocus
         disabled={isSubmitting}
       />

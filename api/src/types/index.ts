@@ -10,8 +10,10 @@ export interface UserEntity {
 export interface GameEntity {
   id: string;
   name: string;
+  ownerId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  owner: UserEntity | null;
   players: PlayerEntity[];
   bringers: BringerEntity[];
 }
@@ -37,6 +39,7 @@ export interface CreateGameDto {
   name: string;
   userId: string;
   isBringing: boolean;
+  isPlaying: boolean;
 }
 
 export interface CreatePlayerDto {
@@ -56,6 +59,7 @@ export interface User {
 export interface Game {
   id: string;
   name: string;
+  owner: User | null;
   players: Player[];
   bringers: Bringer[];
   status: 'wunsch' | 'verfuegbar';

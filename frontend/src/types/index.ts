@@ -30,6 +30,7 @@ export type GameStatus = 'wunsch' | 'verfuegbar';
 export interface Game {
   id: string;
   name: string;
+  owner: User | null;
   players: Player[];
   bringers: Bringer[];
   status: GameStatus;
@@ -66,6 +67,7 @@ export interface CreateGameRequest {
   name: string;
   userId: string;
   isBringing: boolean;
+  isPlaying: boolean;
 }
 
 export interface AddPlayerRequest {

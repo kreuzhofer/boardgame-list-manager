@@ -25,6 +25,8 @@ interface GameCardProps {
   onDeleteGame?: (gameId: string) => void;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
+  /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
+  isHighlighted?: boolean;
 }
 
 export function GameCard({
@@ -37,6 +39,7 @@ export function GameCard({
   onDeleteGame,
   scrollIntoView,
   onScrolledIntoView,
+  isHighlighted,
 }: GameCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
@@ -50,12 +53,24 @@ export function GameCard({
     }
   }, [scrollIntoView, onScrolledIntoView]);
 
+  // Determine background color: highlight > wunsch > default
+  const getCardClassName = () => {
+    const baseClasses = 'p-4';
+    const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
+    
+    if (isHighlighted) {
+      return `${baseClasses} bg-green-100 ${scrollClasses}`;
+    }
+    if (isWunsch) {
+      return `${baseClasses} bg-yellow-50 ${scrollClasses}`;
+    }
+    return `${baseClasses} bg-white ${scrollClasses}`;
+  };
+
   return (
     <div
       ref={cardRef}
-      className={`p-4 ${
-        isWunsch ? 'bg-yellow-50' : 'bg-white'
-      } ${scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : ''}`}
+      className={getCardClassName()}
     >
       {/* Game Name with Status Badge */}
       <div className="flex flex-col gap-2 mb-3">

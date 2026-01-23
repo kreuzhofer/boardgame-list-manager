@@ -3,21 +3,22 @@
  * Wires frontend components to backend API
  * All UI text in German (Requirement 9.1)
  * 
- * Task 14.1: Wire frontend to backend API
- * - Fetches games from API on mount
- * - Displays GameTable, AddGameForm, SearchFilters, Statistics
- * - Handles all game actions (add player, add bringer, remove player, remove bringer, delete game)
- * - Shows loading states and error messages in German
+ * Updated for unified search feature (Spec 006):
+ * - Replaced AddGameForm and SearchFilters name search with UnifiedSearchBar
+ * - Added AdvancedFilters for player/bringer search
+ * - Added game highlighting based on search query
+ * - Kept Wunsch and Meine Spiele toggles visible
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { gamesApi, ApiError } from '../api/client';
 import { GameTable } from '../components/GameTable';
-import { AddGameForm } from '../components/AddGameForm';
-import { SearchFilters } from '../components/SearchFilters';
+import { UnifiedSearchBar } from '../components/UnifiedSearchBar';
+import { AdvancedFilters } from '../components/AdvancedFilters';
 import { Statistics } from '../components/Statistics';
 import { DeleteGameModal } from '../components/DeleteGameModal';
 import { useGameFilters } from '../hooks';
+import { getHighlightedGameIds } from '../utils';
 import type { Game, User } from '../types';
 import type { SortOrder } from '../utils';
 
@@ -37,8 +38,11 @@ export function HomePage({ user }: HomePageProps) {
   // Statistics refresh trigger
   const [statsRefreshTrigger, setStatsRefreshTrigger] = useState(0);
   
-  // Track newly added game for scroll-to behavior
-  const [newlyAddedGameId, setNewlyAddedGameId] = useState<string | null>(null);
+  // Track game to scroll to (newly added or clicked from dropdown)
+  const [scrollToGameId, setScrollToGameId] = useState<string | null>(null);
+  
+  // Search query for highlighting (from UnifiedSearchBar)
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -91,17 +95,28 @@ export function HomePage({ user }: HomePageProps) {
     setStatsRefreshTrigger((prev) => prev + 1);
   }, []);
 
-  // Handle game added
+  // Handle game added from UnifiedSearchBar
   const handleGameAdded = useCallback((game: Game) => {
     setGames((prev) => [...prev, game]);
-    setNewlyAddedGameId(game.id);
+    setScrollToGameId(game.id);
     refreshStats();
   }, [refreshStats]);
 
-  // Clear newly added game ID after scroll
-  const handleScrolledToGame = useCallback(() => {
-    setNewlyAddedGameId(null);
+  // Handle scroll to game from dropdown click
+  const handleScrollToGame = useCallback((gameId: string) => {
+    setScrollToGameId(gameId);
   }, []);
+
+  // Clear scroll target after scroll
+  const handleScrolledToGame = useCallback(() => {
+    setScrollToGameId(null);
+  }, []);
+
+  // Handle search query change for highlighting and filtering
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setNameQuery(query);
+  }, [setNameQuery]);
 
   // Handle add player action
   const handleAddPlayer = useCallback(async (gameId: string) => {
@@ -220,6 +235,9 @@ export function HomePage({ user }: HomePageProps) {
   // Apply filters to games
   const filteredGames = filterGames(games, currentUserName);
 
+  // Get highlighted game IDs based on search query
+  const highlightedGameIds = getHighlightedGameIds(filteredGames, searchQuery);
+
   // Loading state
   if (loading) {
     return (
@@ -310,22 +328,65 @@ export function HomePage({ user }: HomePageProps) {
 
       <Statistics refreshTrigger={statsRefreshTrigger} />
 
+      {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
       {user && (
-        <AddGameForm currentUserId={currentUserId} onGameAdded={handleGameAdded} />
+        <UnifiedSearchBar
+          games={games}
+          currentUserId={currentUserId}
+          onGameAdded={handleGameAdded}
+          onSearchQueryChange={handleSearchQueryChange}
+          onScrollToGame={handleScrollToGame}
+        />
       )}
 
-      <SearchFilters
-        onNameSearch={setNameQuery}
+      {/* Filter toggles - Wunsch and Meine Spiele (Requirement 8.5, 8.6) */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex flex-wrap gap-2">
+          {/* Gesuchte Spiele toggle */}
+          <button
+            type="button"
+            onClick={() => setWunschOnly(!filters.wunschOnly)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+              filters.wunschOnly
+                ? 'bg-amber-100 text-amber-800 border-2 border-amber-400'
+                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+            }`}
+            aria-pressed={filters.wunschOnly}
+            aria-label="Nur gesuchte Spiele anzeigen"
+          >
+            <WunschIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Gesuchte Spiele</span>
+            <span className="sm:hidden">Gesucht</span>
+            {filters.wunschOnly && <CheckIcon className="w-4 h-4" />}
+          </button>
+
+          {/* Meine Spiele toggle */}
+          <button
+            type="button"
+            onClick={() => setMyGamesOnly(!filters.myGamesOnly)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+              filters.myGamesOnly
+                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+            }`}
+            aria-pressed={filters.myGamesOnly}
+            aria-label="Nur meine Spiele anzeigen"
+          >
+            <UserIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Meine Spiele</span>
+            <span className="sm:hidden">Meine</span>
+            {filters.myGamesOnly && <CheckIcon className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Advanced Filters - player and bringer search (Requirement 8.1-8.4) */}
+      <AdvancedFilters
         onPlayerSearch={setPlayerQuery}
         onBringerSearch={setBringerQuery}
-        onWunschFilter={setWunschOnly}
-        onMyGamesFilter={setMyGamesOnly}
         initialValues={{
-          nameQuery: filters.nameQuery,
           playerQuery: filters.playerQuery,
           bringerQuery: filters.bringerQuery,
-          wunschOnly: filters.wunschOnly,
-          myGamesOnly: filters.myGamesOnly,
         }}
       />
 
@@ -345,8 +406,10 @@ export function HomePage({ user }: HomePageProps) {
         onRemovePlayer={handleRemovePlayer}
         onRemoveBringer={handleRemoveBringer}
         onDeleteGame={handleDeleteGameClick}
-        scrollToGameId={newlyAddedGameId}
+        scrollToGameId={scrollToGameId}
         onScrolledToGame={handleScrolledToGame}
+        highlightedGameIds={highlightedGameIds}
+        totalGamesCount={games.length}
       />
 
       {/* Delete confirmation modal */}
@@ -358,6 +421,64 @@ export function HomePage({ user }: HomePageProps) {
         isDeleting={isDeleting}
       />
     </div>
+  );
+}
+
+// Icon components
+function WunschIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
+    </svg>
+  );
+}
+
+function UserIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
   );
 }
 

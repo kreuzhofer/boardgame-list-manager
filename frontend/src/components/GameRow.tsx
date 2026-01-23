@@ -24,6 +24,8 @@ interface GameRowProps {
   onDeleteGame?: (gameId: string) => void;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
+  /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
+  isHighlighted?: boolean;
 }
 
 export function GameRow({
@@ -36,6 +38,7 @@ export function GameRow({
   onDeleteGame,
   scrollIntoView,
   onScrolledIntoView,
+  isHighlighted,
 }: GameRowProps) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const isWunsch = game.status === 'wunsch';
@@ -49,12 +52,24 @@ export function GameRow({
     }
   }, [scrollIntoView, onScrolledIntoView]);
 
+  // Determine background color: highlight > wunsch > default
+  const getRowClassName = () => {
+    const baseClasses = 'border-b border-gray-200 transition-colors';
+    const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
+    
+    if (isHighlighted) {
+      return `${baseClasses} bg-green-100 hover:bg-green-200 ${scrollClasses}`;
+    }
+    if (isWunsch) {
+      return `${baseClasses} bg-yellow-50 hover:bg-yellow-100 ${scrollClasses}`;
+    }
+    return `${baseClasses} hover:bg-gray-50 ${scrollClasses}`;
+  };
+
   return (
     <tr
       ref={rowRef}
-      className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-        isWunsch ? 'bg-yellow-50 hover:bg-yellow-100' : ''
-      } ${scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : ''}`}
+      className={getRowClassName()}
     >
       {/* Game Name with Status Badge and Owner */}
       <td className="px-4 py-3">

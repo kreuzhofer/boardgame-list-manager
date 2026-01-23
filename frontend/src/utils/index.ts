@@ -28,3 +28,24 @@ export {
 } from './filtering';
 
 export type { FilterState } from './filtering';
+
+
+export { normalizeName } from './nameNormalization';
+
+export {
+  checkDuplicate,
+  getExistingBggIds,
+  getExistingNormalizedNames,
+} from './duplicateDetection';
+
+export type { DuplicateCheckResult } from './duplicateDetection';
+
+export {
+  filterGamesByName,
+  shouldHighlightGame,
+  getHighlightedGameIds,
+  getMatchingGamesWithBringers,
+  countMatchingGames,
+} from './gameFiltering';
+
+export type { GameWithBringerInfo } from './gameFiltering';

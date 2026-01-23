@@ -1,4 +1,7 @@
 /**
+ * @deprecated This component has been replaced by UnifiedSearchBar (Spec 006).
+ * Kept for reference only. Use UnifiedSearchBar instead.
+ * 
  * AddGameForm component
  * Form for adding a new game with toggle buttons for playing and bringing
  * Includes BGG autocomplete functionality
@@ -12,12 +15,16 @@ import { useBggSearch } from '../hooks';
 import { AutocompleteDropdown } from './AutocompleteDropdown';
 import type { Game, BggSearchResult } from '../types';
 
+/**
+ * @deprecated Use UnifiedSearchBar instead
+ */
 interface AddGameFormProps {
   /** Current user's ID */
   currentUserId: string;
   /** Callback when a game is successfully added */
   onGameAdded: (game: Game) => void;
 }
+
 
 export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
   const [gameName, setGameName] = useState('');

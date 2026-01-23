@@ -27,3 +27,10 @@ export { SortControls } from './SortControls';
 export { Statistics } from './Statistics';
 export { UserNameEditor } from './UserNameEditor';
 export { UserSelectionModal } from './UserSelectionModal';
+
+export { UnifiedSearchBar } from './UnifiedSearchBar';
+export type { UnifiedSearchBarProps, AddButtonState, AddButtonStateResult } from './UnifiedSearchBar';
+export { UnifiedDropdown, IN_LISTE_MAX_ITEMS, BGG_INITIAL_ITEMS, BGG_EXPAND_INCREMENT } from './UnifiedDropdown';
+export type { UnifiedDropdownProps } from './UnifiedDropdown';
+export { AdvancedFilters } from './AdvancedFilters';
+export type { AdvancedFiltersProps } from './AdvancedFilters';

@@ -25,6 +25,10 @@ interface GameTableProps {
   onDeleteGame?: (gameId: string) => void;
   scrollToGameId?: string | null;
   onScrolledToGame?: () => void;
+  /** Set of game IDs that should be highlighted (match search) - Requirement 7.1, 7.2 */
+  highlightedGameIds?: Set<string>;
+  /** Total number of games before filtering (to show appropriate empty message) */
+  totalGamesCount?: number;
 }
 
 export function GameTable({
@@ -39,6 +43,8 @@ export function GameTable({
   onDeleteGame,
   scrollToGameId,
   onScrolledToGame,
+  highlightedGameIds,
+  totalGamesCount,
 }: GameTableProps) {
   // Sort games alphabetically by name (Requirements 5.2, 5.3)
   const sortedGames = useMemo(() => {
@@ -53,13 +59,20 @@ export function GameTable({
   };
 
   if (games.length === 0) {
+    // Check if there are games but none match the filter
+    const hasGamesButNoMatch = totalGamesCount !== undefined && totalGamesCount > 0;
+    
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <p className="text-gray-500 text-lg">
-          Noch keine Spiele vorhanden.
+          {hasGamesButNoMatch
+            ? 'Keine Spiele gefunden.'
+            : 'Noch keine Spiele vorhanden.'}
         </p>
         <p className="text-gray-400 text-sm mt-2">
-          Füge das erste Spiel hinzu, um loszulegen!
+          {hasGamesButNoMatch
+            ? 'Versuche einen anderen Suchbegriff oder setze die Filter zurück.'
+            : 'Füge das erste Spiel hinzu, um loszulegen!'}
         </p>
       </div>
     );
@@ -135,6 +148,7 @@ export function GameTable({
               onDeleteGame={onDeleteGame}
               scrollIntoView={game.id === scrollToGameId}
               onScrolledIntoView={onScrolledToGame}
+              isHighlighted={highlightedGameIds?.has(game.id)}
             />
           ))}
         </div>
@@ -173,6 +187,7 @@ export function GameTable({
                   onDeleteGame={onDeleteGame}
                   scrollIntoView={game.id === scrollToGameId}
                   onScrolledIntoView={onScrolledToGame}
+                  isHighlighted={highlightedGameIds?.has(game.id)}
                 />
               ))}
             </tbody>

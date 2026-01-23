@@ -1,4 +1,10 @@
 /**
+ * @deprecated This component has been replaced by UnifiedSearchBar + AdvancedFilters (Spec 006).
+ * - Name search moved to UnifiedSearchBar
+ * - Player/Bringer search moved to AdvancedFilters
+ * - Wunsch/Meine Spiele toggles moved to HomePage directly
+ * Kept for reference only.
+ * 
  * SearchFilters component
  * 
  * Provides search boxes for filtering games by name, player, and bringer,
@@ -12,6 +18,9 @@
 
 import { useState } from 'react';
 
+/**
+ * @deprecated Use UnifiedSearchBar + AdvancedFilters instead
+ */
 export interface SearchFiltersProps {
   /** Callback when name search query changes (Requirement 5.4) */
   onNameSearch: (query: string) => void;

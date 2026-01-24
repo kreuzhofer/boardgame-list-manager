@@ -4,6 +4,8 @@ import type { Toast } from '../types';
 
 // Toast auto-dismiss duration in milliseconds
 const TOAST_DURATION = 4000;
+// Exit animation duration in milliseconds
+const EXIT_ANIMATION_DURATION = 300;
 
 interface ToastContextValue {
   showToast: (message: string) => void;
@@ -34,11 +36,13 @@ interface ToastProviderProps {
  * - Auto-dismiss after 4 seconds
  * - Stacked vertically in bottom-right corner
  * - Newest toast appears at the bottom
+ * - Smooth fade-out-up animation on dismiss
  * 
  * Requirements: 4.5, 4.6, 4.7
  */
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
 
   // Show a new toast
   const showToast = useCallback((message: string) => {
@@ -50,9 +54,19 @@ export function ToastProvider({ children }: ToastProviderProps) {
     setToasts((prev) => [...prev, newToast]);
   }, []);
 
-  // Remove a toast by ID
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  // Start exit animation for a toast
+  const startExitAnimation = useCallback((id: string) => {
+    setExitingIds((prev) => new Set(prev).add(id));
+    
+    // Remove toast after animation completes
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      setExitingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, EXIT_ANIMATION_DURATION);
   }, []);
 
   // Auto-dismiss toasts after TOAST_DURATION
@@ -60,18 +74,21 @@ export function ToastProvider({ children }: ToastProviderProps) {
     if (toasts.length === 0) return;
 
     const timers = toasts.map((toast) => {
+      // Skip toasts that are already exiting
+      if (exitingIds.has(toast.id)) return null;
+      
       const elapsed = Date.now() - toast.createdAt;
       const remaining = Math.max(0, TOAST_DURATION - elapsed);
       
       return setTimeout(() => {
-        removeToast(toast.id);
+        startExitAnimation(toast.id);
       }, remaining);
     });
 
     return () => {
-      timers.forEach((timer) => clearTimeout(timer));
+      timers.forEach((timer) => timer && clearTimeout(timer));
     };
-  }, [toasts, removeToast]);
+  }, [toasts, exitingIds, startExitAnimation]);
 
   const contextValue: ToastContextValue = {
     showToast,
@@ -81,7 +98,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     <ToastContext.Provider value={contextValue}>
       {children}
       {createPortal(
-        <ToastContainer toasts={toasts} onDismiss={removeToast} />,
+        <ToastContainer toasts={toasts} exitingIds={exitingIds} onDismiss={startExitAnimation} />,
         document.body
       )}
     </ToastContext.Provider>
@@ -90,13 +107,14 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
 interface ToastContainerProps {
   toasts: Toast[];
+  exitingIds: Set<string>;
   onDismiss: (id: string) => void;
 }
 
 /**
  * ToastContainer - Renders the toast stack in bottom-right corner
  */
-function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+function ToastContainer({ toasts, exitingIds, onDismiss }: ToastContainerProps) {
   if (toasts.length === 0) return null;
 
   return (
@@ -106,7 +124,12 @@ function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
       aria-label="Benachrichtigungen"
     >
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+        <ToastItem 
+          key={toast.id} 
+          toast={toast} 
+          isExiting={exitingIds.has(toast.id)}
+          onDismiss={onDismiss} 
+        />
       ))}
     </div>
   );
@@ -114,16 +137,19 @@ function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
 
 interface ToastItemProps {
   toast: Toast;
+  isExiting: boolean;
   onDismiss: (id: string) => void;
 }
 
 /**
  * ToastItem - Individual toast notification
  */
-function ToastItem({ toast, onDismiss }: ToastItemProps) {
+function ToastItem({ toast, isExiting, onDismiss }: ToastItemProps) {
+  const animationClass = isExiting ? 'animate-fade-out-up' : 'animate-slide-in-right';
+  
   return (
     <div
-      className="pointer-events-auto bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm animate-slide-in-right flex items-center gap-3"
+      className={`pointer-events-auto bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm ${animationClass} flex items-center gap-3`}
       role="alert"
     >
       <span className="flex-1 text-sm">{toast.message}</span>

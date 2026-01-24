@@ -337,8 +337,11 @@ The `enrichment_data` JSONB column stores:
 | Error Condition | Response | Recovery |
 |-----------------|----------|----------|
 | Game not found in database | Return HTTP 404 | Import CSV first |
-| ScraperAPI failure | Return HTTP 503, log error | Retry later (rate limit) |
-| ScraperAPI rate limit | Log, pause bulk enrichment | Auto-resume after delay |
+| ScraperAPI 403 (credits exhausted) | Stop bulk enrichment, set stopReason | Purchase more credits or wait for monthly reset |
+| ScraperAPI 429 (rate limit) | Wait 5s, retry up to 3 times | Auto-retry with backoff |
+| ScraperAPI 500 (failed after retries) | Log error, increment error count, continue | ScraperAPI already retried for 70s |
+| ScraperAPI 400 (malformed request) | Log error, increment error count, continue | Check URL encoding |
+| 10 consecutive errors | Stop bulk enrichment, set stopReason | Investigate root cause |
 | Invalid BGG page HTML | Log error, skip game | Mark as failed, continue bulk |
 | Malformed GEEK.geekitemPreload | Log error, skip game | Mark as failed, continue bulk |
 | Bulk enrichment already running | Return HTTP 409 | Wait for current to complete |
@@ -415,6 +418,53 @@ ScraperAPI has rate limits. For bulk enrichment:
 - Add configurable delay between requests (default: 1 second)
 - Pause on rate limit errors, resume after delay
 - Track progress in memory (survives individual failures, not server restarts)
+
+### ScraperAPI Error Handling
+
+The enrichment service handles ScraperAPI status codes according to their documentation:
+
+| Status Code | Meaning | Action |
+|-------------|---------|--------|
+| 200 | Success (charged) | Process response |
+| 404 | Page not found (charged) | Valid response, game doesn't exist on BGG |
+| 429 | Too many concurrent requests (not charged) | Wait 5s, retry up to 3 times |
+| 400 | Malformed request (not charged) | Log error, continue to next game |
+| 403 | Credits exhausted or unauthorized (not charged) | Stop immediately, fatal error |
+| 500 | Failed after 70s of retries (not charged) | Log error, continue to next game |
+
+```typescript
+// ScraperAPI error class
+class ScraperApiError extends Error {
+  constructor(
+    public statusCode: number,
+    public isFatal: boolean,      // 403 = fatal, stop immediately
+    public shouldRetry: boolean,  // 429 = retry after delay
+    message: string
+  ) {
+    super(message);
+  }
+}
+
+// Fetch with retry for rate limiting
+async function fetchWithRetry(bggId: number): Promise<{ html: string; bytes: number }> {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fetchBggPage(bggId);
+    } catch (error) {
+      if (error instanceof ScraperApiError && error.shouldRetry) {
+        await sleep(RATE_LIMIT_DELAY_MS);
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+```
+
+**Consecutive Error Threshold:**
+- Track consecutive errors (reset to 0 on success)
+- Stop bulk enrichment after 10 consecutive errors
+- Prevents burning through the game list when something is fundamentally wrong
 
 ### Background Process State
 

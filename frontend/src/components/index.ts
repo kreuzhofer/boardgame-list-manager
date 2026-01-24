@@ -43,3 +43,4 @@ export { MobileBottomTabs } from './MobileBottomTabs';
 export { UserOptionsDialog } from './UserOptionsDialog';
 export { PullToRefresh } from './PullToRefresh';
 export { ToastProvider, useToast } from './ToastProvider';
+export { ClickNotification } from './ClickNotification';

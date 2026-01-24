@@ -15,6 +15,7 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
+import { ClickNotification } from './ClickNotification';
 
 interface GameCardProps {
   game: Game;
@@ -89,7 +90,14 @@ export function GameCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
   const isOwner = game.owner?.id === currentUserId;
-  const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
+  
+  // Check if current user is the only player/bringer (or lists are empty)
+  const onlyCurrentUserIsPlayer = game.players.length === 0 || 
+    (game.players.length === 1 && game.players[0].user.id === currentUserId);
+  const onlyCurrentUserIsBringer = game.bringers.length === 0 || 
+    (game.bringers.length === 1 && game.bringers[0].user.id === currentUserId);
+  const canDelete = isOwner && onlyCurrentUserIsPlayer && onlyCurrentUserIsBringer;
+  
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
   
@@ -217,9 +225,13 @@ export function GameCard({
             
             {/* Delete button - only for owner, icon only to save space */}
             {isOwner && (
-              <div className="relative">
+              <ClickNotification
+                message="Andere Spieler oder Mitbringer sind eingetragen"
+                enabled={!canDelete}
+                duration={3000}
+              >
                 <button
-                  onClick={() => onDeleteGame?.(game.id)}
+                  onClick={() => canDelete && onDeleteGame?.(game.id)}
                   disabled={!canDelete}
                   aria-label="Spiel löschen"
                   className={`p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${
@@ -230,15 +242,7 @@ export function GameCard({
                 >
                   <img src="/trash.svg" alt="" className="w-5 h-5" />
                 </button>
-                <HelpBubble
-                  text={
-                    canDelete
-                      ? 'Spiel löschen'
-                      : 'Entferne zuerst alle Mitspieler und Bringer'
-                  }
-                  position="top-right"
-                />
-              </div>
+              </ClickNotification>
             )}
           </div>
         </div>
@@ -249,20 +253,7 @@ export function GameCard({
         className={`grid grid-cols-2 gap-3 pt-1 border-t border-gray-200 ${hasOverflow ? 'cursor-pointer' : ''}`}
         onClick={handleListClick}
       >
-        {/* Players (Mitspieler) - First column to match Mitspielen button */}
-        <div className="min-w-0">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
-            Mitspieler
-          </span>
-          <CompactList 
-            items={game.players} 
-            currentUserId={currentUserId} 
-            emptyText="Keine"
-            expanded={listsExpanded}
-          />
-        </div>
-
-        {/* Bringers (Bringt mit) - Second column to match Mitbringen button */}
+        {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
         <div className="min-w-0">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
             Bringt mit
@@ -271,6 +262,19 @@ export function GameCard({
             items={game.bringers} 
             currentUserId={currentUserId} 
             emptyText="Niemand"
+            expanded={listsExpanded}
+          />
+        </div>
+
+        {/* Players (Mitspieler) - Second column to match Mitspielen button */}
+        <div className="min-w-0">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
+            Mitspieler
+          </span>
+          <CompactList 
+            items={game.players} 
+            currentUserId={currentUserId} 
+            emptyText="Keine"
             expanded={listsExpanded}
           />
         </div>

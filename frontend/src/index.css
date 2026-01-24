@@ -33,3 +33,19 @@
 .animate-fade-out-up {
   animation: fade-out-up 0.3s ease-in forwards;
 }
+
+/* Click notification fade-in animation */
+@keyframes fade-in-up {
+  from {
+    transform: translateX(-50%) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.2s ease-out;
+}

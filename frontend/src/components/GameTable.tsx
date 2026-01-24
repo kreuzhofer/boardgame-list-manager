@@ -167,10 +167,10 @@ export function GameTable({
                   <SortButton />
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[18%]">
-                  Mitspieler
+                  Bringt mit
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[18%]">
-                  Bringt mit
+                  Mitspieler
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[280px]">
                   Aktionen

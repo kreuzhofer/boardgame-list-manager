@@ -15,6 +15,7 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
+import { ClickNotification } from './ClickNotification';
 
 interface GameRowProps {
   game: Game;
@@ -45,7 +46,14 @@ export function GameRow({
   const rowRef = useRef<HTMLTableRowElement>(null);
   const isWunsch = game.status === 'wunsch';
   const isOwner = game.owner?.id === currentUserId;
-  const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
+  
+  // Check if current user is the only player/bringer (or lists are empty)
+  const onlyCurrentUserIsPlayer = game.players.length === 0 || 
+    (game.players.length === 1 && game.players[0].user.id === currentUserId);
+  const onlyCurrentUserIsBringer = game.bringers.length === 0 || 
+    (game.bringers.length === 1 && game.bringers[0].user.id === currentUserId);
+  const canDelete = isOwner && onlyCurrentUserIsPlayer && onlyCurrentUserIsBringer;
+  
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
 
@@ -141,10 +149,10 @@ export function GameRow({
         </div>
       </td>
 
-      {/* Players (Mitspieler) - Requirement 3.9 */}
+      {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
       <td className="px-4 py-3 w-[18%]">
-        <PlayerList 
-          players={game.players} 
+        <BringerList 
+          bringers={game.bringers} 
           currentUserId={currentUserId} 
           maxVisible={5}
           expanded={listsExpanded}
@@ -153,10 +161,10 @@ export function GameRow({
         />
       </td>
 
-      {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
+      {/* Players (Mitspieler) - Requirement 3.9 */}
       <td className="px-4 py-3 w-[18%]">
-        <BringerList 
-          bringers={game.bringers} 
+        <PlayerList 
+          players={game.players} 
           currentUserId={currentUserId} 
           maxVisible={5}
           expanded={listsExpanded}
@@ -196,9 +204,13 @@ export function GameRow({
           
           {/* Delete button - only for owner, icon only to save space */}
           {isOwner && (
-            <div className="relative">
+            <ClickNotification
+              message="Andere Spieler oder Mitbringer sind eingetragen"
+              enabled={!canDelete}
+              duration={3000}
+            >
               <button
-                onClick={() => onDeleteGame?.(game.id)}
+                onClick={() => canDelete && onDeleteGame?.(game.id)}
                 disabled={!canDelete}
                 aria-label="Spiel löschen"
                 className={`p-1.5 rounded transition-colors ${
@@ -209,15 +221,7 @@ export function GameRow({
               >
                 <img src="/trash.svg" alt="" className="w-4 h-4" />
               </button>
-              <HelpBubble
-                text={
-                  canDelete
-                    ? 'Spiel löschen'
-                    : 'Entferne zuerst alle Mitspieler und Bringer'
-                }
-                position="top-right"
-              />
-            </div>
+            </ClickNotification>
           )}
         </div>
       </td>

@@ -64,3 +64,35 @@ model Bringer {
   @@index([userId])
   @@map("bringers")
 }
+
+model BggGame {
+  id                  Int       @id @map("bgg_id")
+  name                String
+  yearPublished       Int?      @map("year_published")
+  rank                Int?
+  bayesAverage        Float?    @map("bayes_average")
+  average             Float?
+  usersRated          Int?      @map("users_rated")
+  isExpansion         Boolean   @default(false) @map("is_expansion")
+  
+  // Category-specific ranks
+  abstractsRank       Int?      @map("abstracts_rank")
+  cgsRank             Int?      @map("cgs_rank")
+  childrensGamesRank  Int?      @map("childrensgames_rank")
+  familyGamesRank     Int?      @map("familygames_rank")
+  partyGamesRank      Int?      @map("partygames_rank")
+  strategyGamesRank   Int?      @map("strategygames_rank")
+  thematicRank        Int?      @map("thematic_rank")
+  warGamesRank        Int?      @map("wargames_rank")
+  
+  // Enrichment fields
+  scrapingDone        Boolean   @default(false) @map("scraping_done")
+  enrichedAt          DateTime? @map("enriched_at")
+  enrichmentData      Json?     @map("enrichment_data") @db.JsonB
+  
+  // Timestamps
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@map("bgg_games")
+}

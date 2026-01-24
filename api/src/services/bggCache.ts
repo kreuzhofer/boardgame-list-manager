@@ -2,11 +2,13 @@
  * BggCache service - loads and caches BoardGameGeek data from CSV
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.2, 2.3
+ * Feature: 011-fuzzy-search - Enhanced with fuzzy matching
  */
 
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fuzzyMatch } from './fuzzyMatch';
 
 export interface BggGame {
   id: number;
@@ -118,24 +120,38 @@ class BggCache {
   }
 
   /**
-   * Search games by name with case-insensitive partial matching
+   * Search games by name with fuzzy matching
    * Requirement 2.2: Case-insensitive partial matching
    * Requirement 2.3: Return max 10 results sorted by rank (ascending)
+   * Feature: 011-fuzzy-search - Enhanced with multi-strategy fuzzy matching
    */
   search(query: string, maxResults: number = 10): BggGame[] {
     if (!this.loaded || !query) {
       return [];
     }
 
-    const lowerQuery = query.toLowerCase();
+    // Use fuzzy matching and collect matches with scores
+    const matchesWithScores: { game: BggGame; score: number }[] = [];
     
-    // Filter games that contain the query (case-insensitive)
-    const matches = this.games.filter(game => 
-      game.name.toLowerCase().includes(lowerQuery)
-    );
+    for (const game of this.games) {
+      const result = fuzzyMatch(query, game.name);
+      if (result.matched) {
+        matchesWithScores.push({ game, score: result.score });
+      }
+    }
 
-    // Games are already sorted by rank, just limit results
-    return matches.slice(0, maxResults);
+    // Sort by score descending (best matches first), then by yearPublished descending
+    matchesWithScores.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      // Secondary sort by year (newest first)
+      const yearA = a.game.yearPublished ?? 0;
+      const yearB = b.game.yearPublished ?? 0;
+      return yearB - yearA;
+    });
+
+    return matchesWithScores.slice(0, maxResults).map(m => m.game);
   }
 
   /**

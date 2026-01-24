@@ -8,9 +8,13 @@
  * Property 12: Search Filter Correctness
  * Property 13: Wunsch Filter Correctness
  * Property 14: My Games Filter Correctness
+ * 
+ * Feature: 011-fuzzy-search
+ * Updated to use fuzzy matching for name filtering
  */
 
 import type { Game } from '../types';
+import { fuzzyMatch } from './fuzzyMatch';
 
 /**
  * Filter state interface for all game filters
@@ -52,8 +56,12 @@ function containsQuery(text: string, query: string): boolean {
 }
 
 /**
- * Filters games by game name.
- * Returns only games where the name contains the query string (case-insensitive).
+ * Filters games by game name using fuzzy matching.
+ * Returns only games where the name matches the query using multi-strategy fuzzy matching:
+ * - Exact substring match
+ * - Punctuation-normalized match (e.g., "Brass Birmingham" matches "Brass: Birmingham")
+ * - Word-order independent match (e.g., "Birmingham Brass" matches "Brass: Birmingham")
+ * - Edit distance match for typo tolerance (e.g., "Cataan" matches "Catan")
  * 
  * @param games - Array of games to filter
  * @param query - Search query for game name
@@ -61,10 +69,11 @@ function containsQuery(text: string, query: string): boolean {
  * 
  * Validates: Requirements 5.4, 5.7
  * Property 12: Search Filter Correctness
+ * Feature: 011-fuzzy-search
  */
 export function filterByName(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
-  return games.filter((game) => containsQuery(game.name, query));
+  return games.filter((game) => fuzzyMatch(query, game.name).matched);
 }
 
 /**

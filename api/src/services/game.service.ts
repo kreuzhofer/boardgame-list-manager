@@ -323,7 +323,7 @@ export class GameService {
    * @throws Error with German message if:
    *   - Game not found (404)
    *   - User is not the owner (403)
-   *   - Game has players or bringers (400)
+   *   - Game has other players or bringers besides the owner (400)
    * 
    * Requirements: 3.2, 3.5, 3.6, 3.7
    */
@@ -344,9 +344,13 @@ export class GameService {
       throw error;
     }
 
-    // Check if game has players or bringers
-    if (entity.players.length > 0 || entity.bringers.length > 0) {
-      const error = new Error('Das Spiel kann nicht gelöscht werden, solange noch Mitspieler oder Bringer eingetragen sind.');
+    // Check if game has other players or bringers besides the owner
+    // Allow deletion if the only player/bringer is the owner themselves
+    const hasOtherPlayers = entity.players.some(p => p.user.id !== userId);
+    const hasOtherBringers = entity.bringers.some(b => b.user.id !== userId);
+    
+    if (hasOtherPlayers || hasOtherBringers) {
+      const error = new Error('Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.');
       (error as Error & { code: string }).code = 'GAME_NOT_EMPTY';
       throw error;
     }

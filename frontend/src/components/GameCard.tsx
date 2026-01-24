@@ -249,20 +249,7 @@ export function GameCard({
         className={`grid grid-cols-2 gap-3 pt-1 border-t border-gray-200 ${hasOverflow ? 'cursor-pointer' : ''}`}
         onClick={handleListClick}
       >
-        {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
-        <div className="min-w-0">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
-            Bringt mit
-          </span>
-          <CompactList 
-            items={game.bringers} 
-            currentUserId={currentUserId} 
-            emptyText="Niemand"
-            expanded={listsExpanded}
-          />
-        </div>
-
-        {/* Players (Mitspieler) - Second column to match Mitspielen button */}
+        {/* Players (Mitspieler) - First column to match Mitspielen button */}
         <div className="min-w-0">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
             Mitspieler
@@ -271,6 +258,19 @@ export function GameCard({
             items={game.players} 
             currentUserId={currentUserId} 
             emptyText="Keine"
+            expanded={listsExpanded}
+          />
+        </div>
+
+        {/* Bringers (Bringt mit) - Second column to match Mitbringen button */}
+        <div className="min-w-0">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
+            Bringt mit
+          </span>
+          <CompactList 
+            items={game.bringers} 
+            currentUserId={currentUserId} 
+            emptyText="Niemand"
             expanded={listsExpanded}
           />
         </div>

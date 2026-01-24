@@ -82,32 +82,7 @@ export function GameActions({
 
   return (
     <div className={`flex ${isMobile ? 'gap-2 flex-wrap' : 'gap-2 flex-nowrap'}`}>
-      {/* Bringer toggle button - always first */}
-      <div className="relative">
-        <button
-          onClick={isBringer ? handleRemoveBringer : handleAddBringer}
-          className={`${baseButtonClasses} ${
-            isBringer
-              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
-        >
-          {isMobile ? (
-            <>
-              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
-              {isBringer && <span className="ml-0.5 text-xs">✓</span>}
-            </>
-          ) : (
-            <>
-              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {bringerText}<span className="inline-block w-3 text-left">{isBringer ? ' ✓' : ''}</span>
-            </>
-          )}
-        </button>
-        {isMobile && <HelpBubble text={bringerHelpText} position="top-right" />}
-      </div>
-
-      {/* Player toggle button - always second */}
+      {/* Player toggle button - always first */}
       <div className="relative">
         <button
           onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
@@ -130,6 +105,31 @@ export function GameActions({
           )}
         </button>
         {isMobile && <HelpBubble text={playerHelpText} position="top-right" />}
+      </div>
+
+      {/* Bringer toggle button - always second */}
+      <div className="relative">
+        <button
+          onClick={isBringer ? handleRemoveBringer : handleAddBringer}
+          className={`${baseButtonClasses} ${
+            isBringer
+              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+          title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
+        >
+          {isMobile ? (
+            <>
+              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
+              {isBringer && <span className="ml-0.5 text-xs">✓</span>}
+            </>
+          ) : (
+            <>
+              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {bringerText}<span className="inline-block w-3 text-left">{isBringer ? ' ✓' : ''}</span>
+            </>
+          )}
+        </button>
+        {isMobile && <HelpBubble text={bringerHelpText} position="top-right" />}
       </div>
     </div>
   );

@@ -60,11 +60,11 @@ export function GameActions({
     }
   };
 
-  // Base button classes - larger touch targets on mobile (Requirement 6.4)
-  // Mobile: icon-only with fixed width to prevent layout shift
+  // Base button classes - touch targets on mobile (Requirement 6.4)
+  // Mobile: icon-only with 44px touch target (Apple recommended minimum)
   // Desktop: full text with icon, whitespace-nowrap prevents checkmark wrapping
   const baseButtonClasses = isMobile
-    ? 'w-[52px] h-[44px] text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
+    ? 'w-[44px] h-[44px] text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
     : 'px-3 py-1.5 text-xs font-medium rounded-md min-w-[6.5rem] whitespace-nowrap transition-colors';
 
   // Bringer button text (desktop only)
@@ -81,7 +81,7 @@ export function GameActions({
     : 'Mitspielen: Tippe um anzugeben, dass du dieses Spiel spielen möchtest.';
 
   return (
-    <div className={`flex ${isMobile ? 'gap-3 flex-wrap' : 'gap-2 flex-nowrap'}`}>
+    <div className={`flex ${isMobile ? 'gap-2 flex-wrap' : 'gap-2 flex-nowrap'}`}>
       {/* Bringer toggle button - always first */}
       <div className="relative">
         <button
@@ -95,8 +95,8 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/package.svg" alt="Mitbringen" className="w-6 h-6" />
-              {isBringer && <span className="ml-0.5">✓</span>}
+              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
+              {isBringer && <span className="ml-0.5 text-xs">✓</span>}
             </>
           ) : (
             <>
@@ -120,8 +120,8 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/meeple.svg" alt="Mitspielen" className="w-5 h-5" />
-              {isPlayer && <span className="ml-0.5">✓</span>}
+              <img src="/meeple.svg" alt="Mitspielen" className="w-4 h-4" />
+              {isPlayer && <span className="ml-0.5 text-xs">✓</span>}
             </>
           ) : (
             <>

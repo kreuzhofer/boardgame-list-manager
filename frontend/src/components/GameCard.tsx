@@ -144,11 +144,11 @@ export function GameCard({
       ref={cardRef}
       className={getCardClassName()}
     >
-      {/* Game Name with Thumbnail - Requirement 8.1, 8.2, 8.3 */}
-      <div className="flex gap-3 mb-2">
-        {/* Thumbnail - micro size for mobile */}
-        {game.bggId && (
-          <div className="flex-shrink-0">
+      {/* Game Name with Thumbnail and Actions - Requirement 8.1, 8.2, 8.3 */}
+      <div className="flex gap-3 mb-1">
+        {/* Thumbnail with Neuheit overlay - micro size for mobile, fixed outer size for consistency */}
+        <div className="flex-shrink-0 relative w-[72px] h-20">
+          {game.bggId && (
             <LazyBggImage
               bggId={game.bggId}
               size="micro"
@@ -156,18 +156,97 @@ export function GameCard({
               className="rounded"
               enableZoom={true}
             />
+          )}
+          {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
+          {game.yearPublished && (
+            <div className="absolute -top-2 -right-2">
+              <NeuheitSticker yearPublished={game.yearPublished} />
+            </div>
+          )}
+        </div>
+        {/* Title and Actions column */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Title row with status indicator */}
+          <div className="flex items-start gap-2">
+            <h3 className="font-semibold text-gray-900 text-lg leading-tight flex-1">
+              {game.name}
+            </h3>
+            {/* Status indicator - colored circle with HelpBubble (no ? shown) */}
+            <div className="relative flex-shrink-0">
+              <div
+                className={`w-6 h-6 rounded-full ${
+                  isWunsch ? 'bg-yellow-400' : 'bg-green-500'
+                }`}
+                aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
+              />
+              <HelpBubble
+                text={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                position="top-right"
+                showIndicator={false}
+              />
+            </div>
           </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-            {game.name}
-          </h3>
+          {/* Actions row - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
+          <div className="flex gap-2 items-center mt-1 flex-wrap">
+            <GameActions
+              game={game}
+              currentUserId={currentUserId}
+              onAddPlayer={onAddPlayer}
+              onAddBringer={onAddBringer}
+              onRemovePlayer={onRemovePlayer}
+              onRemoveBringer={onRemoveBringer}
+              isMobile={true}
+            />
+            
+            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
+            {game.bggId && game.bggRating && (
+              <div className="relative">
+                <button
+                  onClick={() => openBggPage(game.bggId!)}
+                  className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
+                  aria-label="BoardGameGeek Info"
+                >
+                  <BggRatingBadge rating={game.bggRating} />
+                </button>
+                <HelpBubble
+                  text="BoardGameGeek Seite öffnen (neuer Tab)"
+                  position="top-right"
+                />
+              </div>
+            )}
+            
+            {/* Delete button - only for owner, icon only to save space */}
+            {isOwner && (
+              <div className="relative">
+                <button
+                  onClick={() => onDeleteGame?.(game.id)}
+                  disabled={!canDelete}
+                  aria-label="Spiel löschen"
+                  className={`p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${
+                    canDelete
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <img src="/trash.svg" alt="" className="w-5 h-5" />
+                </button>
+                <HelpBubble
+                  text={
+                    canDelete
+                      ? 'Spiel löschen'
+                      : 'Entferne zuerst alle Mitspieler und Bringer'
+                  }
+                  position="top-right"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Players and Bringers - Two column layout for mobile, tappable to expand */}
       <div 
-        className={`grid grid-cols-2 gap-3 mb-3 ${hasOverflow ? 'cursor-pointer' : ''}`}
+        className={`grid grid-cols-2 gap-3 pt-1 border-t border-gray-200 ${hasOverflow ? 'cursor-pointer' : ''}`}
         onClick={handleListClick}
       >
         {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
@@ -194,80 +273,6 @@ export function GameCard({
             emptyText="Keine"
             expanded={listsExpanded}
           />
-        </div>
-      </div>
-
-      {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
-      <div className="pt-2 border-t border-gray-200">
-        <div className="flex gap-3 items-center">
-          <GameActions
-            game={game}
-            currentUserId={currentUserId}
-            onAddPlayer={onAddPlayer}
-            onAddBringer={onAddBringer}
-            onRemovePlayer={onRemovePlayer}
-            onRemoveBringer={onRemoveBringer}
-            isMobile={true}
-          />
-          
-          {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-          {game.bggId && game.bggRating && (
-            <div className="relative">
-              <button
-                onClick={() => openBggPage(game.bggId!)}
-                className="p-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
-                aria-label="BoardGameGeek Info"
-              >
-                <BggRatingBadge rating={game.bggRating} />
-              </button>
-              <HelpBubble
-                text="BoardGameGeek Seite öffnen (neuer Tab)"
-                position="top-right"
-              />
-            </div>
-          )}
-          
-          {/* Delete button - only for owner, icon only to save space */}
-          {isOwner && (
-            <div className="relative">
-              <button
-                onClick={() => onDeleteGame?.(game.id)}
-                disabled={!canDelete}
-                aria-label="Spiel löschen"
-                className={`p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${
-                  canDelete
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                <img src="/trash.svg" alt="" className="w-5 h-5" />
-              </button>
-              <HelpBubble
-                text={
-                  canDelete
-                    ? 'Spiel löschen'
-                    : 'Entferne zuerst alle Mitspieler und Bringer'
-                }
-                position="top-right"
-              />
-            </div>
-          )}
-          
-          {/* Status Badge and Neuheit - Requirement 4.1, 4.2, 5.1, 5.4 - column on right */}
-          <div className="ml-auto flex flex-col items-start gap-1">
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium text-center ${
-                isWunsch
-                  ? 'bg-yellow-200 text-yellow-800'
-                  : 'bg-green-200 text-green-800'
-              }`}
-            >
-              {isWunsch ? 'Gesucht' : 'Verfügbar'}
-            </span>
-            {game.yearPublished && (
-              <NeuheitSticker yearPublished={game.yearPublished} />
-            )}
-          </div>
         </div>
       </div>
     </div>

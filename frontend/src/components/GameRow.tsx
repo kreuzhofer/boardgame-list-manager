@@ -5,7 +5,7 @@
  * All UI text in German (Requirement 9.1)
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Game } from '../types';
 import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
@@ -47,6 +47,11 @@ export function GameRow({
   const isOwner = game.owner?.id === currentUserId;
   const canDelete = isOwner && game.players.length === 0 && game.bringers.length === 0;
   const hasScrolledRef = useRef(false);
+  const [listsExpanded, setListsExpanded] = useState(false);
+
+  const handleToggleExpand = () => {
+    setListsExpanded(!listsExpanded);
+  };
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -90,27 +95,35 @@ export function GameRow({
       ref={rowRef}
       className={getRowClassName()}
     >
-      {/* Thumbnail - Requirement 7.1: square200 thumbnail in first column (desktop) */}
-      <td className="px-2 py-2 w-16">
-        {game.bggId ? (
-          <LazyBggImage
-            bggId={game.bggId}
-            size="micro"
-            alt={game.name}
-            className="rounded"
-            enableZoom={true}
-          />
-        ) : (
-          <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C9.24 2 7 4.24 7 7c0 1.1.36 2.12.97 2.95L4 14.5V22h16v-7.5l-3.97-4.55c.61-.83.97-1.85.97-2.95 0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
-            </svg>
-          </div>
-        )}
+      {/* Thumbnail with Neuheit overlay - Requirement 7.1: square200 thumbnail in first column (desktop) */}
+      <td className="px-2 py-2 w-20">
+        <div className="relative w-[72px] h-16">
+          {game.bggId ? (
+            <LazyBggImage
+              bggId={game.bggId}
+              size="micro"
+              alt={game.name}
+              className="rounded"
+              enableZoom={true}
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C9.24 2 7 4.24 7 7c0 1.1.36 2.12.97 2.95L4 14.5V22h16v-7.5l-3.97-4.55c.61-.83.97-1.85.97-2.95 0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+              </svg>
+            </div>
+          )}
+          {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
+          {game.yearPublished && (
+            <div className="absolute -top-2 -right-2">
+              <NeuheitSticker yearPublished={game.yearPublished} />
+            </div>
+          )}
+        </div>
       </td>
 
       {/* Game Name with Status Badge and Owner */}
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 w-[25%]">
         <div className="flex flex-col gap-1">
           <span className="font-medium text-gray-900">{game.name}</span>
           <div className="flex items-center gap-2">
@@ -124,27 +137,36 @@ export function GameRow({
             >
               {isWunsch ? 'Gesucht' : 'Verfügbar'}
             </span>
-            
-            {/* Neuheit Sticker - Requirement 5.1, 5.4 */}
-            {game.yearPublished && (
-              <NeuheitSticker yearPublished={game.yearPublished} />
-            )}
           </div>
         </div>
       </td>
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
-      <td className="px-4 py-3">
-        <PlayerList players={game.players} currentUserId={currentUserId} />
+      <td className="px-4 py-3 w-[18%]">
+        <PlayerList 
+          players={game.players} 
+          currentUserId={currentUserId} 
+          maxVisible={5}
+          expanded={listsExpanded}
+          onToggleExpand={handleToggleExpand}
+          displayMode="stacked"
+        />
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-      <td className="px-4 py-3">
-        <BringerList bringers={game.bringers} currentUserId={currentUserId} />
+      <td className="px-4 py-3 w-[18%]">
+        <BringerList 
+          bringers={game.bringers} 
+          currentUserId={currentUserId} 
+          maxVisible={5}
+          expanded={listsExpanded}
+          onToggleExpand={handleToggleExpand}
+          displayMode="stacked"
+        />
       </td>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 w-[280px]">
         <div className="flex gap-2 flex-nowrap items-center">
           <GameActions
             game={game}

@@ -17,6 +17,8 @@ interface HelpBubbleProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   /** Optional additional class names for the container */
   className?: string;
+  /** Whether to show the ? indicator button (default: true) */
+  showIndicator?: boolean;
 }
 
 type Position = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
@@ -31,7 +33,8 @@ const calculateDuration = (text: string): number => {
 export function HelpBubble({ 
   text, 
   position: preferredPosition = 'top-right',
-  className = '' 
+  className = '',
+  showIndicator = true
 }: HelpBubbleProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -210,22 +213,32 @@ export function HelpBubble({
     'bottom-left': 'bottom-full left-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
   };
 
+  // When showIndicator is false, we need the container to cover the parent for events
+  // Use inset-0 to cover the parent element completely
+  const containerClasses = showIndicator 
+    ? `absolute ${buttonPositionClasses[preferredPosition]} z-10 ${className}`
+    : `absolute inset-0 z-10 cursor-help ${className}`;
+
   return (
     <div 
       ref={containerRef}
-      className={`absolute ${buttonPositionClasses[preferredPosition]} z-10 ${className}`}
+      className={containerClasses}
       onMouseLeave={handleMouseLeave}
+      onClick={!showIndicator ? handleClick : undefined}
+      onMouseEnter={!showIndicator ? handleMouseEnter : undefined}
     >
-      {/* ? Button - always visible */}
-      <button
-        type="button"
-        onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        className="w-4 h-4 rounded-full bg-gray-500 text-white text-xs font-bold flex items-center justify-center hover:bg-gray-600 transition-colors"
-        aria-label="Hilfe"
-      >
-        ?
-      </button>
+      {/* ? Button - visible when showIndicator is true */}
+      {showIndicator && (
+        <button
+          type="button"
+          onClick={handleClick}
+          onMouseEnter={handleMouseEnter}
+          className="w-4 h-4 rounded-full bg-gray-500 text-white text-xs font-bold flex items-center justify-center hover:bg-gray-600 transition-colors"
+          aria-label="Hilfe"
+        >
+          ?
+        </button>
+      )}
 
       {/* Speech Bubble */}
       {isVisible && (

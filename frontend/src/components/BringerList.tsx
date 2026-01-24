@@ -1,7 +1,6 @@
 /**
  * BringerList component
  * Displays a list of bringer names with current user highlighting
- * Shows duplicate hint when 3+ bringers (Requirement 4.6)
  * All UI text in German (Requirement 9.1)
  */
 
@@ -10,10 +9,24 @@ import { Bringer } from '../types';
 interface BringerListProps {
   bringers: Bringer[];
   currentUserId: string;
-  showDuplicateHint?: boolean;
+  /** Maximum number of bringers to show before using +X overflow */
+  maxVisible?: number;
+  /** Whether the list is expanded (shows all) */
+  expanded?: boolean;
+  /** Callback when overflow link is clicked */
+  onToggleExpand?: () => void;
+  /** Display mode: 'inline' (comma-separated) or 'stacked' (one per line) */
+  displayMode?: 'inline' | 'stacked';
 }
 
-export function BringerList({ bringers, currentUserId, showDuplicateHint = true }: BringerListProps) {
+export function BringerList({ 
+  bringers, 
+  currentUserId,
+  maxVisible,
+  expanded = false,
+  onToggleExpand,
+  displayMode = 'inline'
+}: BringerListProps) {
   if (bringers.length === 0) {
     return (
       <span className="text-gray-400 italic text-sm">
@@ -22,13 +35,18 @@ export function BringerList({ bringers, currentUserId, showDuplicateHint = true 
     );
   }
 
-  const hasDuplicateBringers = bringers.length >= 3;
+  // Apply maxVisible limit if specified and not expanded
+  const hasOverflow = maxVisible !== undefined && bringers.length > maxVisible && !expanded;
+  // If overflow, show maxVisible - 1 to make room for the "+X weitere" line
+  const visibleCount = hasOverflow ? maxVisible - 1 : bringers.length;
+  const visibleBringers = bringers.slice(0, visibleCount);
+  const overflowCount = bringers.length - visibleCount;
 
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm">
-        {bringers.map((bringer, index) => (
-          <span key={bringer.id}>
+  if (displayMode === 'stacked') {
+    return (
+      <div className="text-sm">
+        {visibleBringers.map((bringer) => (
+          <div key={bringer.id} className="truncate">
             <span
               className={
                 bringer.user.id === currentUserId
@@ -39,20 +57,49 @@ export function BringerList({ bringers, currentUserId, showDuplicateHint = true 
             >
               {bringer.user.name}
             </span>
-            {index < bringers.length - 1 && (
-              <span className="text-gray-400">, </span>
-            )}
-          </span>
+          </div>
         ))}
-      </span>
-      
-      {/* Duplicate bringer hint - Requirement 4.6 */}
-      {showDuplicateHint && hasDuplicateBringers && (
-        <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded inline-block w-fit">
-          Wird bereits von {bringers.length} Personen mitgebracht
+        {hasOverflow && (
+          <button 
+            onClick={onToggleExpand}
+            className="text-blue-500 text-xs hover:text-blue-700 hover:underline"
+          >
+            +{overflowCount} weitere
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Inline mode (original)
+  return (
+    <span className="text-sm">
+      {visibleBringers.map((bringer, index) => (
+        <span key={bringer.id}>
+          <span
+            className={
+              bringer.user.id === currentUserId
+                ? 'font-semibold text-blue-600'
+                : 'text-gray-700'
+            }
+            title={bringer.user.id === currentUserId ? 'Das bist du!' : undefined}
+          >
+            {bringer.user.name}
+          </span>
+          {index < visibleBringers.length - 1 && (
+            <span className="text-gray-400">, </span>
+          )}
         </span>
+      ))}
+      {hasOverflow && (
+        <button 
+          onClick={onToggleExpand}
+          className="text-blue-500 text-xs ml-1 hover:text-blue-700 hover:underline"
+        >
+          +{overflowCount}
+        </button>
       )}
-    </div>
+    </span>
   );
 }
 

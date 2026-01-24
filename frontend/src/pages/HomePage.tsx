@@ -19,9 +19,10 @@ import { GameTable } from '../components/GameTable';
 import { UnifiedSearchBar } from '../components/UnifiedSearchBar';
 import { AdvancedFilters } from '../components/AdvancedFilters';
 import { DeleteGameModal } from '../components/DeleteGameModal';
-import { useGameFilters } from '../hooks';
+import { useToast } from '../components/ToastProvider';
+import { useGameFilters, useSSE } from '../hooks';
 import { getHighlightedGameIds } from '../utils';
-import type { Game, User } from '../types';
+import type { Game, User, SSEEvent, GameCreatedEvent } from '../types';
 import type { SortOrder } from '../utils';
 
 interface HomePageProps {
@@ -50,6 +51,9 @@ export function HomePage({ user }: HomePageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Toast notifications
+  const { showToast } = useToast();
   
   // Filter state from hook
   const {
@@ -91,6 +95,49 @@ export function HomePage({ user }: HomePageProps) {
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
+
+  // SSE event handlers for real-time updates
+  const handleSSEGameCreated = useCallback(async (event: GameCreatedEvent) => {
+    try {
+      const response = await gamesApi.getById(event.gameId);
+      setGames((prev) => {
+        // Check if game already exists (in case of race condition)
+        if (prev.some(g => g.id === event.gameId)) {
+          return prev;
+        }
+        return [...prev, response.game];
+      });
+    } catch (err) {
+      console.error('Failed to fetch new game from SSE event:', err);
+    }
+  }, []);
+
+  const handleSSEGameUpdated = useCallback(async (event: SSEEvent) => {
+    try {
+      const response = await gamesApi.getById(event.gameId);
+      setGames((prev) =>
+        prev.map((g) => (g.id === event.gameId ? response.game : g))
+      );
+    } catch (err) {
+      console.error('Failed to fetch updated game from SSE event:', err);
+    }
+  }, []);
+
+  const handleSSEGameDeleted = useCallback((event: SSEEvent) => {
+    setGames((prev) => prev.filter((g) => g.id !== event.gameId));
+  }, []);
+
+  // SSE connection for real-time updates
+  useSSE({
+    currentUserId,
+    enabled: !!currentUserId,
+    handlers: {
+      onGameCreated: handleSSEGameCreated,
+      onGameUpdated: handleSSEGameUpdated,
+      onGameDeleted: handleSSEGameDeleted,
+      onToast: showToast,
+    },
+  });
 
   // Handle game added from UnifiedSearchBar
   const handleGameAdded = useCallback((game: Game) => {

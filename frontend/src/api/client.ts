@@ -132,6 +132,10 @@ export const gamesApi = {
     return fetchApi<GamesResponse>('/api/games');
   },
 
+  getById: (gameId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}`);
+  },
+
   create: (
     name: string,
     userId: string,

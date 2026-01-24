@@ -8,6 +8,7 @@ export type { ImageSize } from './bggImageService';
 export { BggService, bggService } from './bggService';
 export type { BggSearchResult } from './bggService';
 export { GameService, gameService } from './game.service';
+export { SSEManager, sseManager } from './sse.service';
 export { StatisticsService, statisticsService } from './statistics.service';
 export { UserService, userService } from './user.service';
 export type { User } from './user.service';

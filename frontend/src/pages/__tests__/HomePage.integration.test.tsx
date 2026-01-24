@@ -15,6 +15,7 @@ import type { User, Game } from '../../types';
 vi.mock('../../api/client', () => ({
   gamesApi: {
     getAll: vi.fn(),
+    getById: vi.fn(),
     create: vi.fn(),
     addPlayer: vi.fn(),
     addBringer: vi.fn(),
@@ -31,6 +32,21 @@ vi.mock('../../api/client', () => ({
       this.name = 'ApiError';
     }
   },
+}));
+
+// Mock ToastProvider
+vi.mock('../../components/ToastProvider', () => ({
+  useToast: () => ({
+    showToast: vi.fn(),
+  }),
+  ToastProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock useSSE hook
+const mockUseSSE = vi.fn();
+vi.mock('../../hooks/useSSE', () => ({
+  useSSE: (options: unknown) => mockUseSSE(options),
+  calculateBackoffDelay: (attempt: number) => Math.min(Math.pow(2, attempt - 1) * 1000, 30000),
 }));
 
 import { gamesApi, bggApi } from '../../api/client';
@@ -75,6 +91,7 @@ describe('HomePage Integration Tests', () => {
     vi.clearAllMocks();
     (gamesApi.getAll as ReturnType<typeof vi.fn>).mockResolvedValue({ games: mockGames });
     (bggApi.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [], hasMore: false });
+    mockUseSSE.mockReturnValue({ isConnected: true, connectionError: null });
   });
 
   describe('Unified Search Bar', () => {
@@ -243,6 +260,141 @@ describe('HomePage Integration Tests', () => {
       await waitFor(() => {
         // Game list should still render
         expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Azul').length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('SSE Integration (Spec 012)', () => {
+    it('initializes SSE connection with current user ID', async () => {
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        expect(mockUseSSE).toHaveBeenCalledWith(
+          expect.objectContaining({
+            currentUserId: mockUser.id,
+            enabled: true,
+          })
+        );
+      });
+    });
+
+    it('does not enable SSE when user is not logged in', async () => {
+      render(<HomePage user={null} />);
+
+      await waitFor(() => {
+        expect(mockUseSSE).toHaveBeenCalledWith(
+          expect.objectContaining({
+            currentUserId: '',
+            enabled: false,
+          })
+        );
+      });
+    });
+
+    it('provides handlers for game events', async () => {
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        const call = mockUseSSE.mock.calls[mockUseSSE.mock.calls.length - 1][0];
+        expect(call.handlers).toBeDefined();
+        expect(call.handlers.onGameCreated).toBeDefined();
+        expect(call.handlers.onGameUpdated).toBeDefined();
+        expect(call.handlers.onGameDeleted).toBeDefined();
+        expect(call.handlers.onToast).toBeDefined();
+      });
+    });
+
+    it('fetches and adds new game when onGameCreated is called', async () => {
+      const newGame: Game = {
+        id: 'game-3',
+        name: 'Wingspan',
+        owner: mockUser,
+        bggId: 266192,
+        yearPublished: 2019,
+        bggRating: 8.1,
+        players: [],
+        bringers: [],
+        status: 'wunsch',
+        createdAt: new Date(),
+      };
+
+      (gamesApi.getById as ReturnType<typeof vi.fn>).mockResolvedValue({ game: newGame });
+
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
+      });
+
+      // Get the onGameCreated handler and call it
+      const call = mockUseSSE.mock.calls[mockUseSSE.mock.calls.length - 1][0];
+      await call.handlers.onGameCreated({
+        type: 'game:created',
+        gameId: 'game-3',
+        userId: 'user-2',
+        userName: 'Other User',
+        gameName: 'Wingspan',
+        isBringing: false,
+      });
+
+      await waitFor(() => {
+        expect(gamesApi.getById).toHaveBeenCalledWith('game-3');
+      });
+    });
+
+    it('fetches and updates game when onGameUpdated is called', async () => {
+      const updatedGame: Game = {
+        ...mockGames[0],
+        bringers: [
+          ...mockGames[0].bringers,
+          { id: 'b3', user: { id: 'user-4', name: 'New Bringer' }, addedAt: new Date() },
+        ],
+      };
+
+      (gamesApi.getById as ReturnType<typeof vi.fn>).mockResolvedValue({ game: updatedGame });
+
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
+      });
+
+      // Get the onGameUpdated handler and call it
+      const call = mockUseSSE.mock.calls[mockUseSSE.mock.calls.length - 1][0];
+      await call.handlers.onGameUpdated({
+        type: 'game:bringer-added',
+        gameId: 'game-1',
+        userId: 'user-4',
+        userName: 'New Bringer',
+        gameName: 'Catan',
+      });
+
+      await waitFor(() => {
+        expect(gamesApi.getById).toHaveBeenCalledWith('game-1');
+      });
+    });
+
+    it('removes game from list when onGameDeleted is called', async () => {
+      render(<HomePage user={mockUser} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Azul').length).toBeGreaterThan(0);
+      });
+
+      // Get the onGameDeleted handler and call it
+      const call = mockUseSSE.mock.calls[mockUseSSE.mock.calls.length - 1][0];
+      call.handlers.onGameDeleted({
+        type: 'game:deleted',
+        gameId: 'game-1',
+        userId: 'user-2',
+      });
+
+      await waitFor(() => {
+        // Catan should be removed
+        expect(screen.queryAllByText('Catan').length).toBe(0);
+        // Azul should still be there
         expect(screen.getAllByText('Azul').length).toBeGreaterThan(0);
       });
     });

@@ -19,3 +19,6 @@ export type { UseGameFiltersReturn } from './useGameFilters';
 export { useBggSearch } from './useBggSearch';
 
 export { usePullToRefresh, isStandaloneMode } from './usePullToRefresh';
+
+export { useSSE, calculateBackoffDelay } from './useSSE';
+export type { default as UseSSEDefault } from './useSSE';

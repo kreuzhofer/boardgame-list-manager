@@ -27,6 +27,43 @@ router.get('/', async (_req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/games/:id
+ * Returns a single game by ID with its players and bringers.
+ * 
+ * Response: { game: Game }
+ * 
+ * Error responses:
+ *   - 404 if game not found
+ * 
+ * Requirements: 3.1, 3.2 (SSE selective refresh)
+ */
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const game = await gameService.getGameById(id);
+    
+    if (!game) {
+      return res.status(404).json({
+        error: {
+          code: 'GAME_NOT_FOUND',
+          message: 'Spiel nicht gefunden.',
+        },
+      });
+    }
+    
+    return res.json({ game });
+  } catch (error) {
+    console.error('Error fetching game:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
+/**
  * POST /api/games
  * Creates a new game with the user as owner (and optionally as player and/or bringer).
  * 

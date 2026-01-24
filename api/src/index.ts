@@ -4,6 +4,7 @@ import * as path from 'path';
 import authRoutes from './routes/auth.routes';
 import bggRoutes from './routes/bgg.routes';
 import gameRoutes from './routes/game.routes';
+import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import userRoutes from './routes/user.routes';
 import { bggCache } from './services';
@@ -30,6 +31,7 @@ app.use((req, _res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bgg', bggRoutes);
+app.use('/api/events', sseRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/users', userRoutes);

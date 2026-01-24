@@ -3,6 +3,9 @@
  * Matching the API data models from the design document
  */
 
+// SSE Event Types
+export * from './sse';
+
 // User entity
 export interface User {
   id: string;

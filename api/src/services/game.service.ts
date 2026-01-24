@@ -1,4 +1,5 @@
-import { gameRepository, GameRepository } from '../repositories';
+import { gameRepository, GameRepository, userRepository, UserRepository } from '../repositories';
+import { sseManager } from './sse.service';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
 
 /**
@@ -8,7 +9,10 @@ import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } f
  * Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1-4.6
  */
 export class GameService {
-  constructor(private readonly repository: GameRepository = gameRepository) {}
+  constructor(
+    private readonly repository: GameRepository = gameRepository,
+    private readonly userRepo: UserRepository = userRepository
+  ) {}
 
   /**
    * Transforms a PlayerEntity to the API Player format
@@ -79,6 +83,21 @@ export class GameService {
   }
 
   /**
+   * Get a single game by ID
+   * @param gameId - The game's unique identifier
+   * @returns The game in API format, or null if not found
+   * 
+   * Requirements: 3.1, 3.2 (SSE selective refresh)
+   */
+  async getGameById(gameId: string): Promise<Game | null> {
+    const entity = await this.repository.findById(gameId);
+    if (!entity) {
+      return null;
+    }
+    return this.transformGame(entity);
+  }
+
+  /**
    * Create a new game
    * @param name - The game name
    * @param userId - The user ID of the user creating the game
@@ -122,7 +141,24 @@ export class GameService {
         yearPublished,
         bggRating,
       });
-      return this.transformGame(entity);
+      
+      const game = this.transformGame(entity);
+      
+      // Get user name for SSE event
+      const user = await this.userRepo.findById(userId);
+      const userName = user?.name || 'Unbekannt';
+      
+      // Broadcast game:created event
+      sseManager.broadcast({
+        type: 'game:created',
+        gameId: game.id,
+        userId,
+        userName,
+        gameName: game.name,
+        isBringing,
+      });
+      
+      return game;
     } catch (error) {
       // Handle Prisma unique constraint violation
       if (error instanceof Error && error.message.includes('Unique constraint')) {
@@ -144,7 +180,16 @@ export class GameService {
   async addPlayer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.addPlayer(gameId, userId);
-      return this.transformGame(entity);
+      const game = this.transformGame(entity);
+      
+      // Broadcast game:player-added event
+      sseManager.broadcast({
+        type: 'game:player-added',
+        gameId,
+        userId,
+      });
+      
+      return game;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === 'Game not found') {
@@ -171,7 +216,16 @@ export class GameService {
   async removePlayer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.removePlayer(gameId, userId);
-      return this.transformGame(entity);
+      const game = this.transformGame(entity);
+      
+      // Broadcast game:player-removed event
+      sseManager.broadcast({
+        type: 'game:player-removed',
+        gameId,
+        userId,
+      });
+      
+      return game;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === 'Game not found') {
@@ -197,7 +251,22 @@ export class GameService {
   async addBringer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.addBringer(gameId, userId);
-      return this.transformGame(entity);
+      const game = this.transformGame(entity);
+      
+      // Get user name for SSE event
+      const user = await this.userRepo.findById(userId);
+      const userName = user?.name || 'Unbekannt';
+      
+      // Broadcast game:bringer-added event
+      sseManager.broadcast({
+        type: 'game:bringer-added',
+        gameId,
+        userId,
+        userName,
+        gameName: game.name,
+      });
+      
+      return game;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === 'Game not found') {
@@ -224,7 +293,16 @@ export class GameService {
   async removeBringer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.removeBringer(gameId, userId);
-      return this.transformGame(entity);
+      const game = this.transformGame(entity);
+      
+      // Broadcast game:bringer-removed event
+      sseManager.broadcast({
+        type: 'game:bringer-removed',
+        gameId,
+        userId,
+      });
+      
+      return game;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === 'Game not found') {
@@ -275,6 +353,13 @@ export class GameService {
 
     // Delete the game
     await this.repository.delete(gameId);
+    
+    // Broadcast game:deleted event
+    sseManager.broadcast({
+      type: 'game:deleted',
+      gameId,
+      userId,
+    });
   }
 }
 

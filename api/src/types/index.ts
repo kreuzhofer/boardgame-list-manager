@@ -1,3 +1,6 @@
+// SSE Event Types
+export * from './sse';
+
 // User entity type
 export interface UserEntity {
   id: string;

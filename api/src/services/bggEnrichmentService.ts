@@ -6,6 +6,7 @@
 
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
+import { bggCache } from './bggCache';
 
 export interface EnrichmentData {
   alternateNames: Array<{ name: string; language?: string }>;
@@ -364,6 +365,10 @@ class BggEnrichmentService {
       },
     });
     
+    // Update in-memory cache with new alternate names
+    const alternateNames = enrichmentData.alternateNames.map(a => a.name);
+    bggCache.updateGameAlternateNames(bggId, alternateNames);
+    
     return enrichmentData;
   }
 
@@ -417,6 +422,10 @@ class BggEnrichmentService {
             enrichmentData: enrichmentData as any,
           },
         });
+        
+        // Update in-memory cache with new alternate names
+        const alternateNames = enrichmentData.alternateNames.map(a => a.name);
+        bggCache.updateGameAlternateNames(game.id, alternateNames);
         
         this.bulkStatus.processed++;
         consecutiveErrors = 0; // Reset on success

@@ -485,6 +485,56 @@ class BggCache {
   setDataSource(source: 'csv' | 'database'): void {
     this.dataSource = source;
   }
+
+  /**
+   * Update alternate names for a single game in the cache
+   * Called by enrichment service after enriching a game
+   * Feature: 014-alternate-names-search - Live cache updates during enrichment
+   */
+  updateGameAlternateNames(gameId: number, alternateNames: string[]): void {
+    // Find the game in the cache
+    const game = this.games.find(g => g.id === gameId);
+    if (!game) {
+      // Game not in cache (might be an expansion or not loaded)
+      return;
+    }
+
+    // Remove old alternate name entries from the index
+    for (const oldAltName of game.alternateNames) {
+      const normalizedName = oldAltName.toLowerCase().trim();
+      const entries = this.alternateNameIndex.get(normalizedName);
+      if (entries) {
+        const filtered = entries.filter(e => e.gameId !== gameId);
+        if (filtered.length === 0) {
+          this.alternateNameIndex.delete(normalizedName);
+        } else {
+          this.alternateNameIndex.set(normalizedName, filtered);
+        }
+      }
+    }
+
+    // Update the game's alternate names
+    game.alternateNames = alternateNames;
+
+    // Add new alternate name entries to the index
+    for (const alternateName of alternateNames) {
+      const normalizedName = alternateName.toLowerCase().trim();
+      if (!normalizedName) continue;
+
+      const entry: AlternateNameEntry = {
+        gameId,
+        alternateName,
+        normalizedName,
+      };
+
+      const existing = this.alternateNameIndex.get(normalizedName);
+      if (existing) {
+        existing.push(entry);
+      } else {
+        this.alternateNameIndex.set(normalizedName, [entry]);
+      }
+    }
+  }
 }
 
 // Export singleton instance

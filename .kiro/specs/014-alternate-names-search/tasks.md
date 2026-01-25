@@ -20,7 +20,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Set `dataSource` property to 'csv' or 'database'
     - Log selected source and counts
     - _Requirements: 1.3, 1.4, 1.5_
-  - [ ]* 1.4 Write property test for data source selection
+  - [x] 1.4 Write property test for data source selection
     - **Property 1: Data Source Selection**
     - **Validates: Requirements 1.3, 1.4**
 
@@ -34,14 +34,14 @@ This implementation enhances the BGG search to use the database as the primary d
     - Extract alternate names from enrichment_data JSONB
     - Handle null/missing enrichment_data gracefully
     - _Requirements: 2.1, 2.2, 2.3_
-  - [ ]* 2.3 Write property test for alternate name extraction
+  - [x] 2.3 Write property test for alternate name extraction
     - **Property 2: Alternate Name Extraction**
     - **Validates: Requirements 2.2**
   - [x] 2.4 Implement buildAlternateNameIndex() method
     - Create Map from normalized alternate names to game entries
     - Store original (non-normalized) name alongside normalized
     - _Requirements: 2.4, 2.5_
-  - [ ]* 2.5 Write property test for alternate name normalization
+  - [x] 2.5 Write property test for alternate name normalization
     - **Property 4: Alternate Name Normalization**
     - **Validates: Requirements 2.5**
 
@@ -62,16 +62,16 @@ This implementation enhances the BGG search to use the database as the primary d
     - Keep best-scoring alternate when multiple match
     - Include all alternateNames in each result
     - _Requirements: 3.2, 3.3, 3.5, 4.4_
-  - [ ]* 4.4 Write property test for alternate name search inclusion
+  - [x] 4.4 Write property test for alternate name search inclusion
     - **Property 5: Alternate Name Search Inclusion**
     - **Validates: Requirements 3.1**
-  - [ ]* 4.5 Write property test for primary name priority
+  - [x] 4.5 Write property test for primary name priority
     - **Property 6: Primary Name Match Priority**
     - **Validates: Requirements 3.3, 4.4**
-  - [ ]* 4.6 Write property test for result annotation
+  - [x] 4.6 Write property test for result annotation
     - **Property 8: Result Annotation Correctness**
     - **Validates: Requirements 4.1, 4.2, 5.4**
-  - [ ]* 4.7 Write property test for all alternate names included
+  - [x] 4.7 Write property test for all alternate names included
     - **Property 9: All Alternate Names Included**
     - **Validates: Requirements 4.5, 5.2**
 
@@ -82,7 +82,7 @@ This implementation enhances the BGG search to use the database as the primary d
   - [x] 5.2 Update API route response format
     - Ensure backward compatibility (existing fields unchanged)
     - _Requirements: 5.1, 5.2, 5.3_
-  - [ ]* 5.3 Write unit tests for API response format
+  - [x] 5.3 Write unit tests for API response format
     - Test response includes matchedAlternateName and alternateNames fields
     - Test backward compatibility
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
@@ -102,7 +102,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Accept `addedAsAlternateName` and `alternateNames` in create/update
     - Return alternate name fields in responses
     - _Requirements: 8.3, 8.4, 8.5_
-  - [ ]* 7.4 Write unit tests for game service alternate name handling
+  - [x] 7.4 Write unit tests for game service alternate name handling
     - Test creating game with alternate name data
     - Test creating game without alternate name data
     - _Requirements: 8.3, 8.4, 8.5_
@@ -116,7 +116,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Store `addedAsAlternateName` when provided
     - Store `alternateNames` array when provided
     - _Requirements: 9.3_
-  - [ ]* 8.3 Write property test for alternate names persistence
+  - [x] 8.3 Write property test for alternate names persistence
     - **Property 10: Alternate Names Persistence**
     - **Validates: Requirements 9.1, 9.3**
 
@@ -146,7 +146,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Add bottom fade gradient when content is scrollable
     - Match style from UserSelectionModal
     - _Requirements: 7.3, 7.4_
-  - [ ]* 11.4 Write unit tests for AutocompleteDropdown enhancements
+  - [x] 11.4 Write unit tests for AutocompleteDropdown enhancements
     - Test alternate name renders when present
     - Test no alternate name section when null
     - Test dropdown has max-height constraint
@@ -157,7 +157,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Include `addedAsAlternateName` from selected result's `matchedAlternateName`
     - Include `alternateNames` from selected result
     - _Requirements: 9.1, 9.2_
-  - [ ]* 12.2 Write unit tests for add game flow
+  - [x] 12.2 Write unit tests for add game flow
     - Test alternate name data passed to API
     - Test handling when no alternate name matched
     - _Requirements: 9.1, 9.2_
@@ -171,10 +171,10 @@ This implementation enhances the BGG search to use the database as the primary d
     - Use same fuzzy matching as BGG search
     - Case-insensitive matching
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
-  - [ ]* 14.2 Write property test for game list filtering
+  - [x] 14.2 Write property test for game list filtering
     - **Property 11: Game List Filter Includes Alternate Names**
     - **Validates: Requirements 10.1**
-  - [ ]* 14.3 Write unit tests for filtering
+  - [x] 14.3 Write unit tests for filtering
     - Test filter finds game by primary name
     - Test filter finds game by alternate name
     - Test filter excludes non-matching games
@@ -190,7 +190,7 @@ This implementation enhances the BGG search to use the database as the primary d
     - Display alternate name below primary in smaller, muted text
     - Only show when addedAsAlternateName is set
     - _Requirements: 11.1, 11.2, 11.5_
-  - [ ]* 15.3 Write unit tests for game list display
+  - [x] 15.3 Write unit tests for game list display
     - Test GameCard shows inline format with alternate name
     - Test GameRow shows two-line format with alternate name
     - Test both components show only primary when no alternate

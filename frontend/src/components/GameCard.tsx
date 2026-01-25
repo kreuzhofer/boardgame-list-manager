@@ -31,7 +31,65 @@ interface GameCardProps {
   isHighlighted?: boolean;
 }
 
-/** Compact list display for mobile - shows up to 3 names, or 2 names + "+X" if more than 3 */
+/**
+ * Hook to detect if text would wrap at the larger font size
+ * Measures once and only re-measures when content changes, not on resize
+ * This avoids the resize loop where shrinking causes unwrapping which causes growing
+ */
+function useTextWrap(deps: unknown[]): [React.RefObject<HTMLHeadingElement>, boolean] {
+  const ref = useRef<HTMLHeadingElement>(null);
+  const [isWrapped, setIsWrapped] = useState(false);
+  const measuredRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    
+    // Only measure once per content change
+    // Use requestAnimationFrame to ensure layout is complete
+    measuredRef.current = false;
+    
+    const measure = () => {
+      if (measuredRef.current) return;
+      measuredRef.current = true;
+      
+      // Temporarily force large font to measure if it would wrap
+      const originalClass = el.className;
+      el.className = el.className.replace(/text-base/g, 'text-lg').replace(/text-sm/g, 'text-base');
+      
+      // Force layout recalc
+      const style = getComputedStyle(el);
+      const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2;
+      const wouldWrap = el.scrollHeight > lineHeight * 1.3;
+      
+      // Restore original class
+      el.className = originalClass;
+      
+      setIsWrapped(wouldWrap);
+    };
+    
+    requestAnimationFrame(measure);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return [ref, isWrapped];
+}
+
+interface GameCardProps {
+  game: Game;
+  currentUserId: string;
+  onAddPlayer?: (gameId: string) => void;
+  onAddBringer?: (gameId: string) => void;
+  onRemovePlayer?: (gameId: string) => void;
+  onRemoveBringer?: (gameId: string) => void;
+  onDeleteGame?: (gameId: string) => void;
+  scrollIntoView?: boolean;
+  onScrolledIntoView?: () => void;
+  /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
+  isHighlighted?: boolean;
+}
+
+/** Compact list display for mobile - shows up to 2 names, or 1 name + "+X" if more than 2 */
 function CompactList({ 
   items, 
   currentUserId, 
@@ -47,11 +105,11 @@ function CompactList({
     return <span className="text-gray-400 italic text-sm">{emptyText}</span>;
   }
 
-  // When expanded: show all. When collapsed: show 2 + "+X" if >3, otherwise show all (up to 3)
-  const hasOverflow = !expanded && items.length > 3;
-  const maxVisible = expanded ? items.length : (hasOverflow ? 2 : items.length);
+  // When expanded: show all. When collapsed: show 1 + "+X" if >2, otherwise show all (up to 2)
+  const hasOverflow = !expanded && items.length > 2;
+  const maxVisible = expanded ? items.length : (hasOverflow ? 1 : items.length);
   const visibleItems = items.slice(0, maxVisible);
-  const overflowCount = items.length - 2; // +X shows total - 2
+  const overflowCount = items.length - 1; // +X shows total - 1
 
   return (
     <div className="text-sm">
@@ -101,8 +159,11 @@ export function GameCard({
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
   
-  // Check if either list has overflow (more than 3 items)
-  const hasOverflow = game.players.length > 3 || game.bringers.length > 3;
+  // Dynamic text sizing - shrink when title wraps to 2 lines
+  const [titleRef, isTitleWrapped] = useTextWrap([game.name, game.addedAsAlternateName]);
+  
+  // Check if either list has overflow (more than 2 items)
+  const hasOverflow = game.players.length > 2 || game.bringers.length > 2;
 
   const handleListClick = () => {
     if (hasOverflow) {
@@ -135,7 +196,7 @@ export function GameCard({
 
   // Determine background color: highlight > wunsch > default
   const getCardClassName = () => {
-    const baseClasses = 'p-4';
+    const baseClasses = 'px-4 py-2';
     const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
     
     if (isHighlighted) {
@@ -176,11 +237,16 @@ export function GameCard({
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Title row with status indicator */}
           <div className="flex items-start gap-2">
-            <h3 className="font-semibold text-gray-900 text-lg leading-tight flex-1 truncate">
+            <h3 
+              ref={titleRef}
+              className={`font-semibold text-gray-900 leading-tight flex-1 line-clamp-2 ${
+                isTitleWrapped ? 'text-sm' : 'text-lg'
+              }`}
+            >
               {game.name}
               {/* Feature: 014-alternate-names-search - Show alternate name inline on mobile */}
               {game.addedAsAlternateName && (
-                <span className="font-normal text-gray-500 text-base">
+                <span className={`font-normal text-gray-500 ${isTitleWrapped ? 'text-sm' : 'text-base'}`}>
                   {' · '}{game.addedAsAlternateName}
                 </span>
               )}

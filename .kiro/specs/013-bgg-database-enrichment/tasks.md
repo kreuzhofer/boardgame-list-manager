@@ -161,6 +161,15 @@ This implementation adds CSV import and game enrichment capabilities to the BGG 
   - Ensure all new tests pass
   - Rebuild Docker container
 
+- [x] 14. Sort Enrichment by Release Year
+  - [x] 14.1 Update bulk enrichment query to sort by year_published DESC
+    - Order games by year_published descending (newest first)
+    - Use NULLS LAST to process games without year at the end
+    - _Requirements: 6a.5_
+  - [x] 14.2 Write test for enrichment ordering
+    - Verify games are processed newest first
+    - _Requirements: 6a.5_
+
 ## Notes
 
 - All tests are required for comprehensive coverage

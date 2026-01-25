@@ -385,10 +385,12 @@ class BggEnrichmentService {
     this.bulkStatus.skipped = alreadyEnriched;
     console.log(`[BggEnrichment] Starting bulk enrichment of ${needingEnrichment} games (${alreadyEnriched} already enriched)`);
     
-    // Get all games needing enrichment
+    // Get all games needing enrichment, sorted by year_published DESC (newest first)
+    // Requirement 6a.5: Sort by year_published descending so newer games are enriched first
     const games = await prisma.bggGame.findMany({
       where: { scrapingDone: false },
-      select: { id: true },
+      select: { id: true, yearPublished: true },
+      orderBy: { yearPublished: 'desc' },
     });
     
     let lastLogTime = Date.now();

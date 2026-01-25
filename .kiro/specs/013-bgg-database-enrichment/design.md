@@ -419,6 +419,13 @@ ScraperAPI has rate limits. For bulk enrichment:
 - Pause on rate limit errors, resume after delay
 - Track progress in memory (survives individual failures, not server restarts)
 
+### Enrichment Processing Order
+
+Games are processed in order of release year (newest first):
+- Query games where `scraping_done=false` ordered by `year_published DESC NULLS LAST`
+- This ensures newer games get enriched before older ones
+- Games with null year_published are processed last
+
 ### ScraperAPI Error Handling
 
 The enrichment service handles ScraperAPI status codes according to their documentation:

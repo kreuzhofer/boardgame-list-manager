@@ -139,6 +139,7 @@ This feature enhances the BoardGameGeek (BGG) data capabilities by importing the
 2. WHEN bulk enrichment is already in progress, THE System SHALL return HTTP 409 with a message indicating enrichment is already running
 3. THE bulk enrichment process SHALL process games sequentially to respect ScraperAPI rate limits
 4. THE bulk enrichment process SHALL continue processing even if individual games fail (log errors and continue)
+5. THE bulk enrichment process SHALL sort games by year_published descending (newest first) before processing, so that newer games are enriched before older ones
 
 ### Requirement 6b: Bulk Enrichment Status Endpoint
 

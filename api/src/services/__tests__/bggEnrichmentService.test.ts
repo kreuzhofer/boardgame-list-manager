@@ -1,10 +1,23 @@
 /**
  * Unit tests for BggEnrichmentService
  * 
- * Requirements: 4.2, 4.3, 6.3
+ * Requirements: 4.2, 4.3, 6.3, 6a.5
  */
 
 import { BggEnrichmentService } from '../bggEnrichmentService';
+import { prisma } from '../../lib/prisma';
+
+// Mock prisma
+jest.mock('../../lib/prisma', () => ({
+  prisma: {
+    bggGame: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}));
 
 describe('BggEnrichmentService Unit Tests', () => {
   const service = new BggEnrichmentService();
@@ -170,6 +183,34 @@ describe('BggEnrichmentService Unit Tests', () => {
       expect(service.formatBytes(1024 * 1024)).toBe('1.0 MB');
       expect(service.formatBytes(1024 * 1024 * 1024)).toBe('1.00 GB');
       expect(service.formatBytes(1536)).toBe('1.5 KB');
+    });
+  });
+
+  describe('bulk enrichment ordering', () => {
+    /**
+     * Requirement 6a.5: Games should be sorted by year_published DESC (newest first)
+     */
+    it('should query games ordered by yearPublished descending', async () => {
+      const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+      
+      // Setup mocks
+      (mockPrisma.bggGame.count as jest.Mock).mockResolvedValue(0);
+      (mockPrisma.bggGame.findMany as jest.Mock).mockResolvedValue([]);
+      
+      // Create a fresh service instance for this test
+      const testService = new BggEnrichmentService();
+      testService.startBulkEnrichment();
+      
+      // Wait a bit for the async process to start
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify findMany was called with correct orderBy
+      expect(mockPrisma.bggGame.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { scrapingDone: false },
+          orderBy: { yearPublished: 'desc' },
+        })
+      );
     });
   });
 });

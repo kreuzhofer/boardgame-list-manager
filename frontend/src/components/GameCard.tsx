@@ -176,8 +176,14 @@ export function GameCard({
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Title row with status indicator */}
           <div className="flex items-start gap-2">
-            <h3 className="font-semibold text-gray-900 text-lg leading-tight flex-1">
+            <h3 className="font-semibold text-gray-900 text-lg leading-tight flex-1 truncate">
               {game.name}
+              {/* Feature: 014-alternate-names-search - Show alternate name inline on mobile */}
+              {game.addedAsAlternateName && (
+                <span className="font-normal text-gray-500 text-base">
+                  {' · '}{game.addedAsAlternateName}
+                </span>
+              )}
             </h3>
             {/* Status indicator - colored circle with HelpBubble (no ? shown) */}
             <div className="relative flex-shrink-0">

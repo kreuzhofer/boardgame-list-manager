@@ -38,7 +38,11 @@ export class GameRepository {
         name: 'asc',
       },
     });
-    return games;
+    // Cast alternateNames from Json to string[]
+    return games.map(game => ({
+      ...game,
+      alternateNames: (game.alternateNames as string[]) ?? [],
+    })) as GameEntity[];
   }
 
   /**
@@ -51,7 +55,12 @@ export class GameRepository {
       where: { id },
       include: this.includeRelations,
     });
-    return game;
+    if (!game) return null;
+    // Cast alternateNames from Json to string[]
+    return {
+      ...game,
+      alternateNames: (game.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -61,9 +70,10 @@ export class GameRepository {
    * Requirements: 4.1 - Accept userId instead of userName
    * Requirements: 2.2 - Set ownerId to the creating user's ID
    * Requirements: 4.3, 4.4 - Store bggId and yearPublished if provided
+   * Feature: 014-alternate-names-search - Store alternate name data
    */
   async create(data: CreateGameDto): Promise<GameEntity> {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating } = data;
+    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = data;
 
     // Create game with the user as owner, and optionally as player and/or bringer
     const game = await prisma.game.create({
@@ -73,6 +83,8 @@ export class GameRepository {
         bggId: bggId ?? null,
         yearPublished: yearPublished ?? null,
         bggRating: bggRating ?? null,
+        addedAsAlternateName: addedAsAlternateName ?? null,
+        alternateNames: alternateNames ?? [],
         ...(isPlaying && {
           players: {
             create: {
@@ -91,7 +103,10 @@ export class GameRepository {
       include: this.includeRelations,
     });
 
-    return game;
+    return {
+      ...game,
+      alternateNames: (game.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -126,7 +141,10 @@ export class GameRepository {
       include: this.includeRelations,
     });
 
-    return game!;
+    return {
+      ...game!,
+      alternateNames: (game!.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -167,7 +185,10 @@ export class GameRepository {
       include: this.includeRelations,
     });
 
-    return game!;
+    return {
+      ...game!,
+      alternateNames: (game!.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -202,7 +223,10 @@ export class GameRepository {
       include: this.includeRelations,
     });
 
-    return game!;
+    return {
+      ...game!,
+      alternateNames: (game!.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -243,7 +267,10 @@ export class GameRepository {
       include: this.includeRelations,
     });
 
-    return game!;
+    return {
+      ...game!,
+      alternateNames: (game!.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**
@@ -256,7 +283,12 @@ export class GameRepository {
       where: { name },
       include: this.includeRelations,
     });
-    return game;
+    if (!game) return null;
+    // Cast alternateNames from Json to string[]
+    return {
+      ...game,
+      alternateNames: (game.alternateNames as string[]) ?? [],
+    } as GameEntity;
   }
 
   /**

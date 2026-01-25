@@ -20,17 +20,19 @@ model User {
 }
 
 model Game {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  ownerId       String?  @map("owner_id")
-  bggId         Int?     @map("bgg_id")
-  yearPublished Int?     @map("year_published")
-  bggRating     Float?   @map("bgg_rating")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  owner         User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  players       Player[]
-  bringers      Bringer[]
+  id                    String   @id @default(uuid())
+  name                  String   @unique
+  ownerId               String?  @map("owner_id")
+  bggId                 Int?     @map("bgg_id")
+  yearPublished         Int?     @map("year_published")
+  bggRating             Float?   @map("bgg_rating")
+  addedAsAlternateName  String?  @map("added_as_alternate_name") @db.VarChar(255)
+  alternateNames        Json     @default("[]") @map("alternate_names") @db.JsonB
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  owner                 User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  players               Player[]
+  bringers              Bringer[]
 
   @@index([ownerId])
   @@index([bggId])

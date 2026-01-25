@@ -5,7 +5,7 @@
  */
 
 import * as fc from 'fast-check';
-import { BggCache, BggGame } from '../bggCache';
+import { BggCache, BggGameWithAlternates } from '../bggCache';
 
 describe('BggCache Property Tests', () => {
   /**
@@ -28,12 +28,13 @@ describe('BggCache Property Tests', () => {
             const roundedRating = Math.round(rawRating * 10) / 10;
             
             const cache = new BggCache();
-            const games: BggGame[] = [{
+            const games: BggGameWithAlternates[] = [{
               id: 1,
               name: 'Test Game',
               yearPublished: 2020,
               rank: 1,
               rating: roundedRating,
+              alternateNames: [],
             }];
             cache.loadGames(games);
             
@@ -67,6 +68,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 20 }
           ),
@@ -115,6 +117,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 20 }
           ),
@@ -145,6 +148,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 15 }
           ),
@@ -197,7 +201,7 @@ describe('BggCache Property Tests', () => {
             const cache = new BggCache();
             
             // Load only base games (simulating what the CSV parser does)
-            const baseGames: BggGame[] = gameData
+            const baseGames: BggGameWithAlternates[] = gameData
               .filter(g => !g.isExpansion)
               .map(g => ({
                 id: g.id,
@@ -205,6 +209,7 @@ describe('BggCache Property Tests', () => {
                 yearPublished: g.yearPublished,
                 rank: g.rank,
                 rating: null,
+                alternateNames: [],
               }));
             
             cache.loadGames(baseGames);
@@ -240,6 +245,7 @@ describe('BggCache Property Tests', () => {
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
               rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 30 }
           ),
@@ -283,6 +289,7 @@ describe('BggCache Property Tests', () => {
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
               rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 15, maxLength: 30 }
           ),
@@ -310,6 +317,7 @@ describe('BggCache Property Tests', () => {
               yearPublished: fc.option(fc.integer({ min: 1990, max: 2025 }), { nil: null }),
               rank: fc.integer({ min: 1, max: 100000 }),
               rating: fc.option(fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10), { nil: null }),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 20 }
           ),
@@ -321,9 +329,10 @@ describe('BggCache Property Tests', () => {
             const results = cache.search(query);
             const lowerQuery = query.toLowerCase();
             
-            // All results should contain the query (case-insensitive)
+            // All results should contain the query (case-insensitive) in name or alternate names
             return results.every(game => 
-              game.name.toLowerCase().includes(lowerQuery)
+              game.name.toLowerCase().includes(lowerQuery) ||
+              game.alternateNames.some(alt => alt.toLowerCase().includes(lowerQuery))
             );
           }
         ),
@@ -356,6 +365,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 2, maxLength: 30 }
           ),
@@ -412,6 +422,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 5, maxLength: 25 }
           ),
@@ -476,6 +487,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 2, maxLength: 30 }
           ),
@@ -528,6 +540,7 @@ describe('BggCache Property Tests', () => {
                   fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                   { nil: null }
                 ),
+                alternateNames: fc.constant([] as string[]),
               }),
               { minLength: 1, maxLength: 15 }
             ),
@@ -542,6 +555,7 @@ describe('BggCache Property Tests', () => {
                   fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                   { nil: null }
                 ),
+                alternateNames: fc.constant([] as string[]),
               }),
               { minLength: 1, maxLength: 15 }
             )
@@ -597,6 +611,7 @@ describe('BggCache Property Tests', () => {
                 fc.float({ min: 1, max: 10, noNaN: true }).map(r => Math.round(r * 10) / 10),
                 { nil: null }
               ),
+              alternateNames: fc.constant([] as string[]),
             }),
             { minLength: 1, maxLength: 20 }
           ),

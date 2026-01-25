@@ -306,7 +306,9 @@ export function UnifiedSearchBar({
         isPlaying,
         selectedBggItem?.id,
         selectedBggItem?.yearPublished ?? undefined,
-        selectedBggItem?.rating ?? undefined
+        selectedBggItem?.rating ?? undefined,
+        selectedBggItem?.matchedAlternateName ?? undefined,
+        selectedBggItem?.alternateNames ?? undefined
       );
 
       // Reset form
@@ -350,14 +352,22 @@ export function UnifiedSearchBar({
                 <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">
                   BGG
                 </span>
-                <span className="text-gray-900 font-medium truncate flex-1">
-                  {selectedBggItem.name}
-                  {selectedBggItem.yearPublished && (
-                    <span className="text-gray-500 font-normal ml-1">
-                      ({selectedBggItem.yearPublished})
+                <div className="flex-1 min-w-0">
+                  <span className="text-gray-900 font-medium truncate block">
+                    {selectedBggItem.name}
+                    {selectedBggItem.yearPublished && (
+                      <span className="text-gray-500 font-normal ml-1">
+                        ({selectedBggItem.yearPublished})
+                      </span>
+                    )}
+                  </span>
+                  {/* Feature: 014-alternate-names-search - Show matched alternate name */}
+                  {selectedBggItem.matchedAlternateName && (
+                    <span className="text-xs text-gray-500 truncate block">
+                      Auch bekannt als: {selectedBggItem.matchedAlternateName}
                     </span>
                   )}
-                </span>
+                </div>
                 <button
                   type="button"
                   onClick={handleClearSelection}

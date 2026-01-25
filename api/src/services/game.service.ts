@@ -57,6 +57,7 @@ export class GameService {
    * Transforms a GameEntity from the database to the API Game format
    * Requirements: 2.3, 2.4 - Include owner information
    * Requirements: 4.3, 4.4 - Include bggId and yearPublished
+   * Feature: 014-alternate-names-search - Include alternate name data
    */
   private transformGame(entity: GameEntity): Game {
     return {
@@ -66,6 +67,8 @@ export class GameService {
       bggId: entity.bggId,
       yearPublished: entity.yearPublished,
       bggRating: entity.bggRating,
+      addedAsAlternateName: entity.addedAsAlternateName,
+      alternateNames: entity.alternateNames ?? [],
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -105,10 +108,14 @@ export class GameService {
    * @param isPlaying - Whether the user wants to play the game
    * @param bggId - Optional BoardGameGeek ID
    * @param yearPublished - Optional year the game was published
+   * @param bggRating - Optional BGG rating
+   * @param addedAsAlternateName - Optional alternate name used when adding
+   * @param alternateNames - Optional array of all alternate names
    * @returns The created game in API format
    * @throws Error with German message if game name is empty or already exists
    * 
    * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
+   * Feature: 014-alternate-names-search - Store alternate name data
    */
   async createGame(
     name: string,
@@ -117,7 +124,9 @@ export class GameService {
     isPlaying: boolean,
     bggId?: number,
     yearPublished?: number,
-    bggRating?: number
+    bggRating?: number,
+    addedAsAlternateName?: string,
+    alternateNames?: string[]
   ): Promise<Game> {
     // Validate game name
     const trimmedName = name.trim();
@@ -140,6 +149,8 @@ export class GameService {
         bggId,
         yearPublished,
         bggRating,
+        addedAsAlternateName,
+        alternateNames,
       });
       
       const game = this.transformGame(entity);

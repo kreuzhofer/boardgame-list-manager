@@ -134,6 +134,12 @@ export function GameRow({
       <td className="px-4 py-3 w-[25%]">
         <div className="flex flex-col gap-1">
           <span className="font-medium text-gray-900">{game.name}</span>
+          {/* Feature: 014-alternate-names-search - Show alternate name on second line (desktop) */}
+          {game.addedAsAlternateName && (
+            <span className="text-sm text-gray-500 truncate">
+              {game.addedAsAlternateName}
+            </span>
+          )}
           <div className="flex items-center gap-2">
             {/* Status Badge - Requirement 4.1, 4.2 */}
             <span

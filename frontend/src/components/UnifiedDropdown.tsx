@@ -134,9 +134,17 @@ export function UnifiedDropdown({
                         enableZoom={false}
                       />
                     )}
-                    <span className="font-medium text-gray-900 truncate flex-1">
-                      ✓ {game.name}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-gray-900 truncate block">
+                        ✓ {game.name}
+                      </span>
+                      {/* Feature: 014-alternate-names-search - Show matched alternate name */}
+                      {game.matchedAlternateName && (
+                        <div className="text-xs text-gray-500 truncate">
+                          Auch bekannt als: {game.matchedAlternateName}
+                        </div>
+                      )}
+                    </div>
                     {game.bringerNames.length > 0 ? (
                       <span className="text-sm text-green-700 flex-shrink-0 flex items-center gap-1">
                         <img src="/package.svg" alt="" className="w-4 h-4" /> {game.bringerNames.length === 1 
@@ -199,14 +207,24 @@ export function UnifiedDropdown({
                         className="flex-shrink-0 rounded"
                         enableZoom={false}
                       />
-                      <span className="text-gray-900 truncate flex-1">
-                        {result.name}
-                        {result.yearPublished && (
-                          <span className="text-gray-500 ml-1">
-                            ({result.yearPublished})
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-900 truncate">
+                            {result.name}
                           </span>
+                          {result.yearPublished && (
+                            <span className="text-gray-500 flex-shrink-0">
+                              ({result.yearPublished})
+                            </span>
+                          )}
+                        </div>
+                        {/* Feature: 014-alternate-names-search - Show matched alternate name */}
+                        {result.matchedAlternateName && (
+                          <div className="text-xs text-gray-500 truncate">
+                            Auch bekannt als: {result.matchedAlternateName}
+                          </div>
                         )}
-                      </span>
+                      </div>
                       {result.rating && (
                         <BggRatingBadge rating={result.rating} />
                       )}

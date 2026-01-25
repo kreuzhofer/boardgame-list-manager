@@ -143,9 +143,21 @@ export const gamesApi = {
     isPlaying: boolean,
     bggId?: number,
     yearPublished?: number,
-    bggRating?: number
+    bggRating?: number,
+    addedAsAlternateName?: string,
+    alternateNames?: string[]
   ): Promise<GameResponse> => {
-    const body: CreateGameRequest = { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating };
+    const body: CreateGameRequest = { 
+      name, 
+      userId, 
+      isBringing, 
+      isPlaying, 
+      bggId, 
+      yearPublished, 
+      bggRating,
+      addedAsAlternateName,
+      alternateNames
+    };
     return fetchApi<GameResponse>('/api/games', {
       method: 'POST',
       body: JSON.stringify(body),

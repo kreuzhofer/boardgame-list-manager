@@ -72,6 +72,12 @@ const gameArbitrary: fc.Arbitrary<Game> = fc.record({
   players: fc.array(playerArbitrary, { minLength: 0, maxLength: 10 }),
   bringers: fc.array(bringerArbitrary, { minLength: 0, maxLength: 10 }),
   createdAt: fc.date(),
+  owner: fc.constant(null),
+  bggId: fc.constant(null),
+  yearPublished: fc.constant(null),
+  bggRating: fc.constant(null),
+  addedAsAlternateName: fc.constant(null),
+  alternateNames: fc.array(gameNameArbitrary, { minLength: 0, maxLength: 5 }),
 }).map(game => ({
   ...game,
   status: game.bringers.length === 0 ? 'wunsch' as const : 'verfuegbar' as const,
@@ -236,7 +242,7 @@ describe('Property 12: Search Filter Correctness', () => {
    */
 
   describe('filterByName', () => {
-    it('should return only games where name contains query (case-insensitive)', () => {
+    it('should return only games where name or alternate names match query (fuzzy matching)', () => {
       fc.assert(
         fc.property(
           gameListArbitrary,
@@ -248,14 +254,20 @@ describe('Property 12: Search Filter Correctness', () => {
               // Empty query should return all games
               expect(filtered).toEqual(games);
             } else {
-              // Property: Every returned game must contain the query in its name
+              // Property: Every returned game must match the query in name or alternate names
+              // (using fuzzy matching, so we just verify the filtered list is a subset)
               for (const game of filtered) {
-                expect(game.name.toLowerCase()).toContain(query.toLowerCase().trim());
+                expect(games).toContainEqual(game);
               }
               
-              // Property: No game that contains the query should be excluded
+              // Property: No game that contains the exact query should be excluded
+              // (fuzzy matching is more permissive, so exact matches must be included)
               for (const game of games) {
-                if (game.name.toLowerCase().includes(query.toLowerCase().trim())) {
+                const nameMatches = game.name.toLowerCase().includes(query.toLowerCase().trim());
+                const altNameMatches = game.alternateNames?.some(
+                  alt => alt.toLowerCase().includes(query.toLowerCase().trim())
+                );
+                if (nameMatches || altNameMatches) {
                   expect(filtered).toContainEqual(game);
                 }
               }

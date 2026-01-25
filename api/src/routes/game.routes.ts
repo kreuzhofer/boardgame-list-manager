@@ -67,7 +67,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * POST /api/games
  * Creates a new game with the user as owner (and optionally as player and/or bringer).
  * 
- * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, bggId?: number, yearPublished?: number }
+ * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, bggId?: number, yearPublished?: number, addedAsAlternateName?: string, alternateNames?: string[] }
  * Response: { game: Game }
  * 
  * Error responses:
@@ -75,10 +75,11 @@ router.get('/:id', async (req: Request, res: Response) => {
  *   - 409 if game name already exists
  * 
  * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
+ * Feature: 014-alternate-names-search - Accept alternate name data
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating } = req.body;
+    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -103,6 +104,10 @@ router.post('/', async (req: Request, res: Response) => {
     const validBggId = bggId !== undefined && bggId !== null ? Number(bggId) : undefined;
     const validYearPublished = yearPublished !== undefined && yearPublished !== null ? Number(yearPublished) : undefined;
     const validBggRating = bggRating !== undefined && bggRating !== null ? Number(bggRating) : undefined;
+    
+    // Validate alternate name fields
+    const validAddedAsAlternateName = addedAsAlternateName && typeof addedAsAlternateName === 'string' ? addedAsAlternateName : undefined;
+    const validAlternateNames = Array.isArray(alternateNames) ? alternateNames.filter((n): n is string => typeof n === 'string') : undefined;
 
     const game = await gameService.createGame(
       name,
@@ -111,7 +116,9 @@ router.post('/', async (req: Request, res: Response) => {
       Boolean(isPlaying),
       validBggId,
       validYearPublished,
-      validBggRating
+      validBggRating,
+      validAddedAsAlternateName,
+      validAlternateNames
     );
 
     return res.status(201).json({ game });

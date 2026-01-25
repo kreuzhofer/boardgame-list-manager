@@ -18,6 +18,8 @@ export interface GameWithBringerInfo {
   name: string;
   bggId: number | null;
   bringerNames: string[];
+  /** Feature: 014-alternate-names-search - The alternate name that matched, if any */
+  matchedAlternateName: string | null;
 }
 
 /**
@@ -28,11 +30,15 @@ export interface ScoredGame {
   game: Game;
   score: number;
   matchType: FuzzyMatchResult['matchType'];
+  /** Feature: 014-alternate-names-search - The alternate name that matched, if any */
+  matchedAlternateName: string | null;
 }
 
 /**
  * Filters games using fuzzy matching and returns with scores.
  * Results are sorted by score in descending order (best matches first).
+ * 
+ * Feature: 014-alternate-names-search - Also searches alternate names
  * 
  * @param games - The list of games to filter
  * @param query - The search query
@@ -55,19 +61,46 @@ export function filterGamesByNameWithScores(
       game,
       score: 0,
       matchType: 'none' as const,
+      matchedAlternateName: null,
     }));
   }
   
   const scoredGames: ScoredGame[] = [];
   
   for (const game of games) {
-    const result = fuzzyMatch(query, game.name, config);
-    if (result.matched) {
+    // Check primary name first
+    const primaryResult = fuzzyMatch(query, game.name, config);
+    if (primaryResult.matched) {
       scoredGames.push({
         game,
-        score: result.score,
-        matchType: result.matchType,
+        score: primaryResult.score,
+        matchType: primaryResult.matchType,
+        matchedAlternateName: null,
       });
+      continue;
+    }
+    
+    // Feature: 014-alternate-names-search - Check alternate names
+    if (game.alternateNames && game.alternateNames.length > 0) {
+      let bestAltMatch: { result: FuzzyMatchResult; name: string } | null = null;
+      
+      for (const altName of game.alternateNames) {
+        const altResult = fuzzyMatch(query, altName, config);
+        if (altResult.matched) {
+          if (!bestAltMatch || altResult.score > bestAltMatch.result.score) {
+            bestAltMatch = { result: altResult, name: altName };
+          }
+        }
+      }
+      
+      if (bestAltMatch) {
+        scoredGames.push({
+          game,
+          score: bestAltMatch.result.score,
+          matchType: bestAltMatch.result.matchType,
+          matchedAlternateName: bestAltMatch.name,
+        });
+      }
     }
   }
   
@@ -109,6 +142,8 @@ export function filterGamesByName(games: Game[], query: string): Game[] {
  * Determines if a game should be highlighted based on search query.
  * Uses fuzzy matching to determine if the game matches the query.
  * 
+ * Feature: 014-alternate-names-search - Also checks alternate names
+ * 
  * @param game - The game to check
  * @param searchQuery - The current search query
  * @returns true if the game should be highlighted
@@ -129,8 +164,17 @@ export function shouldHighlightGame(game: Game, searchQuery: string): boolean {
     return false;
   }
   
-  const result = fuzzyMatch(searchQuery, game.name);
-  return result.matched;
+  // Check primary name
+  if (fuzzyMatch(searchQuery, game.name).matched) {
+    return true;
+  }
+  
+  // Feature: 014-alternate-names-search - Check alternate names
+  if (game.alternateNames && game.alternateNames.length > 0) {
+    return game.alternateNames.some(altName => fuzzyMatch(searchQuery, altName).matched);
+  }
+  
+  return false;
 }
 
 /**
@@ -194,6 +238,7 @@ export function getMatchingGamesWithBringers(
       name: sg.game.name,
       bggId: sg.game.bggId,
       bringerNames: sg.game.bringers.map((b) => b.user.name),
+      matchedAlternateName: sg.matchedAlternateName,
     }));
 }
 

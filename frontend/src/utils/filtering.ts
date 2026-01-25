@@ -63,6 +63,8 @@ function containsQuery(text: string, query: string): boolean {
  * - Word-order independent match (e.g., "Birmingham Brass" matches "Brass: Birmingham")
  * - Edit distance match for typo tolerance (e.g., "Cataan" matches "Catan")
  * 
+ * Feature: 014-alternate-names-search - Also searches alternate names
+ * 
  * @param games - Array of games to filter
  * @param query - Search query for game name
  * @returns Filtered array of games
@@ -73,7 +75,17 @@ function containsQuery(text: string, query: string): boolean {
  */
 export function filterByName(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
-  return games.filter((game) => fuzzyMatch(query, game.name).matched);
+  return games.filter((game) => {
+    // Match primary name
+    if (fuzzyMatch(query, game.name).matched) return true;
+    
+    // Feature: 014-alternate-names-search - Match any alternate name
+    if (game.alternateNames && game.alternateNames.length > 0) {
+      return game.alternateNames.some(altName => fuzzyMatch(query, altName).matched);
+    }
+    
+    return false;
+  });
 }
 
 /**

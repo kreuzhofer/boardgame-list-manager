@@ -37,6 +37,8 @@ export interface Game {
   bggId: number | null;
   yearPublished: number | null;
   bggRating: number | null;
+  addedAsAlternateName: string | null;
+  alternateNames: string[];
   players: Player[];
   bringers: Bringer[];
   status: GameStatus;
@@ -77,6 +79,8 @@ export interface CreateGameRequest {
   bggId?: number;
   yearPublished?: number;
   bggRating?: number;
+  addedAsAlternateName?: string;
+  alternateNames?: string[];
 }
 
 export interface AddPlayerRequest {
@@ -126,6 +130,8 @@ export interface BggSearchResult {
   name: string;
   yearPublished: number | null;
   rating: number | null;
+  matchedAlternateName?: string | null;
+  alternateNames?: string[];
 }
 
 export interface BggSearchResponse {

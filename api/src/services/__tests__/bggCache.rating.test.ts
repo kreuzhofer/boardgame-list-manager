@@ -5,7 +5,7 @@
  * Requirements: 1.1, 1.2, 1.3
  */
 
-import { BggCache, BggGame } from '../bggCache';
+import { BggCache, BggGameWithAlternates } from '../bggCache';
 
 describe('BggCache Rating Tests', () => {
   let cache: BggCache;
@@ -19,8 +19,8 @@ describe('BggCache Rating Tests', () => {
      * Requirement 1.1: Extract "average" column as rating
      */
     it('should include rating field in BggGame objects', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'Catan', yearPublished: 1995, rank: 50, rating: 7.2 },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'Catan', yearPublished: 1995, rank: 50, rating: 7.2, alternateNames: [] },
       ];
       cache.loadGames(games);
 
@@ -33,8 +33,8 @@ describe('BggCache Rating Tests', () => {
      * Requirement 1.2: Round rating to one decimal place
      */
     it('should store rating rounded to one decimal place', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'Test Game', yearPublished: 2020, rank: 1, rating: 7.5 },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'Test Game', yearPublished: 2020, rank: 1, rating: 7.5, alternateNames: [] },
       ];
       cache.loadGames(games);
 
@@ -49,8 +49,8 @@ describe('BggCache Rating Tests', () => {
      * Requirement 1.3: Store null for missing/invalid rating
      */
     it('should handle null rating', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'No Rating Game', yearPublished: 2020, rank: 1, rating: null },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'No Rating Game', yearPublished: 2020, rank: 1, rating: null, alternateNames: [] },
       ];
       cache.loadGames(games);
 
@@ -60,10 +60,10 @@ describe('BggCache Rating Tests', () => {
     });
 
     it('should preserve rating through search results', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'High Rated', yearPublished: 2020, rank: 1, rating: 8.5 },
-        { id: 2, name: 'Medium Rated', yearPublished: 2020, rank: 2, rating: 6.0 },
-        { id: 3, name: 'Low Rated', yearPublished: 2020, rank: 3, rating: 4.2 },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'High Rated', yearPublished: 2020, rank: 1, rating: 8.5, alternateNames: [] },
+        { id: 2, name: 'Medium Rated', yearPublished: 2020, rank: 2, rating: 6.0, alternateNames: [] },
+        { id: 3, name: 'Low Rated', yearPublished: 2020, rank: 3, rating: 4.2, alternateNames: [] },
       ];
       cache.loadGames(games);
 
@@ -78,9 +78,9 @@ describe('BggCache Rating Tests', () => {
 
   describe('Rating edge cases', () => {
     it('should handle rating at boundary values', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'Perfect Game', yearPublished: 2020, rank: 1, rating: 10.0 },
-        { id: 2, name: 'Worst Game', yearPublished: 2020, rank: 2, rating: 1.0 },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'Perfect Game', yearPublished: 2020, rank: 1, rating: 10.0, alternateNames: [] },
+        { id: 2, name: 'Worst Game', yearPublished: 2020, rank: 2, rating: 1.0, alternateNames: [] },
       ];
       cache.loadGames(games);
 
@@ -91,9 +91,9 @@ describe('BggCache Rating Tests', () => {
     });
 
     it('should handle mixed null and valid ratings', () => {
-      const games: BggGame[] = [
-        { id: 1, name: 'Rated Game', yearPublished: 2020, rank: 1, rating: 7.5 },
-        { id: 2, name: 'Unrated Game', yearPublished: 2020, rank: 2, rating: null },
+      const games: BggGameWithAlternates[] = [
+        { id: 1, name: 'Rated Game', yearPublished: 2020, rank: 1, rating: 7.5, alternateNames: [] },
+        { id: 2, name: 'Unrated Game', yearPublished: 2020, rank: 2, rating: null, alternateNames: [] },
       ];
       cache.loadGames(games);
 

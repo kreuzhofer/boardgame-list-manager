@@ -49,7 +49,9 @@ describe('GameService', () => {
     bringers: BringerEntity[] = [],
     bggId: number | null = null,
     yearPublished: number | null = null,
-    bggRating: number | null = null
+    bggRating: number | null = null,
+    addedAsAlternateName: string | null = null,
+    alternateNames: string[] = []
   ): GameEntity => ({
     id,
     name,
@@ -57,6 +59,8 @@ describe('GameService', () => {
     bggId,
     yearPublished,
     bggRating,
+    addedAsAlternateName,
+    alternateNames,
     owner: ownerId && ownerName ? createMockUserEntity(ownerId, ownerName) : null,
     players,
     bringers,
@@ -149,7 +153,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
 
       await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
-        'Das Spiel kann nicht gelöscht werden, solange noch Mitspieler oder Bringer eingetragen sind.'
+        'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
       expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
@@ -169,7 +173,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
 
       await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
-        'Das Spiel kann nicht gelöscht werden, solange noch Mitspieler oder Bringer eingetragen sind.'
+        'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
       expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
@@ -190,7 +194,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
 
       await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
-        'Das Spiel kann nicht gelöscht werden, solange noch Mitspieler oder Bringer eingetragen sind.'
+        'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
       expect(mockRepository.findById).toHaveBeenCalledWith(gameId);

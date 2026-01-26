@@ -38,6 +38,8 @@ export interface BringerRemovedEvent extends BaseGameEvent {
 // Event for player added
 export interface PlayerAddedEvent extends BaseGameEvent {
   type: 'game:player-added';
+  userName: string;
+  gameName: string;
 }
 
 // Event for player removed
@@ -68,6 +70,6 @@ export function isBringerAddedEvent(event: GameEvent): event is BringerAddedEven
   return event.type === 'game:bringer-added';
 }
 
-export function hasToastData(event: GameEvent): event is GameCreatedEvent | BringerAddedEvent {
-  return event.type === 'game:created' || event.type === 'game:bringer-added';
+export function hasToastData(event: GameEvent): event is GameCreatedEvent | BringerAddedEvent | PlayerAddedEvent {
+  return event.type === 'game:created' || event.type === 'game:bringer-added' || event.type === 'game:player-added';
 }

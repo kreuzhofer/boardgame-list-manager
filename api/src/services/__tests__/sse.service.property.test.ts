@@ -47,6 +47,8 @@ const playerAddedEventArb: fc.Arbitrary<GameEvent> = fc.record({
   type: fc.constant('game:player-added' as const),
   gameId: gameIdArb,
   userId: userIdArb,
+  userName: userNameArb,
+  gameName: gameNameArb,
 });
 
 // Generate PlayerRemovedEvent

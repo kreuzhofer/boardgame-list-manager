@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { shouldShowToast, getToastMessage } from '../../utils/toastMessages';
 import { calculateBackoffDelay } from '../useSSE';
-import type { SSEEvent, GameCreatedEvent, BringerAddedEvent } from '../../types';
+import type { SSEEvent, GameCreatedEvent, BringerAddedEvent, PlayerAddedEvent } from '../../types';
 
 /**
  * Property-Based Tests for SSE Hook
@@ -20,7 +20,7 @@ const userNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.tri
 const gameNameArb = fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0);
 
 // Generate toast-triggering events
-const toastEventArb: fc.Arbitrary<GameCreatedEvent | BringerAddedEvent> = fc.oneof(
+const toastEventArb: fc.Arbitrary<GameCreatedEvent | BringerAddedEvent | PlayerAddedEvent> = fc.oneof(
   fc.record({
     type: fc.constant('game:created' as const),
     gameId: gameIdArb,
@@ -35,6 +35,13 @@ const toastEventArb: fc.Arbitrary<GameCreatedEvent | BringerAddedEvent> = fc.one
     userId: userIdArb,
     userName: userNameArb,
     gameName: gameNameArb,
+  }),
+  fc.record({
+    type: fc.constant('game:player-added' as const),
+    gameId: gameIdArb,
+    userId: userIdArb,
+    userName: userNameArb,
+    gameName: gameNameArb,
   })
 );
 
@@ -42,11 +49,6 @@ const toastEventArb: fc.Arbitrary<GameCreatedEvent | BringerAddedEvent> = fc.one
 const nonToastEventArb: fc.Arbitrary<SSEEvent> = fc.oneof(
   fc.record({
     type: fc.constant('game:bringer-removed' as const),
-    gameId: gameIdArb,
-    userId: userIdArb,
-  }),
-  fc.record({
-    type: fc.constant('game:player-added' as const),
     gameId: gameIdArb,
     userId: userIdArb,
   }),
@@ -98,7 +100,7 @@ describe('SSE Hook Property Tests', () => {
           fc.oneof(toastEventArb, nonToastEventArb),
           (event) => {
             const shouldShow = shouldShowToast(event);
-            const isToastType = event.type === 'game:created' || event.type === 'game:bringer-added';
+            const isToastType = event.type === 'game:created' || event.type === 'game:bringer-added' || event.type === 'game:player-added';
             expect(shouldShow).toBe(isToastType);
           }
         ),

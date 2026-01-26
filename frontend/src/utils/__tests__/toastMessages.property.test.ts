@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { getToastMessage, shouldShowToast } from '../toastMessages';
-import type { SSEEvent, GameCreatedEvent, BringerAddedEvent } from '../../types';
+import type { SSEEvent, GameCreatedEvent, BringerAddedEvent, PlayerAddedEvent } from '../../types';
 
 /**
  * Property-Based Tests for Toast Message Formatting
  * 
  * **Feature: 012-sse-real-time-updates**
  * **Property 4: Toast Message Formatting**
- * **Validates: Requirements 4.1, 4.2, 4.3**
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.5**
  */
 
 // Arbitraries for generating test data
@@ -46,15 +46,19 @@ const bringerAddedEventArb: fc.Arbitrary<BringerAddedEvent> = fc.record({
   gameName: gameNameArb,
 });
 
+// Generate PlayerAddedEvent
+const playerAddedEventArb: fc.Arbitrary<PlayerAddedEvent> = fc.record({
+  type: fc.constant('game:player-added' as const),
+  gameId: gameIdArb,
+  userId: userIdArb,
+  userName: userNameArb,
+  gameName: gameNameArb,
+});
+
 // Generate events that should NOT trigger toasts
 const noToastEventArb: fc.Arbitrary<SSEEvent> = fc.oneof(
   fc.record({
     type: fc.constant('game:bringer-removed' as const),
-    gameId: gameIdArb,
-    userId: userIdArb,
-  }),
-  fc.record({
-    type: fc.constant('game:player-added' as const),
     gameId: gameIdArb,
     userId: userIdArb,
   }),
@@ -110,7 +114,7 @@ describe('Toast Message Formatting Properties', () => {
   });
 
   /**
-   * Property 4: Toast Message Formatting
+   * Property 4.3: game:bringer-added
    * For any game:bringer-added event, the toast message SHALL be
    * formatted as "{userName} bringt {gameName} mit".
    */
@@ -129,11 +133,30 @@ describe('Toast Message Formatting Properties', () => {
   });
 
   /**
-   * Property 4.4: No toast for other events
-   * For any event that is not game:created or game:bringer-added,
+   * Property 4.4: game:player-added
+   * For any game:player-added event, the toast message SHALL be
+   * formatted as "{userName} spielt mit bei {gameName}".
+   */
+  describe('Property 4.4: game:player-added', () => {
+    it('should format message as "NAME spielt mit bei GAME_NAME"', () => {
+      fc.assert(
+        fc.property(playerAddedEventArb, (event) => {
+          const message = getToastMessage(event);
+          
+          expect(message).not.toBeNull();
+          expect(message).toBe(`${event.userName} spielt mit bei ${event.gameName}`);
+        }),
+        { numRuns: 10 }
+      );
+    });
+  });
+
+  /**
+   * Property 4.5: No toast for other events
+   * For any event that is not game:created, game:bringer-added, or game:player-added,
    * getToastMessage SHALL return null.
    */
-  describe('Property 4.4: No toast for other events', () => {
+  describe('Property 4.5: No toast for other events', () => {
     it('should return null for non-toast events', () => {
       fc.assert(
         fc.property(noToastEventArb, (event) => {
@@ -164,6 +187,15 @@ describe('Toast Message Formatting Properties', () => {
     it('should return true for game:bringer-added events', () => {
       fc.assert(
         fc.property(bringerAddedEventArb, (event) => {
+          expect(shouldShowToast(event)).toBe(true);
+        }),
+        { numRuns: 10 }
+      );
+    });
+
+    it('should return true for game:player-added events', () => {
+      fc.assert(
+        fc.property(playerAddedEventArb, (event) => {
           expect(shouldShowToast(event)).toBe(true);
         }),
         { numRuns: 10 }

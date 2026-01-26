@@ -141,7 +141,7 @@ describe('SSEManager', () => {
           gameName: 'Game2',
         },
         { type: 'game:bringer-removed', gameId: 'g3', userId: 'u3' },
-        { type: 'game:player-added', gameId: 'g4', userId: 'u4' },
+        { type: 'game:player-added', gameId: 'g4', userId: 'u4', userName: 'User4', gameName: 'Game4' },
         { type: 'game:player-removed', gameId: 'g5', userId: 'u5' },
         { type: 'game:deleted', gameId: 'g6', userId: 'u6' },
       ];

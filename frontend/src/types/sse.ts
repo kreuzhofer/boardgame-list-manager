@@ -38,6 +38,8 @@ export interface BringerRemovedEvent extends BaseSSEEvent {
 // Event for player added
 export interface PlayerAddedEvent extends BaseSSEEvent {
   type: 'game:player-added';
+  userName: string;
+  gameName: string;
 }
 
 // Event for player removed
@@ -68,8 +70,8 @@ export function isBringerAddedEvent(event: SSEEvent): event is BringerAddedEvent
   return event.type === 'game:bringer-added';
 }
 
-export function hasToastData(event: SSEEvent): event is GameCreatedEvent | BringerAddedEvent {
-  return event.type === 'game:created' || event.type === 'game:bringer-added';
+export function hasToastData(event: SSEEvent): event is GameCreatedEvent | BringerAddedEvent | PlayerAddedEvent {
+  return event.type === 'game:created' || event.type === 'game:bringer-added' || event.type === 'game:player-added';
 }
 
 // Toast state types

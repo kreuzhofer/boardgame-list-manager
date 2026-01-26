@@ -193,11 +193,17 @@ export class GameService {
       const entity = await this.repository.addPlayer(gameId, userId);
       const game = this.transformGame(entity);
       
+      // Get user name for SSE event
+      const user = await this.userRepo.findById(userId);
+      const userName = user?.name || 'Unbekannt';
+      
       // Broadcast game:player-added event
       sseManager.broadcast({
         type: 'game:player-added',
         gameId,
         userId,
+        userName,
+        gameName: game.name,
       });
       
       return game;

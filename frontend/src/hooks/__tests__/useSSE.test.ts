@@ -288,13 +288,39 @@ describe('useSSE', () => {
 
       act(() => {
         MockEventSource.instances[0].simulateMessage({
-          type: 'game:player-added',
+          type: 'game:player-removed',
           gameId: 'game-1',
           userId: 'user-456',
         });
       });
 
       expect(onToast).not.toHaveBeenCalled();
+    });
+
+    it('should call onToast for game:player-added events from other users', () => {
+      const onToast = vi.fn();
+      const handlers = { onToast };
+
+      renderHook(() => useSSE({
+        currentUserId: 'user-123',
+        handlers,
+      }));
+
+      act(() => {
+        vi.runAllTimers();
+      });
+
+      act(() => {
+        MockEventSource.instances[0].simulateMessage({
+          type: 'game:player-added',
+          gameId: 'game-1',
+          userId: 'user-456',
+          userName: 'Other User',
+          gameName: 'Test Game',
+        });
+      });
+
+      expect(onToast).toHaveBeenCalledWith('Other User spielt mit bei Test Game');
     });
   });
 });

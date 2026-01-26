@@ -123,14 +123,19 @@ class BggCache {
    */
   async countDbRows(): Promise<number> {
     try {
+      console.log('Querying BggGame table for non-expansion count...');
       const count = await prisma.bggGame.count({
         where: {
           isExpansion: false,
         },
       });
+      console.log(`Database BggGame count (non-expansions): ${count}`);
       return count;
     } catch (error) {
       console.error('Failed to count DB rows:', error instanceof Error ? error.message : error);
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        console.error('→ BggGame table may not exist. Run prisma migrate or import data.');
+      }
       return 0;
     }
   }
@@ -217,33 +222,40 @@ class BggCache {
    * Feature: 014-alternate-names-search, Requirements 1.3, 1.4, 1.5
    */
   async initialize(csvPath: string): Promise<void> {
+    console.log('=== BGG Cache Initialization ===');
+    console.log(`CSV path: ${csvPath}`);
+    
     try {
       // Count rows in both sources
+      console.log('Counting rows in CSV and database...');
       const [csvCount, dbCount] = await Promise.all([
         this.countCsvRows(csvPath),
         this.countDbRows(),
       ]);
 
       console.log(`Data source detection: CSV=${csvCount} rows, DB=${dbCount} rows`);
+      console.log(`Decision criteria: DB >= CSV && DB > 0 → ${dbCount >= csvCount && dbCount > 0}`);
 
       // Select data source: use database if it has >= CSV rows
       if (dbCount >= csvCount && dbCount > 0) {
         this.dataSource = 'database';
-        console.log('Selected data source: database');
+        console.log('✓ Selected data source: DATABASE (has enrichment data + alternate names)');
         await this.loadFromDatabase();
       } else {
         this.dataSource = 'csv';
-        console.log('Selected data source: CSV');
+        console.log('✓ Selected data source: CSV (database not populated or has fewer rows)');
         await this.loadFromCsv(csvPath);
       }
 
       this.loaded = true;
+      console.log(`=== BGG Cache Ready: ${this.games.length} games from ${this.dataSource.toUpperCase()} ===`);
     } catch (error) {
       // Fallback to CSV on any error
       console.error('Error during initialization, falling back to CSV:', error instanceof Error ? error.message : error);
       this.dataSource = 'csv';
       await this.loadFromCsv(csvPath);
       this.loaded = true;
+      console.log(`=== BGG Cache Ready (fallback): ${this.games.length} games from CSV ===`);
     }
   }
 

@@ -36,9 +36,17 @@ app.use('/api/games', gameRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/users', userRoutes);
 
-// Health check endpoint
+// Health check endpoint - includes BGG cache status for debugging
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    bggCache: {
+      loaded: bggCache.isLoaded(),
+      dataSource: bggCache.getDataSource(),
+      gameCount: bggCache.getCount(),
+    },
+  });
 });
 
 // Initialize BGG cache at startup

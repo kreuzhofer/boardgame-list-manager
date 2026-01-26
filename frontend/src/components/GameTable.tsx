@@ -135,8 +135,16 @@ export function GameTable({
         </div>
         
         {/* Mobile card list */}
-        <div className="divide-y divide-gray-200">
-          {sortedGames.map((game) => (
+        <div>
+          {sortedGames.map((game, index) => (
+            <div 
+              key={game.id}
+              className="relative"
+            >
+              {/* Top shadow gradient for stacked effect */}
+              {index > 0 && (
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300/50 to-transparent pointer-events-none" />
+              )}
             <GameCard
               key={game.id}
               game={game}
@@ -150,6 +158,7 @@ export function GameTable({
               onScrolledIntoView={onScrolledToGame}
               isHighlighted={highlightedGameIds?.has(game.id)}
             />
+            </div>
           ))}
         </div>
       </div>

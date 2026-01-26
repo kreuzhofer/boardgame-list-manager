@@ -98,3 +98,41 @@ model BggGame {
 
   @@map("bgg_games")
 }
+
+// Account Management Models
+
+enum AccountRole {
+  account_owner
+  admin
+}
+
+enum AccountStatus {
+  active
+  deactivated
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  role         AccountRole   @default(account_owner)
+  status       AccountStatus @default(active)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  sessions     Session[]
+
+  @@map("accounts")
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  accountId  String   @map("account_id")
+  userAgent  String?  @map("user_agent")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("sessions")
+}

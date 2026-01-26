@@ -19,10 +19,29 @@ import type {
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
+import type { Account, Session, LoginResponse, RegisterResponse } from '../types/account';
 
 // Get API URL from environment variable
 const getApiUrl = (): string => {
   return import.meta.env.VITE_API_URL || 'http://localhost:3001';
+};
+
+// Token storage key
+const TOKEN_KEY = 'auth_token';
+
+// Get stored token
+export const getToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY);
+};
+
+// Set token
+export const setToken = (token: string): void => {
+  localStorage.setItem(TOKEN_KEY, token);
+};
+
+// Remove token
+export const removeToken = (): void => {
+  localStorage.removeItem(TOKEN_KEY);
 };
 
 // Custom error class for API errors
@@ -41,13 +60,22 @@ export class ApiError extends Error {
 // Base fetch wrapper with error handling
 async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  includeAuth: boolean = false
 ): Promise<T> {
   const url = `${getApiUrl()}${endpoint}`;
   
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
   };
+
+  // Add auth header if requested and token exists
+  if (includeAuth) {
+    const token = getToken();
+    if (token) {
+      (defaultHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+  }
 
   const response = await fetch(url, {
     ...options,
@@ -58,18 +86,28 @@ async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    let errorData: ErrorResponse | null = null;
+    let errorData: ErrorResponse | { error: string; message: string } | null = null;
     try {
       errorData = await response.json();
     } catch {
       // Response is not JSON
     }
 
-    if (errorData?.error) {
+    // Handle account API error format
+    if (errorData && 'error' in errorData && 'message' in errorData && typeof errorData.error === 'string') {
       throw new ApiError(
-        errorData.error.message,
-        errorData.error.code,
-        errorData.error.details
+        errorData.message,
+        errorData.error
+      );
+    }
+
+    // Handle standard error format
+    if (errorData && 'error' in errorData && typeof errorData.error === 'object' && errorData.error !== null) {
+      const err = errorData.error as { message: string; code: string; details?: Record<string, unknown> };
+      throw new ApiError(
+        err.message,
+        err.code,
+        err.details
       );
     }
 
@@ -222,6 +260,66 @@ export const bggApi = {
   },
 };
 
+// Account API
+export const accountsApi = {
+  register: (email: string, password: string): Promise<RegisterResponse> => {
+    return fetchApi<RegisterResponse>('/api/accounts/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  login: (email: string, password: string): Promise<LoginResponse> => {
+    return fetchApi<LoginResponse>('/api/accounts/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  getMe: (): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>('/api/accounts/me', {}, true);
+  },
+
+  changePassword: (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }, true);
+  },
+
+  deactivate: (password: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/deactivate', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }, true);
+  },
+
+  promoteToAdmin: (accountId: string): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>(`/api/accounts/${accountId}/promote`, {
+      method: 'POST',
+    }, true);
+  },
+};
+
+// Sessions API
+export const sessionsApi = {
+  getAll: (): Promise<{ sessions: Session[] }> => {
+    return fetchApi<{ sessions: Session[] }>('/api/sessions', {}, true);
+  },
+
+  logoutAll: (): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>('/api/sessions', {
+      method: 'DELETE',
+    }, true);
+  },
+
+  logout: (sessionId: string): Promise<{ success: boolean }> => {
+    return fetchApi<{ success: boolean }>(`/api/sessions/${sessionId}`, {
+      method: 'DELETE',
+    }, true);
+  },
+};
+
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
@@ -229,6 +327,8 @@ export const api = {
   games: gamesApi,
   statistics: statisticsApi,
   bgg: bggApi,
+  accounts: accountsApi,
+  sessions: sessionsApi,
 };
 
 export default api;

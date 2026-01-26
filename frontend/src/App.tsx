@@ -3,6 +3,9 @@
  * Routes:
  *   / - Main game list page (HomePage)
  *   /print - Print view page (PrintPage)
+ *   /login - Account login page
+ *   /register - Account registration page
+ *   /profile - Account profile page (requires auth)
  * 
  * Authentication flow:
  *   1. AuthGuard checks sessionStorage for auth state
@@ -17,10 +20,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthGuard, Layout, UserSelectionModal, ToastProvider } from './components';
+import { AccountAuthGuard } from './components/AccountAuthGuard';
+import { AuthProvider } from './contexts/AuthContext';
 import { useUser } from './hooks';
 import { HomePage } from './pages/HomePage';
 import { PrintPage } from './pages/PrintPage';
 import { StatisticsPage } from './pages/StatisticsPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ProfilePage } from './pages/ProfilePage';
 import type { User } from './types';
 
 // Get event name from environment variable
@@ -62,29 +70,51 @@ function App() {
   const showUserSelection = isAuthenticated && !isLoading && !user;
 
   return (
-    <ToastProvider>
-      <BrowserRouter>
-        <AuthGuard onAuthChange={handleAuthChange}>
-          {/* Show UserSelectionModal for users without a stored user */}
-          <UserSelectionModal
-            isOpen={showUserSelection}
-            onUserSelected={handleUserSelected}
-          />
+    <AuthProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Account routes - outside of event auth */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/profile"
+              element={
+                <AccountAuthGuard>
+                  <ProfilePage />
+                </AccountAuthGuard>
+              }
+            />
 
-          <Layout 
-            user={user ?? undefined} 
-            onUserUpdated={handleUserUpdated}
-            onLogout={handleLogout}
-          >
-            <Routes>
-              <Route path="/" element={<HomePage user={user} />} />
-              <Route path="/print" element={<PrintPage user={user} />} />
-              <Route path="/statistics" element={<StatisticsPage />} />
-            </Routes>
-          </Layout>
-        </AuthGuard>
-      </BrowserRouter>
-    </ToastProvider>
+            {/* Event routes - require event password */}
+            <Route
+              path="/*"
+              element={
+                <AuthGuard onAuthChange={handleAuthChange}>
+                  {/* Show UserSelectionModal for users without a stored user */}
+                  <UserSelectionModal
+                    isOpen={showUserSelection}
+                    onUserSelected={handleUserSelected}
+                  />
+
+                  <Layout 
+                    user={user ?? undefined} 
+                    onUserUpdated={handleUserUpdated}
+                    onLogout={handleLogout}
+                  >
+                    <Routes>
+                      <Route path="/" element={<HomePage user={user} />} />
+                      <Route path="/print" element={<PrintPage user={user} />} />
+                      <Route path="/statistics" element={<StatisticsPage />} />
+                    </Routes>
+                  </Layout>
+                </AuthGuard>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </AuthProvider>
   );
 }
 

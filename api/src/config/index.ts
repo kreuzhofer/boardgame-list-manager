@@ -13,6 +13,10 @@ export const config = {
   auth: {
     eventPassword: process.env.EVENT_PASSWORD || 'default-password',
   },
+  jwt: {
+    secret: process.env.JWT_SECRET || 'development-jwt-secret-change-in-production',
+    expiresIn: '7d',
+  },
   event: {
     name: process.env.EVENT_NAME || 'Brettspiel-Event',
   },

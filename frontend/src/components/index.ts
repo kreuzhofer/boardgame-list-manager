@@ -26,6 +26,7 @@ export { PasswordScreen } from './PasswordScreen';
 export { PlayerList } from './PlayerList';
 export { PrintList, filterGamesUserIsBringing } from './PrintList';
 export type { PrintListProps } from './PrintList';
+export { ReleaseNotesDialog } from './ReleaseNotesDialog';
 export { SearchFilters } from './SearchFilters';
 export type { SearchFiltersProps } from './SearchFilters';
 export { SortControls } from './SortControls';

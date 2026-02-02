@@ -19,7 +19,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthGuard, Layout, UserSelectionModal, ToastProvider } from './components';
+import { AuthGuard, Layout, UserSelectionModal, ToastProvider, ReleaseNotesDialog } from './components';
 import { AccountAuthGuard } from './components/AccountAuthGuard';
 import { AuthProvider } from './contexts/AuthContext';
 import { useUser } from './hooks';
@@ -33,6 +33,17 @@ import type { User } from './types';
 
 // Get event name from environment variable
 const eventName = import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
+const RELEASE_NOTES_PATH = '/release-notes.md';
+const RELEASE_NOTES_STORAGE_PREFIX = 'boardgame_event_release_notes_dismissed_';
+
+function hashReleaseNotes(content: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < content.length; i += 1) {
+    hash ^= content.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
 
 function App() {
   // Track authentication state for passing to Layout
@@ -40,6 +51,9 @@ function App() {
 
   // User management via localStorage and API
   const { user, isLoading, setUser, clearUser } = useUser();
+  const [releaseNotesContent, setReleaseNotesContent] = useState('');
+  const [releaseNotesHash, setReleaseNotesHash] = useState<string | null>(null);
+  const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
 
   // Set document title from environment variable
   useEffect(() => {
@@ -64,6 +78,59 @@ function App() {
   const handleLogout = useCallback(() => {
     clearUser();
   }, [clearUser]);
+
+  const userId = user?.id;
+
+  const handleDismissReleaseNotes = useCallback(() => {
+    setIsReleaseNotesOpen(false);
+    if (!userId || !releaseNotesHash) return;
+    const storageKey = `${RELEASE_NOTES_STORAGE_PREFIX}${userId}`;
+    try {
+      localStorage.setItem(storageKey, releaseNotesHash);
+    } catch (error) {
+      console.warn('Unable to persist release notes dismissal:', error);
+    }
+  }, [releaseNotesHash, userId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      setIsReleaseNotesOpen(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const checkReleaseNotes = async () => {
+      if (typeof fetch !== 'function') return;
+      try {
+        const response = await fetch(RELEASE_NOTES_PATH, { cache: 'no-store' });
+        if (!response.ok) return;
+        const text = await response.text();
+        if (cancelled) return;
+        const hash = hashReleaseNotes(text);
+        const storageKey = `${RELEASE_NOTES_STORAGE_PREFIX}${userId}`;
+        let dismissedHash: string | null = null;
+        try {
+          dismissedHash = localStorage.getItem(storageKey);
+        } catch (error) {
+          console.warn('Unable to read release notes dismissal:', error);
+        }
+
+        setReleaseNotesContent(text);
+        setReleaseNotesHash(hash);
+        if (dismissedHash !== hash) {
+          setIsReleaseNotesOpen(true);
+        }
+      } catch (error) {
+        console.error('Failed to load release notes:', error);
+      }
+    };
+
+    checkReleaseNotes();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, userId]);
 
   // Determine if we need to show the user selection modal
   // Show if authenticated but no user stored (first-time user or user deleted)
@@ -96,6 +163,13 @@ function App() {
                     isOpen={showUserSelection}
                     onUserSelected={handleUserSelected}
                   />
+                  {releaseNotesContent && (
+                    <ReleaseNotesDialog
+                      isOpen={isReleaseNotesOpen}
+                      content={releaseNotesContent}
+                      onDismiss={handleDismissReleaseNotes}
+                    />
+                  )}
 
                   <Layout 
                     user={user ?? undefined} 

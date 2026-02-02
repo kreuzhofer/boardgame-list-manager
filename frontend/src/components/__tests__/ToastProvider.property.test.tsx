@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { ToastProvider, useToast } from '../ToastProvider';
 
@@ -50,25 +50,29 @@ describe('Toast Ordering Properties', () => {
             </ToastProvider>
           );
 
-          // Show all toasts
-          messages.forEach((message) => {
-            act(() => {
-              showToastFn!(message);
+          try {
+            // Show all toasts
+            messages.forEach((message) => {
+              act(() => {
+                showToastFn!(message);
+              });
             });
-          });
 
-          // Get all toast elements
-          const toasts = screen.getAllByRole('alert');
+            // Get all toast elements
+            const toasts = screen.getAllByRole('alert');
 
-          // Property: Number of toasts should match number of messages
-          expect(toasts).toHaveLength(messages.length);
+            // Property: Number of toasts should match number of messages
+            expect(toasts).toHaveLength(messages.length);
 
-          // Property: Toasts should be in chronological order (first message first, newest last)
-          messages.forEach((message, index) => {
-            expect(toasts[index]).toHaveTextContent(message);
-          });
-
-          unmount();
+            // Property: Toasts should be in chronological order (first message first, newest last)
+            messages.forEach((message, index) => {
+              const toastText = toasts[index].textContent ?? '';
+              expect(toastText).toBe(message);
+            });
+          } finally {
+            unmount();
+            cleanup();
+          }
         }),
         { numRuns: 10 }
       );
@@ -87,22 +91,26 @@ describe('Toast Ordering Properties', () => {
               </ToastProvider>
             );
 
-            // Add all toasts in sequence
-            act(() => {
-              messages.forEach((message) => {
-                showToastFn!(message);
+            try {
+              // Add all toasts in sequence
+              act(() => {
+                messages.forEach((message) => {
+                  showToastFn!(message);
+                });
               });
-            });
 
-            const toasts = screen.getAllByRole('alert');
+              const toasts = screen.getAllByRole('alert');
 
-            // Property: Order should be preserved (oldest first, newest last)
-            expect(toasts).toHaveLength(messages.length);
-            messages.forEach((message, index) => {
-              expect(toasts[index]).toHaveTextContent(message);
-            });
-
-            unmount();
+              // Property: Order should be preserved (oldest first, newest last)
+              expect(toasts).toHaveLength(messages.length);
+              messages.forEach((message, index) => {
+                const toastText = toasts[index].textContent ?? '';
+                expect(toastText).toBe(message);
+              });
+            } finally {
+              unmount();
+              cleanup();
+            }
           }
         ),
         { numRuns: 10 }

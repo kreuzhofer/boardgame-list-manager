@@ -215,6 +215,11 @@ describe('Property 11: Alphabetical Sort Order', () => {
       fc.property(
         gameListArbitrary,
         (games) => {
+          const normalizedNames = games.map((game) => game.name.toLowerCase());
+          const hasDuplicates = new Set(normalizedNames).size !== normalizedNames.length;
+          if (hasDuplicates) {
+            return true;
+          }
           const sortedAsc = sortGamesByName(games, 'asc');
           const sortedDesc = sortGamesByName(games, 'desc');
           

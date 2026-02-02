@@ -66,7 +66,7 @@ describe('ToastProvider', () => {
 
     // Advance time by 4 seconds
     act(() => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(4000 + 300);
     });
 
     expect(screen.queryByText('Test message')).not.toBeInTheDocument();
@@ -114,6 +114,10 @@ describe('ToastProvider', () => {
     // Click the close button
     const closeButton = screen.getByLabelText('Schließen');
     fireEvent.click(closeButton);
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(screen.queryByText('Test message')).not.toBeInTheDocument();
   });

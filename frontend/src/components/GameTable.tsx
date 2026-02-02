@@ -23,6 +23,7 @@ interface GameTableProps {
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
+  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   scrollToGameId?: string | null;
   onScrolledToGame?: () => void;
   /** Set of game IDs that should be highlighted (match search) - Requirement 7.1, 7.2 */
@@ -41,6 +42,7 @@ export function GameTable({
   onRemovePlayer,
   onRemoveBringer,
   onDeleteGame,
+  onTogglePrototype,
   scrollToGameId,
   onScrolledToGame,
   highlightedGameIds,
@@ -146,6 +148,7 @@ export function GameTable({
               onRemovePlayer={onRemovePlayer}
               onRemoveBringer={onRemoveBringer}
               onDeleteGame={onDeleteGame}
+              onTogglePrototype={onTogglePrototype}
               scrollIntoView={game.id === scrollToGameId}
               onScrolledIntoView={onScrolledToGame}
               isHighlighted={highlightedGameIds?.has(game.id)}
@@ -188,6 +191,7 @@ export function GameTable({
                   onRemovePlayer={onRemovePlayer}
                   onRemoveBringer={onRemoveBringer}
                   onDeleteGame={onDeleteGame}
+                  onTogglePrototype={onTogglePrototype}
                   scrollIntoView={game.id === scrollToGameId}
                   onScrolledIntoView={onScrolledToGame}
                   isHighlighted={highlightedGameIds?.has(game.id)}

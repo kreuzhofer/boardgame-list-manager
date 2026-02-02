@@ -16,6 +16,7 @@ import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { ClickNotification } from './ClickNotification';
+import { PrototypeToggle } from './PrototypeToggle';
 
 interface GameRowProps {
   game: Game;
@@ -25,6 +26,7 @@ interface GameRowProps {
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
+  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
@@ -39,6 +41,7 @@ export function GameRow({
   onRemovePlayer,
   onRemoveBringer,
   onDeleteGame,
+  onTogglePrototype,
   scrollIntoView,
   onScrolledIntoView,
   isHighlighted,
@@ -47,6 +50,8 @@ export function GameRow({
   const isWunsch = game.status === 'wunsch';
   const isPrototype = game.isPrototype;
   const isOwner = game.owner?.id === currentUserId;
+  const hasNoBggId = game.bggId === null;
+  const canTogglePrototype = isOwner && hasNoBggId;
   
   // Check if current user is the only player/bringer (or lists are empty)
   const onlyCurrentUserIsPlayer = game.players.length === 0 || 
@@ -234,6 +239,15 @@ export function GameRow({
                 <img src="/trash.svg" alt="" className="w-4 h-4" />
               </button>
             </ClickNotification>
+          )}
+          
+          {/* Prototype Toggle - only for owner's non-BGG games */}
+          {canTogglePrototype && onTogglePrototype && (
+            <PrototypeToggle
+              gameId={game.id}
+              isPrototype={isPrototype}
+              onToggle={onTogglePrototype}
+            />
           )}
         </div>
       </td>

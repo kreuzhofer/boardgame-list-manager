@@ -246,6 +246,24 @@ export const gamesApi = {
       }
     );
   },
+
+  /**
+   * Toggle prototype status for a game
+   * @param gameId - The game's unique identifier
+   * @param isPrototype - The new prototype status
+   * @param userId - The user's ID (must be owner)
+   * @returns The updated game
+   * Requirements: 022-prototype-toggle 1.1
+   */
+  togglePrototype: (gameId: string, isPrototype: boolean, userId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}/prototype`, {
+      method: 'PATCH',
+      headers: {
+        'x-user-id': userId,
+      },
+      body: JSON.stringify({ isPrototype }),
+    });
+  },
 };
 
 // Statistics API

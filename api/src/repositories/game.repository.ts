@@ -308,6 +308,26 @@ export class GameRepository {
       return false;
     }
   }
+
+  /**
+   * Update the prototype status of a game
+   * @param gameId - The game's unique identifier
+   * @param isPrototype - The new prototype status
+   * @returns The updated game entity
+   * Requirements: 022-prototype-toggle 1.1
+   */
+  async updatePrototype(gameId: string, isPrototype: boolean): Promise<GameEntity> {
+    const game = await prisma.game.update({
+      where: { id: gameId },
+      data: { isPrototype },
+      include: this.includeRelations,
+    });
+
+    return {
+      ...game,
+      alternateNames: (game.alternateNames as string[]) ?? [],
+    } as GameEntity;
+  }
 }
 
 // Export a singleton instance for convenience

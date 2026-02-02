@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { GameService } from '../game.service';
 import { GameRepository } from '../../repositories/game.repository';
+import { UserRepository } from '../../repositories/user.repository';
 import type { GameEntity, PlayerEntity, BringerEntity, UserEntity } from '../../types';
 
 /**
@@ -12,6 +13,7 @@ import type { GameEntity, PlayerEntity, BringerEntity, UserEntity } from '../../
 describe('GameService', () => {
   let gameService: GameService;
   let mockRepository: jest.Mocked<GameRepository>;
+  let mockUserRepository: jest.Mocked<UserRepository>;
 
   // Helper to create a mock UserEntity
   const createMockUserEntity = (id: string, name: string): UserEntity => ({
@@ -82,10 +84,19 @@ describe('GameService', () => {
       addBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       removeBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       delete: jest.fn<(id: string) => Promise<boolean>>(),
+      updatePrototype: jest.fn<(gameId: string, isPrototype: boolean) => Promise<GameEntity>>(),
     } as unknown as jest.Mocked<GameRepository>;
 
-    // Create service with mocked repository
-    gameService = new GameService(mockRepository);
+    // Create mock user repository
+    mockUserRepository = {
+      findById: jest.fn<(id: string) => Promise<UserEntity | null>>(),
+      findByName: jest.fn<(name: string) => Promise<UserEntity | null>>(),
+      create: jest.fn<(name: string) => Promise<UserEntity>>(),
+      updateName: jest.fn<(id: string, name: string) => Promise<UserEntity>>(),
+    } as unknown as jest.Mocked<UserRepository>;
+
+    // Create service with mocked repositories
+    gameService = new GameService(mockRepository, mockUserRepository);
   });
 
   describe('deleteGame', () => {
@@ -365,6 +376,148 @@ describe('GameService', () => {
       expect(result[0].yearPublished).toBe(1995);
       expect(result[1].bggId).toBeNull();
       expect(result[1].yearPublished).toBeNull();
+    });
+  });
+
+  /**
+   * Unit tests for togglePrototype functionality
+   * Validates: Requirements 022-prototype-toggle 1.1, 1.2, 1.3, 1.5
+   */
+  describe('togglePrototype', () => {
+    /**
+     * Test successful toggle returns updated game
+     * Validates: Requirement 1.1
+     */
+    it('should toggle prototype status successfully when owner and no BGG ID', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', [], [], null, null, null, null, [], false);
+      const updatedGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', [], [], null, null, null, null, [], true);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.updatePrototype.mockResolvedValue(updatedGame);
+
+      const result = await gameService.togglePrototype(gameId, ownerId, true);
+
+      expect(result.isPrototype).toBe(true);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, true);
+    });
+
+    /**
+     * Test 404 when game not found
+     * Validates: Requirement 1.5
+     */
+    it('should throw "Spiel nicht gefunden." when game does not exist', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      await expect(gameService.togglePrototype('non-existent', 'user-123', true)).rejects.toThrow(
+        'Spiel nicht gefunden.'
+      );
+      
+      expect(mockRepository.findById).toHaveBeenCalledWith('non-existent');
+      expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test 403 when non-owner attempts toggle
+     * Validates: Requirement 1.2
+     */
+    it('should throw "Du bist nicht berechtigt, dieses Spiel zu bearbeiten." when user is not owner', async () => {
+      const ownerId = 'owner-123';
+      const nonOwnerId = 'other-user-456';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', [], [], null, null, null, null, [], false);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+
+      await expect(gameService.togglePrototype(gameId, nonOwnerId, true)).rejects.toThrow(
+        'Du bist nicht berechtigt, dieses Spiel zu bearbeiten.'
+      );
+      
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test 400 when game has BGG ID
+     * Validates: Requirement 1.3
+     */
+    it('should throw "Nur Spiele ohne BGG-Eintrag können als Prototyp markiert werden." when game has BGG ID', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Catan', ownerId, 'Owner Name', [], [], 13, 1995, null, null, [], false);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+
+      await expect(gameService.togglePrototype(gameId, ownerId, true)).rejects.toThrow(
+        'Nur Spiele ohne BGG-Eintrag können als Prototyp markiert werden.'
+      );
+      
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test that error has correct code for GAME_NOT_FOUND
+     */
+    it('should set error code to GAME_NOT_FOUND when game does not exist', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      try {
+        await gameService.togglePrototype('non-existent', 'user-123', true);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect((error as Error & { code: string }).code).toBe('GAME_NOT_FOUND');
+      }
+    });
+
+    /**
+     * Test that error has correct code for FORBIDDEN
+     */
+    it('should set error code to FORBIDDEN when user is not owner', async () => {
+      const mockGame = createMockGameEntity('game-123', 'Test Game', 'owner-123', 'Owner', [], [], null, null, null, null, [], false);
+      mockRepository.findById.mockResolvedValue(mockGame);
+
+      try {
+        await gameService.togglePrototype('game-123', 'other-user', true);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect((error as Error & { code: string }).code).toBe('FORBIDDEN');
+      }
+    });
+
+    /**
+     * Test that error has correct code for VALIDATION_ERROR
+     */
+    it('should set error code to VALIDATION_ERROR when game has BGG ID', async () => {
+      const mockGame = createMockGameEntity('game-123', 'Catan', 'owner-123', 'Owner', [], [], 13, 1995, null, null, [], false);
+      mockRepository.findById.mockResolvedValue(mockGame);
+
+      try {
+        await gameService.togglePrototype('game-123', 'owner-123', true);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect((error as Error & { code: string }).code).toBe('VALIDATION_ERROR');
+      }
+    });
+
+    /**
+     * Test toggling from true to false
+     */
+    it('should toggle prototype status from true to false', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', [], [], null, null, null, null, [], true);
+      const updatedGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', [], [], null, null, null, null, [], false);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.updatePrototype.mockResolvedValue(updatedGame);
+
+      const result = await gameService.togglePrototype(gameId, ownerId, false);
+
+      expect(result.isPrototype).toBe(false);
+      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, false);
     });
   });
 });

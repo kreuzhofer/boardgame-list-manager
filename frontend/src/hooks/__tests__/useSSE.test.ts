@@ -216,6 +216,39 @@ describe('useSSE', () => {
         gameId: 'game-1',
       }));
     });
+
+    /**
+     * Test for prototype-toggled SSE event handling
+     * Requirements: 022-prototype-toggle 4.1, 4.2
+     */
+    it('should call onGameUpdated for game:prototype-toggled events', () => {
+      const onGameUpdated = vi.fn();
+      const handlers = { onGameUpdated };
+
+      renderHook(() => useSSE({
+        currentUserId: 'user-123',
+        handlers,
+      }));
+
+      act(() => {
+        vi.runAllTimers();
+      });
+
+      act(() => {
+        MockEventSource.instances[0].simulateMessage({
+          type: 'game:prototype-toggled',
+          gameId: 'game-1',
+          userId: 'user-456',
+          isPrototype: true,
+        });
+      });
+
+      expect(onGameUpdated).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'game:prototype-toggled',
+        gameId: 'game-1',
+        isPrototype: true,
+      }));
+    });
   });
 
   describe('toast filtering', () => {

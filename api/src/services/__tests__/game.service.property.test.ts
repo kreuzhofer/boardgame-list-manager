@@ -381,4 +381,51 @@ describe('GameService Property Tests', () => {
       );
     });
   });
+
+  /**
+   * Property 1: Prototype Toggle Round-Trip
+   * **Validates: Requirements 022-prototype-toggle 1.1**
+   * 
+   * *For any* game owned by a user with no BGG ID, toggling the prototype status
+   * to a value `v` and then reading the game back SHALL return a game with
+   * `isPrototype === v`.
+   * 
+   * Feature: prototype-toggle, Property 1: Prototype Toggle Round-Trip
+   */
+  describe('Property 1: Prototype Toggle Round-Trip', () => {
+    it('should persist prototype status correctly after toggle', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          gameNameArbitrary,
+          userNameArbitrary,
+          fc.boolean(),
+          async (gameName, userName, targetPrototypeStatus) => {
+            // Create a user first
+            const user = await createTestUser(userName);
+
+            // Generate unique game name to avoid conflicts between test runs
+            const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+            // Create game without BGG ID (required for prototype toggle)
+            const game = await gameService.createGame(uniqueGameName, user.id, false, false, false);
+            createdGameIds.push(game.id);
+
+            // Toggle prototype status to the target value
+            const toggledGame = await gameService.togglePrototype(game.id, user.id, targetPrototypeStatus);
+
+            // Property: The toggled game should have the correct isPrototype value
+            expect(toggledGame.isPrototype).toBe(targetPrototypeStatus);
+
+            // Read the game back to verify persistence
+            const fetchedGame = await gameService.getGameById(game.id);
+            expect(fetchedGame).not.toBeNull();
+            expect(fetchedGame!.isPrototype).toBe(targetPrototypeStatus);
+
+            return true;
+          }
+        ),
+        { numRuns: 3 } // Per workspace guidelines for DB operations
+      );
+    });
+  });
 });

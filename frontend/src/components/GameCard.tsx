@@ -16,6 +16,7 @@ import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { ClickNotification } from './ClickNotification';
+import { MobileActionsMenu } from './MobileActionsMenu';
 
 interface GameCardProps {
   game: Game;
@@ -25,6 +26,7 @@ interface GameCardProps {
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
+  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
@@ -83,6 +85,7 @@ interface GameCardProps {
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
+  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
@@ -141,6 +144,7 @@ export function GameCard({
   onRemovePlayer,
   onRemoveBringer,
   onDeleteGame,
+  onTogglePrototype,
   scrollIntoView,
   onScrolledIntoView,
   isHighlighted,
@@ -333,6 +337,15 @@ export function GameCard({
                   <img src="/trash.svg" alt="" className="w-5 h-5" />
                 </button>
               </ClickNotification>
+            )}
+            
+            {/* Mobile Actions Menu - prototype toggle for owner's non-BGG games */}
+            {onTogglePrototype && (
+              <MobileActionsMenu
+                game={game}
+                currentUserId={currentUserId}
+                onTogglePrototype={onTogglePrototype}
+              />
             )}
           </div>
         </div>

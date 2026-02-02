@@ -123,6 +123,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
           currentUserId,
           false, // isBringing
           false, // isPlaying
+          false, // isPrototype
           115746, // bggId
           2012, // yearPublished
           8.5, // bggRating
@@ -169,6 +170,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'Ark Nova',
           currentUserId,
+          false,
           false,
           false,
           342942,
@@ -220,6 +222,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
           currentUserId,
           false,
           false,
+          false,
           174430,
           2017,
           8.7,
@@ -255,6 +258,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'My Custom Game',
           currentUserId,
+          false,
           false,
           false,
           undefined, // No bggId

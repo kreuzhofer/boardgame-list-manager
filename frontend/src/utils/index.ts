@@ -22,12 +22,13 @@ export {
   filterByBringer,
   filterWunschGames,
   filterMyGames,
+  filterPrototypeGames,
   applyAllFilters,
   hasActiveFilters,
   DEFAULT_FILTER_STATE,
 } from './filtering';
 
-export type { FilterState } from './filtering';
+export type { FilterState, PrototypeFilter } from './filtering';
 
 
 export { normalizeName } from './nameNormalization';

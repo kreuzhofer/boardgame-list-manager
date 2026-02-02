@@ -73,7 +73,7 @@ export class GameRepository {
    * Feature: 014-alternate-names-search - Store alternate name data
    */
   async create(data: CreateGameDto): Promise<GameEntity> {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = data;
+    const { name, userId, isBringing, isPlaying, isPrototype, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = data;
 
     // Create game with the user as owner, and optionally as player and/or bringer
     const game = await prisma.game.create({
@@ -85,6 +85,7 @@ export class GameRepository {
         bggRating: bggRating ?? null,
         addedAsAlternateName: addedAsAlternateName ?? null,
         alternateNames: alternateNames ?? [],
+        isPrototype: isPrototype ?? false,
         ...(isPlaying && {
           players: {
             create: {

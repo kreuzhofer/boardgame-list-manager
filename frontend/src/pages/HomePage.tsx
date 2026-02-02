@@ -63,6 +63,7 @@ export function HomePage({ user }: HomePageProps) {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setPrototypeFilter,
     filterGames,
     hasActiveFilters,
     resetFilters,
@@ -428,6 +429,57 @@ export function HomePage({ user }: HomePageProps) {
             <span className="sm:hidden">Meine</span>
             {filters.myGamesOnly && <CheckIcon className="w-4 h-4" />}
           </button>
+
+          {/* Prototypen filter - segmented control */}
+          <div className="flex items-end">
+            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden bg-gray-100 min-h-[44px]">
+              <button
+                type="button"
+                onClick={() => setPrototypeFilter('all')}
+                className={`px-3 text-xs sm:text-sm font-medium transition-colors ${
+                  filters.prototypeFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-pressed={filters.prototypeFilter === 'all'}
+                aria-label="Alle Spiele anzeigen"
+                title="Alle Spiele"
+              >
+                <span className="hidden sm:inline">Alle</span>
+                <span className="sm:hidden">Alle</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrototypeFilter('exclude')}
+                className={`px-3 text-xs sm:text-sm font-medium transition-colors border-l border-gray-200 ${
+                  filters.prototypeFilter === 'exclude'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-pressed={filters.prototypeFilter === 'exclude'}
+                aria-label="Ohne Prototypen anzeigen"
+                title="Ohne Prototypen"
+              >
+                <span className="hidden sm:inline">Ohne Prototypen</span>
+                <span className="sm:hidden">Ohne Protos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrototypeFilter('only')}
+                className={`px-3 text-xs sm:text-sm font-medium transition-colors border-l border-gray-200 ${
+                  filters.prototypeFilter === 'only'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-pressed={filters.prototypeFilter === 'only'}
+                aria-label="Nur Prototypen anzeigen"
+                title="Nur Prototypen"
+              >
+                <span className="hidden sm:inline">Nur Prototypen</span>
+                <span className="sm:hidden">Nur Protos</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

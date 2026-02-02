@@ -28,6 +28,7 @@ model Game {
   bggRating             Float?   @map("bgg_rating")
   addedAsAlternateName  String?  @map("added_as_alternate_name") @db.VarChar(255)
   alternateNames        Json     @default("[]") @map("alternate_names") @db.JsonB
+  isPrototype           Boolean  @default(false) @map("is_prototype")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
   owner                 User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)

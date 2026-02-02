@@ -51,7 +51,8 @@ describe('GameService', () => {
     yearPublished: number | null = null,
     bggRating: number | null = null,
     addedAsAlternateName: string | null = null,
-    alternateNames: string[] = []
+    alternateNames: string[] = [],
+    isPrototype: boolean = false
   ): GameEntity => ({
     id,
     name,
@@ -61,6 +62,7 @@ describe('GameService', () => {
     bggRating,
     addedAsAlternateName,
     alternateNames,
+    isPrototype,
     owner: ownerId && ownerName ? createMockUserEntity(ownerId, ownerName) : null,
     players,
     bringers,
@@ -74,7 +76,7 @@ describe('GameService', () => {
       findAll: jest.fn<() => Promise<GameEntity[]>>(),
       findById: jest.fn<(id: string) => Promise<GameEntity | null>>(),
       findByName: jest.fn<(name: string) => Promise<GameEntity | null>>(),
-      create: jest.fn<(data: { name: string; userId: string; isBringing: boolean; isPlaying: boolean }) => Promise<GameEntity>>(),
+      create: jest.fn<(data: { name: string; userId: string; isBringing: boolean; isPlaying: boolean; isPrototype?: boolean }) => Promise<GameEntity>>(),
       addPlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       removePlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       addBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
@@ -260,7 +262,7 @@ describe('GameService', () => {
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false);
+      const result = await gameService.createGame(gameName, userId, false, false, false);
 
       expect(result.owner).toEqual({ id: userId, name: 'User Name' });
       expect(mockRepository.create).toHaveBeenCalledWith({
@@ -268,8 +270,12 @@ describe('GameService', () => {
         userId,
         isBringing: false,
         isPlaying: false,
+        isPrototype: false,
         bggId: undefined,
         yearPublished: undefined,
+        bggRating: undefined,
+        addedAsAlternateName: undefined,
+        alternateNames: undefined,
       });
     });
 
@@ -287,7 +293,7 @@ describe('GameService', () => {
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false, bggId, yearPublished);
+      const result = await gameService.createGame(gameName, userId, false, false, false, bggId, yearPublished);
 
       expect(result.bggId).toBe(bggId);
       expect(result.yearPublished).toBe(yearPublished);
@@ -296,8 +302,12 @@ describe('GameService', () => {
         userId,
         isBringing: false,
         isPlaying: false,
+        isPrototype: false,
         bggId,
         yearPublished,
+        bggRating: undefined,
+        addedAsAlternateName: undefined,
+        alternateNames: undefined,
       });
     });
 
@@ -313,7 +323,7 @@ describe('GameService', () => {
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false);
+      const result = await gameService.createGame(gameName, userId, false, false, false);
 
       expect(result.bggId).toBeNull();
       expect(result.yearPublished).toBeNull();

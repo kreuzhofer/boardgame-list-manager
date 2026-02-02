@@ -30,7 +30,11 @@ export interface FilterState {
   wunschOnly: boolean;
   /** Filter to show only games where current user is involved (Requirement 5.9) */
   myGamesOnly: boolean;
+  /** Filter by prototype status */
+  prototypeFilter: PrototypeFilter;
 }
+
+export type PrototypeFilter = 'all' | 'exclude' | 'only';
 
 /**
  * Default filter state with all filters cleared
@@ -41,6 +45,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   bringerQuery: '',
   wunschOnly: false,
   myGamesOnly: false,
+  prototypeFilter: 'all',
 };
 
 /**
@@ -165,6 +170,24 @@ export function filterMyGames(games: Game[], currentUserName: string, enabled: b
 }
 
 /**
+ * Filters games based on prototype flag.
+ * - 'all': return all games
+ * - 'exclude': return only non-prototype games
+ * - 'only': return only prototype games
+ */
+export function filterPrototypeGames(games: Game[], filter: PrototypeFilter): Game[] {
+  switch (filter) {
+    case 'exclude':
+      return games.filter((game) => !game.isPrototype);
+    case 'only':
+      return games.filter((game) => game.isPrototype);
+    case 'all':
+    default:
+      return games;
+  }
+}
+
+/**
  * Applies all filters to a game list.
  * Filters are applied in sequence: name → player → bringer → wunsch → myGames.
  * 
@@ -190,6 +213,7 @@ export function applyAllFilters(
   // Apply toggle filters
   result = filterWunschGames(result, filters.wunschOnly);
   result = filterMyGames(result, currentUser, filters.myGamesOnly);
+  result = filterPrototypeGames(result, filters.prototypeFilter);
   
   return result;
 }
@@ -206,6 +230,7 @@ export function hasActiveFilters(filters: FilterState): boolean {
     filters.playerQuery.trim() !== '' ||
     filters.bringerQuery.trim() !== '' ||
     filters.wunschOnly ||
-    filters.myGamesOnly
+    filters.myGamesOnly ||
+    filters.prototypeFilter !== 'all'
   );
 }

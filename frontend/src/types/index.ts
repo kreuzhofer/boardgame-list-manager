@@ -39,6 +39,7 @@ export interface Game {
   bggRating: number | null;
   addedAsAlternateName: string | null;
   alternateNames: string[];
+  isPrototype: boolean;
   players: Player[];
   bringers: Bringer[];
   status: GameStatus;
@@ -76,6 +77,7 @@ export interface CreateGameRequest {
   userId: string;
   isBringing: boolean;
   isPlaying: boolean;
+  isPrototype?: boolean;
   bggId?: number;
   yearPublished?: number;
   bggRating?: number;

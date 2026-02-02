@@ -13,6 +13,7 @@ import {
   applyAllFilters,
   hasActiveFilters,
   type FilterState,
+  type PrototypeFilter,
 } from '../utils/filtering';
 import type { Game } from '../types';
 
@@ -29,6 +30,8 @@ export interface UseGameFiltersReturn {
   setWunschOnly: (enabled: boolean) => void;
   /** Set the My Games filter toggle */
   setMyGamesOnly: (enabled: boolean) => void;
+  /** Set the prototype filter */
+  setPrototypeFilter: (filter: PrototypeFilter) => void;
   /** Reset all filters to default state */
   resetFilters: () => void;
   /** Check if any filters are active */
@@ -51,6 +54,7 @@ export interface UseGameFiltersReturn {
  *   setBringerQuery,
  *   setWunschOnly,
  *   setMyGamesOnly,
+ *   setPrototypeFilter,
  *   resetFilters,
  *   hasActiveFilters,
  *   filterGames,
@@ -92,6 +96,10 @@ export function useGameFilters(): UseGameFiltersReturn {
     setFilters((prev) => ({ ...prev, myGamesOnly: enabled }));
   }, []);
 
+  const setPrototypeFilter = useCallback((filter: PrototypeFilter) => {
+    setFilters((prev) => ({ ...prev, prototypeFilter: filter }));
+  }, []);
+
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_FILTER_STATE);
   }, []);
@@ -112,6 +120,7 @@ export function useGameFilters(): UseGameFiltersReturn {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setPrototypeFilter,
     resetFilters,
     hasActiveFilters: activeFilters,
     filterGames,

@@ -67,7 +67,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * POST /api/games
  * Creates a new game with the user as owner (and optionally as player and/or bringer).
  * 
- * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, bggId?: number, yearPublished?: number, addedAsAlternateName?: string, alternateNames?: string[] }
+ * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, isPrototype?: boolean, bggId?: number, yearPublished?: number, addedAsAlternateName?: string, alternateNames?: string[] }
  * Response: { game: Game }
  * 
  * Error responses:
@@ -79,7 +79,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing, isPlaying, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
+    const { name, userId, isBringing, isPlaying, isPrototype, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -104,6 +104,8 @@ router.post('/', async (req: Request, res: Response) => {
     const validBggId = bggId !== undefined && bggId !== null ? Number(bggId) : undefined;
     const validYearPublished = yearPublished !== undefined && yearPublished !== null ? Number(yearPublished) : undefined;
     const validBggRating = bggRating !== undefined && bggRating !== null ? Number(bggRating) : undefined;
+    const hasBggId = validBggId !== undefined && validBggId !== null;
+    const validIsPrototype = Boolean(isPrototype) && !hasBggId;
     
     // Validate alternate name fields
     const validAddedAsAlternateName = addedAsAlternateName && typeof addedAsAlternateName === 'string' ? addedAsAlternateName : undefined;
@@ -114,6 +116,7 @@ router.post('/', async (req: Request, res: Response) => {
       userId,
       Boolean(isBringing),
       Boolean(isPlaying),
+      validIsPrototype,
       validBggId,
       validYearPublished,
       validBggRating,

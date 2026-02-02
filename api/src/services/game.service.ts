@@ -69,6 +69,7 @@ export class GameService {
       bggRating: entity.bggRating,
       addedAsAlternateName: entity.addedAsAlternateName,
       alternateNames: entity.alternateNames ?? [],
+      isPrototype: entity.isPrototype,
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -106,6 +107,7 @@ export class GameService {
    * @param userId - The user ID of the user creating the game
    * @param isBringing - Whether the user is bringing the game
    * @param isPlaying - Whether the user wants to play the game
+   * @param isPrototype - Whether the game is marked as a prototype
    * @param bggId - Optional BoardGameGeek ID
    * @param yearPublished - Optional year the game was published
    * @param bggRating - Optional BGG rating
@@ -122,6 +124,7 @@ export class GameService {
     userId: string,
     isBringing: boolean,
     isPlaying: boolean,
+    isPrototype: boolean = false,
     bggId?: number,
     yearPublished?: number,
     bggRating?: number,
@@ -146,6 +149,7 @@ export class GameService {
         userId,
         isBringing,
         isPlaying,
+        isPrototype,
         bggId,
         yearPublished,
         bggRating,

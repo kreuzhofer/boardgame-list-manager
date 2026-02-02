@@ -14,6 +14,7 @@ import {
   filterByBringer,
   filterWunschGames,
   filterMyGames,
+  filterPrototypeGames,
   applyAllFilters,
   hasActiveFilters,
   DEFAULT_FILTER_STATE,
@@ -26,11 +27,19 @@ function createGame(
   id: string,
   name: string,
   players: string[] = [],
-  bringers: string[] = []
+  bringers: string[] = [],
+  isPrototype: boolean = false
 ): Game {
   return {
     id,
     name,
+    owner: null,
+    bggId: null,
+    yearPublished: null,
+    bggRating: null,
+    addedAsAlternateName: null,
+    alternateNames: [],
+    isPrototype,
     players: players.map((p, i) => ({
       id: `player-${id}-${i}`,
       user: {
@@ -224,6 +233,31 @@ describe('filterMyGames', () => {
   });
 });
 
+describe('filterPrototypeGames', () => {
+  const games: Game[] = [
+    createGame('1', 'Catan', ['Alice'], ['Bob'], false),
+    createGame('2', 'Prototype One', ['Charlie'], [], true),
+    createGame('3', 'Prototype Two', ['Dave'], ['Eve'], true),
+  ];
+
+  it('returns all games when filter is "all"', () => {
+    expect(filterPrototypeGames(games, 'all')).toEqual(games);
+  });
+
+  it('excludes prototype games when filter is "exclude"', () => {
+    const result = filterPrototypeGames(games, 'exclude');
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Catan');
+  });
+
+  it('returns only prototype games when filter is "only"', () => {
+    const result = filterPrototypeGames(games, 'only');
+    expect(result).toHaveLength(2);
+    expect(result.map((g) => g.name)).toContain('Prototype One');
+    expect(result.map((g) => g.name)).toContain('Prototype Two');
+  });
+});
+
 describe('applyAllFilters', () => {
   const games: Game[] = [
     createGame('1', 'Catan', ['Alice', 'Bob'], ['Charlie']),
@@ -304,6 +338,11 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, myGamesOnly: true })).toBe(true);
   });
 
+  it('returns true when prototype filter is not "all"', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, prototypeFilter: 'only' })).toBe(true);
+    expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, prototypeFilter: 'exclude' })).toBe(true);
+  });
+
   it('returns false for whitespace-only queries', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, nameQuery: '   ' })).toBe(false);
   });
@@ -316,5 +355,6 @@ describe('DEFAULT_FILTER_STATE', () => {
     expect(DEFAULT_FILTER_STATE.bringerQuery).toBe('');
     expect(DEFAULT_FILTER_STATE.wunschOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.myGamesOnly).toBe(false);
+    expect(DEFAULT_FILTER_STATE.prototypeFilter).toBe('all');
   });
 });

@@ -96,6 +96,7 @@ export function UnifiedSearchBar({
   // Toggle states for adding
   const [isBringing, setIsBringing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPrototype, setIsPrototype] = useState(false);
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,6 +117,7 @@ export function UnifiedSearchBar({
       setIsDropdownOpen(false);
       setIsBringing(false);
       setIsPlaying(false);
+      setIsPrototype(false);
       setError(null);
       onSearchQueryChange('');
     }
@@ -223,6 +225,7 @@ export function UnifiedSearchBar({
     setSelectedBggItem(result);
     setIsDropdownOpen(false);
     setSelectedIndex(-1);
+    setIsPrototype(false);
   }, []);
 
   // Clear the BGG selection and return to search mode
@@ -304,6 +307,7 @@ export function UnifiedSearchBar({
         currentUserId,
         isBringing,
         isPlaying,
+        !selectedBggItem && isPrototype,
         selectedBggItem?.id,
         selectedBggItem?.yearPublished ?? undefined,
         selectedBggItem?.rating ?? undefined,
@@ -316,6 +320,7 @@ export function UnifiedSearchBar({
       setSelectedBggItem(null);
       setIsBringing(false);
       setIsPlaying(false);
+      setIsPrototype(false);
       inputRef.current?.focus();
 
       onGameAdded(response.game);
@@ -328,9 +333,10 @@ export function UnifiedSearchBar({
     } finally {
       setIsSubmitting(false);
     }
-  }, [query, addButtonState.state, currentUserId, isBringing, isPlaying, selectedBggItem, onGameAdded]);
+  }, [query, addButtonState.state, currentUserId, isBringing, isPlaying, isPrototype, selectedBggItem, onGameAdded]);
 
   const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px] min-w-[7.5rem]';
+  const isPrototypeDisabled = Boolean(selectedBggItem);
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -479,6 +485,22 @@ export function UnifiedSearchBar({
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitspielen<span className="inline-block w-3 text-left">{isPlaying ? ' ✓' : ''}</span>
+              </button>
+
+              {/* Prototyp toggle (manual entries only) */}
+              <button
+                type="button"
+                onClick={() => setIsPrototype(!isPrototype)}
+                disabled={isSubmitting || isPrototypeDisabled}
+                className={`${toggleButtonBase} ${
+                  isPrototype
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={isPrototypeDisabled ? 'Nur für manuelle Einträge verfügbar' : 'Prototyp markieren'}
+                aria-pressed={isPrototype}
+              >
+                Prototyp<span className="inline-block w-3 text-left">{isPrototype ? ' ✓' : ''}</span>
               </button>
 
               {/* Add button */}

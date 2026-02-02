@@ -12,6 +12,14 @@ import * as fc from 'fast-check';
 import { Header } from '../Header';
 import type { User } from '../../types';
 
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    account: null,
+    logout: vi.fn(),
+  }),
+}));
+
 const mockUser: User = {
   id: 'user-1',
   name: 'Test User',

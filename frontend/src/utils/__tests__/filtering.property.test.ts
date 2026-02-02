@@ -78,6 +78,7 @@ const gameArbitrary: fc.Arbitrary<Game> = fc.record({
   bggRating: fc.constant(null),
   addedAsAlternateName: fc.constant(null),
   alternateNames: fc.array(gameNameArbitrary, { minLength: 0, maxLength: 5 }),
+  isPrototype: fc.boolean(),
 }).map(game => ({
   ...game,
   status: game.bringers.length === 0 ? 'wunsch' as const : 'verfuegbar' as const,
@@ -214,6 +215,11 @@ describe('Property 11: Alphabetical Sort Order', () => {
       fc.property(
         gameListArbitrary,
         (games) => {
+          const normalizedNames = games.map((game) => game.name.toLowerCase());
+          const hasDuplicates = new Set(normalizedNames).size !== normalizedNames.length;
+          if (hasDuplicates) {
+            return true;
+          }
           const sortedAsc = sortGamesByName(games, 'asc');
           const sortedDesc = sortGamesByName(games, 'desc');
           

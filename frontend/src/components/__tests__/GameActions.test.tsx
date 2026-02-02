@@ -168,7 +168,7 @@ describe('GameActions', () => {
       // In mobile view, action buttons should have the mobile-specific fixed width class
       // Note: HelpBubble also renders buttons, so we filter by the action button class
       const actionButtons = screen.getAllByRole('button').filter(
-        button => button.classList.contains('w-[52px]')
+        button => button.classList.contains('w-[44px]')
       );
       expect(actionButtons).toHaveLength(2);
     });
@@ -181,7 +181,7 @@ describe('GameActions', () => {
       
       // Find the action buttons (not the help buttons)
       const actionButtons = screen.getAllByRole('button').filter(
-        button => button.classList.contains('w-[52px]')
+        button => button.classList.contains('w-[44px]')
       );
       // Second action button is Mitspielen
       const playButton = actionButtons[1];

@@ -43,6 +43,14 @@ interface ToastProviderProps {
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+  const [portalContainer] = useState(() => document.createElement('div'));
+
+  useEffect(() => {
+    document.body.appendChild(portalContainer);
+    return () => {
+      document.body.removeChild(portalContainer);
+    };
+  }, [portalContainer]);
 
   // Show a new toast
   const showToast = useCallback((message: string) => {
@@ -99,7 +107,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
       {children}
       {createPortal(
         <ToastContainer toasts={toasts} exitingIds={exitingIds} onDismiss={startExitAnimation} />,
-        document.body
+        portalContainer
       )}
     </ToastContext.Provider>
   );

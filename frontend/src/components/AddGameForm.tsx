@@ -99,6 +99,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
           currentUserId,
           isBringing,
           isPlaying,
+          false,
           selectedBggId,
           selectedYearPublished,
           selectedBggRating

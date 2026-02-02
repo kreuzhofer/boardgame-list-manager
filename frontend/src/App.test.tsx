@@ -16,6 +16,9 @@ const mockUsers = [
 
 // Mock the API client
 vi.mock('./api/client', () => ({
+  getToken: vi.fn().mockReturnValue(null),
+  setToken: vi.fn(),
+  removeToken: vi.fn(),
   usersApi: {
     getAll: vi.fn(),
     getById: vi.fn(),
@@ -44,7 +47,7 @@ vi.mock('./api/client', () => ({
 }));
 
 // Import mocked module
-import { usersApi } from './api/client';
+import { usersApi, gamesApi, statisticsApi } from './api/client';
 
 describe('App', () => {
   beforeEach(() => {
@@ -57,12 +60,20 @@ describe('App', () => {
     vi.mocked(usersApi.getAll).mockResolvedValue({ users: mockUsers });
     vi.mocked(usersApi.getById).mockResolvedValue({ user: mockUser });
     vi.mocked(usersApi.create).mockResolvedValue({ user: mockUser });
+    vi.mocked(gamesApi.getAll).mockResolvedValue({ games: [] });
+    vi.mocked(statisticsApi.get).mockResolvedValue({
+      totalGames: 0,
+      totalParticipants: 0,
+      availableGames: 0,
+      requestedGames: 0,
+      popularGames: [],
+    });
   });
 
   afterEach(() => {
     sessionStorage.clear();
     localStorage.clear();
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when not authenticated', () => {
@@ -272,7 +283,7 @@ describe('App', () => {
       
       await waitFor(() => {
         expect(screen.getByText('Test User')).toBeInTheDocument();
-        expect(screen.getByText('Angemeldet als:')).toBeInTheDocument();
+        expect(screen.getByText('Event-Nutzer:')).toBeInTheDocument();
       });
     });
 

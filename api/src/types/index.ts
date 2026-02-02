@@ -19,6 +19,7 @@ export interface GameEntity {
   bggRating: number | null;
   addedAsAlternateName: string | null;
   alternateNames: string[];
+  isPrototype: boolean;
   createdAt: Date;
   updatedAt: Date;
   owner: UserEntity | null;
@@ -48,6 +49,7 @@ export interface CreateGameDto {
   userId: string;
   isBringing: boolean;
   isPlaying: boolean;
+  isPrototype?: boolean;
   bggId?: number;
   yearPublished?: number;
   bggRating?: number;
@@ -78,6 +80,7 @@ export interface Game {
   bggRating: number | null;
   addedAsAlternateName: string | null;
   alternateNames: string[];
+  isPrototype: boolean;
   players: Player[];
   bringers: Bringer[];
   status: 'wunsch' | 'verfuegbar';

@@ -8,10 +8,14 @@
  * - Added "Statistiken" as third tab in desktop navigation
  * - Removed burger menu (replaced by MobileBottomTabs)
  * - Simplified mobile header display
+ * 
+ * Updated for Spec 016:
+ * - Added account management link (Profil)
  */
 
 import { Link, useLocation } from 'react-router-dom';
 import { UserNameEditor } from './UserNameEditor';
+import { useAuth } from '../contexts/AuthContext';
 import type { User } from '../types';
 
 interface HeaderProps {
@@ -35,6 +39,7 @@ const DESKTOP_TABS = [
 export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
   const eventName = getEventName();
   const location = useLocation();
+  const { isAuthenticated: isAccountAuthenticated, account, logout: accountLogout } = useAuth();
 
   // Check if a nav link is active
   const isActive = (path: string) => location.pathname === path;
@@ -72,25 +77,55 @@ export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
           </nav>
 
           {/* Desktop User Info - hidden on mobile */}
-          {user && onUserUpdated && (
-            <div className="hidden md:flex items-center gap-3">
-              <span className="text-white/90 text-sm">
-                Angemeldet als:
-              </span>
-              <div className="bg-white/10 px-3 py-1 rounded">
-                <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
-              </div>
-              {onLogout && (
-                <button
-                  onClick={onLogout}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Account management links */}
+            {isAccountAuthenticated && account ? (
+              <>
+                <Link
+                  to="/profile"
                   className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                  aria-label="Abmelden"
                 >
-                  Abmelden
+                  Profil ({account.email})
+                </Link>
+                <button
+                  onClick={accountLogout}
+                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                  aria-label="Konto abmelden"
+                >
+                  Konto abmelden
                 </button>
-              )}
-            </div>
-          )}
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+              >
+                Anmelden
+              </Link>
+            )}
+
+            {/* Event user info */}
+            {user && onUserUpdated && (
+              <>
+                <span className="text-white/50">|</span>
+                <span className="text-white/90 text-sm">
+                  Event-Nutzer:
+                </span>
+                <div className="bg-white/10 px-3 py-1 rounded">
+                  <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
+                </div>
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                    aria-label="Event-Nutzer wechseln"
+                  >
+                    Wechseln
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

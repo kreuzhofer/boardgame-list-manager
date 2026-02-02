@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import * as path from 'path';
+import accountRoutes from './routes/account.routes';
 import authRoutes from './routes/auth.routes';
 import bggRoutes from './routes/bgg.routes';
 import gameRoutes from './routes/game.routes';
+import sessionRoutes from './routes/session.routes';
 import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import userRoutes from './routes/user.routes';
@@ -29,10 +31,12 @@ app.use((req, _res, next) => {
 });
 
 // Routes
+app.use('/api/accounts', accountRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bgg', bggRoutes);
 app.use('/api/events', sseRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/sessions', sessionRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/users', userRoutes);
 

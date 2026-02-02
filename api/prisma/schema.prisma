@@ -28,6 +28,7 @@ model Game {
   bggRating             Float?   @map("bgg_rating")
   addedAsAlternateName  String?  @map("added_as_alternate_name") @db.VarChar(255)
   alternateNames        Json     @default("[]") @map("alternate_names") @db.JsonB
+  isPrototype           Boolean  @default(false) @map("is_prototype")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
   owner                 User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
@@ -97,4 +98,42 @@ model BggGame {
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
   @@map("bgg_games")
+}
+
+// Account Management Models
+
+enum AccountRole {
+  account_owner
+  admin
+}
+
+enum AccountStatus {
+  active
+  deactivated
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  role         AccountRole   @default(account_owner)
+  status       AccountStatus @default(active)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  sessions     Session[]
+
+  @@map("accounts")
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  accountId  String   @map("account_id")
+  userAgent  String?  @map("user_agent")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("sessions")
 }

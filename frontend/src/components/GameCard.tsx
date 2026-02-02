@@ -147,6 +147,7 @@ export function GameCard({
 }: GameCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
+  const isPrototype = game.isPrototype;
   const isOwner = game.owner?.id === currentUserId;
   
   // Check if current user is the only player/bringer (or lists are empty)
@@ -252,18 +253,35 @@ export function GameCard({
               )}
             </h3>
             {/* Status indicator - colored circle with HelpBubble (no ? shown) */}
-            <div className="relative flex-shrink-0">
-              <div
-                className={`w-6 h-6 rounded-full ${
-                  isWunsch ? 'bg-yellow-400' : 'bg-green-500'
-                }`}
-                aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
-              />
-              <HelpBubble
-                text={isWunsch ? 'Gesucht' : 'Verfügbar'}
-                position="top-right"
-                showIndicator={false}
-              />
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="relative">
+                <div
+                  className={`w-6 h-6 rounded-full ${
+                    isWunsch ? 'bg-yellow-400' : 'bg-green-500'
+                  }`}
+                  aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                />
+                <HelpBubble
+                  text={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                  position="top-right"
+                  showIndicator={false}
+                />
+              </div>
+              {isPrototype && (
+                <div className="relative">
+                  <div
+                    className="w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center"
+                    aria-label="Prototyp"
+                  >
+                    P
+                  </div>
+                  <HelpBubble
+                    text="Prototyp"
+                    position="top-right"
+                    showIndicator={false}
+                  />
+                </div>
+              )}
             </div>
           </div>
           {/* Actions row - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}

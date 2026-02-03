@@ -246,6 +246,24 @@ export const gamesApi = {
       }
     );
   },
+
+  /**
+   * Toggle prototype status for a game
+   * @param gameId - The game's unique identifier
+   * @param isPrototype - The new prototype status
+   * @param userId - The user's ID (must be owner)
+   * @returns The updated game
+   * Requirements: 022-prototype-toggle 1.1
+   */
+  togglePrototype: (gameId: string, isPrototype: boolean, userId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}/prototype`, {
+      method: 'PATCH',
+      headers: {
+        'x-user-id': userId,
+      },
+      body: JSON.stringify({ isPrototype }),
+    });
+  },
 };
 
 // Statistics API
@@ -322,6 +340,71 @@ export const sessionsApi = {
   },
 };
 
+// Thumbnails API
+export const thumbnailsApi = {
+  /**
+   * Upload a custom thumbnail for a game
+   * @param gameId - The game's unique identifier
+   * @param file - The image file to upload
+   * @param userId - The user's ID (must be owner)
+   * @returns Success response
+   * Requirements: 023-custom-thumbnail-upload 1.1
+   */
+  upload: async (gameId: string, file: File, userId: string): Promise<{ success: boolean }> => {
+    const url = `${getApiUrl()}/api/thumbnails/${gameId}`;
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'x-user-id': userId,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorData: { error?: { message: string; code: string } } | null = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // Response is not JSON
+      }
+
+      if (errorData?.error) {
+        throw new ApiError(errorData.error.message, errorData.error.code);
+      }
+
+      throw new ApiError(
+        `HTTP ${response.status}: ${response.statusText}`,
+        'HTTP_ERROR'
+      );
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get the URL for a custom thumbnail
+   * @param gameId - The game's unique identifier
+   * @param size - Image size ('micro' or 'square200')
+   * @returns The URL to the thumbnail image
+   * Requirements: 023-custom-thumbnail-upload 2.3
+   */
+  getUrl: (gameId: string, size: 'micro' | 'square200'): string => {
+    return `${getApiUrl()}/api/thumbnails/${gameId}/${size}`;
+  },
+
+  /**
+   * Check if a game has a custom thumbnail
+   * @param gameId - The game's unique identifier
+   * @returns Whether the thumbnail exists
+   */
+  exists: (gameId: string): Promise<{ exists: boolean }> => {
+    return fetchApi<{ exists: boolean }>(`/api/thumbnails/${gameId}/exists`);
+  },
+};
+
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
@@ -331,6 +414,7 @@ export const api = {
   bgg: bggApi,
   accounts: accountsApi,
   sessions: sessionsApi,
+  thumbnails: thumbnailsApi,
 };
 
 export default api;

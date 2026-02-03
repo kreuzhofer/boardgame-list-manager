@@ -449,4 +449,89 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * PATCH /api/games/:id/prototype
+ * Toggles the prototype status of a game. Only the owner can toggle, and only for non-BGG games.
+ * 
+ * Request headers: x-user-id (required)
+ * Request body: { isPrototype: boolean }
+ * Response: { game: Game }
+ * 
+ * Error responses:
+ *   - 400 if isPrototype is missing or game has BGG ID
+ *   - 403 if user is not the owner
+ *   - 404 if game not found
+ * 
+ * Requirements: 022-prototype-toggle 1.1, 1.2, 1.3, 1.5
+ */
+router.patch('/:id/prototype', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string;
+    const { isPrototype } = req.body;
+
+    // Validate required header
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Benutzer-ID erforderlich.',
+        },
+      });
+    }
+
+    // Validate request body
+    if (typeof isPrototype !== 'boolean') {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Ungültige Anfrage.',
+        },
+      });
+    }
+
+    const game = await gameService.togglePrototype(id, userId, isPrototype);
+    return res.json({ game });
+  } catch (error) {
+    if (error instanceof Error) {
+      const errorWithCode = error as Error & { code?: string };
+      
+      // Handle game not found
+      if (errorWithCode.code === 'GAME_NOT_FOUND') {
+        return res.status(404).json({
+          error: {
+            code: 'GAME_NOT_FOUND',
+            message: error.message,
+          },
+        });
+      }
+      // Handle forbidden (not owner)
+      if (errorWithCode.code === 'FORBIDDEN') {
+        return res.status(403).json({
+          error: {
+            code: 'FORBIDDEN',
+            message: error.message,
+          },
+        });
+      }
+      // Handle validation error (has BGG ID)
+      if (errorWithCode.code === 'VALIDATION_ERROR') {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: error.message,
+          },
+        });
+      }
+    }
+    console.error('Error toggling prototype status:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
 export default router;

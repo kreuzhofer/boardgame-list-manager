@@ -8,6 +8,7 @@ import gameRoutes from './routes/game.routes';
 import sessionRoutes from './routes/session.routes';
 import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
+import thumbnailRoutes from './routes/thumbnail.routes';
 import userRoutes from './routes/user.routes';
 import { bggCache } from './services';
 import { config } from './config';
@@ -38,6 +39,7 @@ app.use('/api/events', sseRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/thumbnails', thumbnailRoutes);
 app.use('/api/users', userRoutes);
 
 // Health check endpoint - includes BGG cache status for debugging

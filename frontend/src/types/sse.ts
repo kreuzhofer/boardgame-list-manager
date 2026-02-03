@@ -6,7 +6,9 @@ export type SSEEventType =
   | 'game:bringer-removed'
   | 'game:player-added'
   | 'game:player-removed'
-  | 'game:deleted';
+  | 'game:deleted'
+  | 'game:prototype-toggled'
+  | 'game:thumbnail-uploaded';
 
 // Base event structure
 export interface BaseSSEEvent {
@@ -52,6 +54,19 @@ export interface GameDeletedEvent extends BaseSSEEvent {
   type: 'game:deleted';
 }
 
+// Event for prototype status toggled
+export interface PrototypeToggledEvent extends BaseSSEEvent {
+  type: 'game:prototype-toggled';
+  isPrototype: boolean;
+}
+
+// Event for thumbnail uploaded
+export interface ThumbnailUploadedEvent extends BaseSSEEvent {
+  type: 'game:thumbnail-uploaded';
+  /** Timestamp for cache-busting */
+  timestamp: number;
+}
+
 // Union type for all SSE events
 export type SSEEvent =
   | GameCreatedEvent
@@ -59,7 +74,9 @@ export type SSEEvent =
   | BringerRemovedEvent
   | PlayerAddedEvent
   | PlayerRemovedEvent
-  | GameDeletedEvent;
+  | GameDeletedEvent
+  | PrototypeToggledEvent
+  | ThumbnailUploadedEvent;
 
 // Helper type guards
 export function isGameCreatedEvent(event: SSEEvent): event is GameCreatedEvent {

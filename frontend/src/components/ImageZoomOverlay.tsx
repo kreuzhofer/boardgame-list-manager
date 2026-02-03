@@ -12,18 +12,28 @@ import { createPortal } from 'react-dom';
 
 export interface ImageZoomOverlayProps {
   /** BGG ID for loading square200 image */
-  bggId: number;
+  bggId?: number;
   /** Alt text */
   alt: string;
   /** Callback when overlay should close */
   onClose: () => void;
   /** Position reference - bounding rect of the thumbnail */
   anchorRect?: DOMRect;
+  /** Custom thumbnail game ID - when provided, uses custom thumbnail API instead of BGG */
+  customThumbnailGameId?: string;
+  /** Cache-busting timestamp - append to URL to force reload */
+  thumbnailTimestamp?: number;
 }
 
 function getBggImageUrl(bggId: number): string {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   return `${apiUrl}/api/bgg/image/${bggId}/square200`;
+}
+
+function getCustomThumbnailUrl(gameId: string, timestamp?: number): string {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const baseUrl = `${apiUrl}/api/thumbnails/${gameId}/square200`;
+  return timestamp ? `${baseUrl}?t=${timestamp}` : baseUrl;
 }
 
 const ZOOM_SIZE = 200; // square200 is 200x200
@@ -33,11 +43,19 @@ export function ImageZoomOverlay({
   bggId,
   alt,
   anchorRect,
+  customThumbnailGameId,
+  thumbnailTimestamp,
 }: ImageZoomOverlayProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageUrl = getBggImageUrl(bggId);
+  
+  // Use custom thumbnail URL if gameId provided, otherwise use BGG URL
+  const imageUrl = customThumbnailGameId 
+    ? getCustomThumbnailUrl(customThumbnailGameId, thumbnailTimestamp)
+    : bggId 
+      ? getBggImageUrl(bggId)
+      : '';
 
   // Calculate position to keep zoom within viewport
   useEffect(() => {

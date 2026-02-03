@@ -144,11 +144,34 @@ describe('SSEManager', () => {
         { type: 'game:player-added', gameId: 'g4', userId: 'u4', userName: 'User4', gameName: 'Game4' },
         { type: 'game:player-removed', gameId: 'g5', userId: 'u5' },
         { type: 'game:deleted', gameId: 'g6', userId: 'u6' },
+        { type: 'game:prototype-toggled', gameId: 'g7', userId: 'u7', isPrototype: true },
       ];
 
       events.forEach((event) => sseManager.broadcast(event));
 
-      expect(mockResponse.write).toHaveBeenCalledTimes(6);
+      expect(mockResponse.write).toHaveBeenCalledTimes(7);
+    });
+
+    /**
+     * Test prototype-toggled event broadcast
+     * Validates: Requirement 022-prototype-toggle 1.4
+     */
+    it('should broadcast prototype-toggled event with correct payload', () => {
+      const mockResponse = createMockResponse();
+      sseManager.addClient('client-1', mockResponse as any);
+
+      const event: GameEvent = {
+        type: 'game:prototype-toggled',
+        gameId: 'game-123',
+        userId: 'user-456',
+        isPrototype: true,
+      };
+
+      sseManager.broadcast(event);
+
+      expect(mockResponse.write).toHaveBeenCalledTimes(1);
+      const expectedData = `data: ${JSON.stringify(event)}\n\n`;
+      expect(mockResponse.write).toHaveBeenCalledWith(expectedData);
     });
   });
 

@@ -112,6 +112,8 @@ export function useSSE(options: UseSSEOptions): UseSSEResult {
             case 'game:bringer-removed':
             case 'game:player-added':
             case 'game:player-removed':
+            case 'game:prototype-toggled':
+            case 'game:thumbnail-uploaded':
               handlersRef.current.onGameUpdated?.(sseEvent);
               break;
             case 'game:deleted':

@@ -1,5 +1,6 @@
 import { gameRepository, GameRepository, userRepository, UserRepository } from '../repositories';
 import { sseManager } from './sse.service';
+import { thumbnailService } from './thumbnailService';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
 
 /**
@@ -347,6 +348,7 @@ export class GameService {
    *   - Game has other players or bringers besides the owner (400)
    * 
    * Requirements: 3.2, 3.5, 3.6, 3.7
+   * Feature: 023-custom-thumbnail-upload - Clean up thumbnails on deletion
    */
   async deleteGame(gameId: string, userId: string): Promise<void> {
     // Find the game
@@ -376,6 +378,17 @@ export class GameService {
       throw error;
     }
 
+    // Clean up custom thumbnails for non-BGG games (Requirement 3.1, 3.3)
+    // Only delete thumbnails for games without a BGG ID
+    if (entity.bggId === null) {
+      try {
+        await thumbnailService.deleteThumbnails(gameId);
+      } catch (error) {
+        // Log but don't prevent game deletion (Requirement 3.2)
+        console.error(`[GameService] Failed to delete thumbnails for game ${gameId}:`, error);
+      }
+    }
+
     // Delete the game
     await this.repository.delete(gameId);
     
@@ -385,6 +398,55 @@ export class GameService {
       gameId,
       userId,
     });
+  }
+
+  /**
+   * Toggle prototype status for a game
+   * @param gameId - The game's unique identifier
+   * @param userId - The user requesting the change (must be owner)
+   * @param isPrototype - The new prototype status
+   * @returns The updated game
+   * @throws Error if not owner, game has BGG ID, or game not found
+   * 
+   * Requirements: 022-prototype-toggle 1.1, 1.2, 1.3, 1.4
+   */
+  async togglePrototype(gameId: string, userId: string, isPrototype: boolean): Promise<Game> {
+    // Find the game
+    const entity = await this.repository.findById(gameId);
+    
+    if (!entity) {
+      const error = new Error('Spiel nicht gefunden.');
+      (error as Error & { code: string }).code = 'GAME_NOT_FOUND';
+      throw error;
+    }
+
+    // Check ownership - user must be the owner
+    if (entity.ownerId !== userId) {
+      const error = new Error('Du bist nicht berechtigt, dieses Spiel zu bearbeiten.');
+      (error as Error & { code: string }).code = 'FORBIDDEN';
+      throw error;
+    }
+
+    // Check that game has no BGG ID
+    if (entity.bggId !== null) {
+      const error = new Error('Nur Spiele ohne BGG-Eintrag können als Prototyp markiert werden.');
+      (error as Error & { code: string }).code = 'VALIDATION_ERROR';
+      throw error;
+    }
+
+    // Update prototype status
+    const updatedEntity = await this.repository.updatePrototype(gameId, isPrototype);
+    const game = this.transformGame(updatedEntity);
+
+    // Broadcast game:prototype-toggled event
+    sseManager.broadcast({
+      type: 'game:prototype-toggled',
+      gameId,
+      userId,
+      isPrototype,
+    });
+
+    return game;
   }
 }
 

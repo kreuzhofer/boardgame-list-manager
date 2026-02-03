@@ -14,6 +14,7 @@ import {
   filterByBringer,
   filterWunschGames,
   filterMyGames,
+  filterPlayerGames,
   filterPrototypeGames,
   applyAllFilters,
   hasActiveFilters,
@@ -209,12 +210,10 @@ describe('filterMyGames', () => {
     expect(filterMyGames(games, 'Alice', false)).toEqual(games);
   });
 
-  it('returns games where user is a player', () => {
+  it('returns games where user is a bringer', () => {
     const result = filterMyGames(games, 'Alice', true);
-    expect(result).toHaveLength(3);
-    expect(result.map((g) => g.name)).toContain('Catan');
+    expect(result).toHaveLength(1);
     expect(result.map((g) => g.name)).toContain('Carcassonne');
-    expect(result.map((g) => g.name)).toContain('Azul');
   });
 
   it('returns games where user is a bringer', () => {
@@ -225,11 +224,41 @@ describe('filterMyGames', () => {
 
   it('is case-insensitive for user name matching', () => {
     const result = filterMyGames(games, 'ALICE', true);
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(1);
   });
 
   it('returns empty array when user is not involved in any game', () => {
     const result = filterMyGames(games, 'Unknown', true);
+    expect(result).toHaveLength(0);
+  });
+});
+
+describe('filterPlayerGames', () => {
+  const games: Game[] = [
+    createGame('1', 'Catan', ['Alice', 'Bob'], ['Charlie']),
+    createGame('2', 'Carcassonne', ['Dave'], ['Alice']),
+    createGame('3', 'Ticket to Ride', ['Eve'], ['Frank']),
+    createGame('4', 'Azul', ['Alice'], []),
+  ];
+
+  it('returns all games when filter is disabled', () => {
+    expect(filterPlayerGames(games, 'Alice', false)).toEqual(games);
+  });
+
+  it('returns games where user is a player', () => {
+    const result = filterPlayerGames(games, 'Alice', true);
+    expect(result).toHaveLength(2);
+    expect(result.map((g) => g.name)).toContain('Catan');
+    expect(result.map((g) => g.name)).toContain('Azul');
+  });
+
+  it('is case-insensitive for user name matching', () => {
+    const result = filterPlayerGames(games, 'ALICE', true);
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns empty array when user is not a player in any game', () => {
+    const result = filterPlayerGames(games, 'Unknown', true);
     expect(result).toHaveLength(0);
   });
 });
@@ -301,13 +330,13 @@ describe('applyAllFilters', () => {
       nameQuery: 'a',
       playerQuery: 'Alice',
       wunschOnly: true,
-      myGamesOnly: true,
+      playerOnly: true,
     };
     const result = applyAllFilters(games, filters, 'Alice');
     // Name contains 'a': Catan, Carcassonne, Azul
     // Player is Alice: Catan, Carcassonne, Azul
     // Wunsch only: Carcassonne, Azul
-    // My games (Alice): Carcassonne, Azul
+    // Player only (Alice): Carcassonne, Azul
     expect(result).toHaveLength(2);
     expect(result.map((g) => g.name)).toContain('Carcassonne');
     expect(result.map((g) => g.name)).toContain('Azul');
@@ -339,6 +368,10 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, myGamesOnly: true })).toBe(true);
   });
 
+  it('returns true when playerOnly is enabled', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, playerOnly: true })).toBe(true);
+  });
+
   it('returns true when hiddenOnly is enabled', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, hiddenOnly: true })).toBe(true);
   });
@@ -360,6 +393,7 @@ describe('DEFAULT_FILTER_STATE', () => {
     expect(DEFAULT_FILTER_STATE.bringerQuery).toBe('');
     expect(DEFAULT_FILTER_STATE.wunschOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.myGamesOnly).toBe(false);
+    expect(DEFAULT_FILTER_STATE.playerOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.hiddenOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.prototypeFilter).toBe('all');
   });

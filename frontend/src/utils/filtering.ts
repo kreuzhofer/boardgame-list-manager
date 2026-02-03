@@ -28,8 +28,10 @@ export interface FilterState {
   bringerQuery: string;
   /** Filter to show only games without bringers (Requirement 5.8) */
   wunschOnly: boolean;
-  /** Filter to show only games where current user is involved (Requirement 5.9) */
+  /** Filter to show only games the current user is bringing */
   myGamesOnly: boolean;
+  /** Filter to show only games the current user is playing */
+  playerOnly: boolean;
   /** Filter to show only hidden games */
   hiddenOnly: boolean;
   /** Filter by prototype status */
@@ -47,6 +49,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   bringerQuery: '',
   wunschOnly: false,
   myGamesOnly: false,
+  playerOnly: false,
   hiddenOnly: false,
   prototypeFilter: 'all',
 };
@@ -148,13 +151,12 @@ export function filterWunschGames(games: Game[], enabled: boolean): Game[] {
 }
 
 /**
- * Filters games to show only games where the current user is involved.
- * A user is involved if they are either a player or a bringer.
+ * Filters games to show only games where the current user is a bringer.
  * 
  * @param games - Array of games to filter
  * @param currentUserName - The current user's name
  * @param enabled - Whether the filter is enabled
- * @returns Filtered array of games (only games where user is player or bringer if enabled)
+ * @returns Filtered array of games (only games where user is a bringer if enabled)
  * 
  * Validates: Requirements 5.9
  * Property 14: My Games Filter Correctness
@@ -162,14 +164,28 @@ export function filterWunschGames(games: Game[], enabled: boolean): Game[] {
 export function filterMyGames(games: Game[], currentUserName: string, enabled: boolean): Game[] {
   if (!enabled) return games;
   return games.filter((game) => {
-    const isPlayer = game.players.some(
-      (player) => player.user.name.toLowerCase() === currentUserName.toLowerCase()
-    );
     const isBringer = game.bringers.some(
       (bringer) => bringer.user.name.toLowerCase() === currentUserName.toLowerCase()
     );
-    return isPlayer || isBringer;
+    return isBringer;
   });
+}
+
+/**
+ * Filters games to show only games where the current user is a player.
+ * 
+ * @param games - Array of games to filter
+ * @param currentUserName - The current user's name
+ * @param enabled - Whether the filter is enabled
+ * @returns Filtered array of games (only games where user is a player if enabled)
+ */
+export function filterPlayerGames(games: Game[], currentUserName: string, enabled: boolean): Game[] {
+  if (!enabled) return games;
+  return games.filter((game) =>
+    game.players.some(
+      (player) => player.user.name.toLowerCase() === currentUserName.toLowerCase()
+    )
+  );
 }
 
 /**
@@ -203,7 +219,7 @@ export function filterHiddenGames(games: Game[], hiddenOnly: boolean): Game[] {
 
 /**
  * Applies all filters to a game list.
- * Filters are applied in sequence: name → player → bringer → wunsch → myGames → prototype → hidden.
+ * Filters are applied in sequence: name → player → bringer → wunsch → bringerOnly → playerOnly → prototype → hidden.
  * 
  * @param games - Array of games to filter
  * @param filters - Filter state object
@@ -227,6 +243,7 @@ export function applyAllFilters(
   // Apply toggle filters
   result = filterWunschGames(result, filters.wunschOnly);
   result = filterMyGames(result, currentUser, filters.myGamesOnly);
+  result = filterPlayerGames(result, currentUser, filters.playerOnly);
   result = filterPrototypeGames(result, filters.prototypeFilter);
   result = filterHiddenGames(result, filters.hiddenOnly);
   
@@ -246,6 +263,7 @@ export function hasActiveFilters(filters: FilterState): boolean {
     filters.bringerQuery.trim() !== '' ||
     filters.wunschOnly ||
     filters.myGamesOnly ||
+    filters.playerOnly ||
     filters.hiddenOnly ||
     filters.prototypeFilter !== 'all'
   );

@@ -16,7 +16,6 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
-import { ClickNotification } from './ClickNotification';
 import { MobileActionsMenu } from './MobileActionsMenu';
 import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 
@@ -175,10 +174,10 @@ export function GameCard({
   const swipeTimeoutRef = useRef<number | null>(null);
   const collapseTimeoutRef = useRef<number | null>(null);
   const [visualIsPlayer, setVisualIsPlayer] = useState(isPlayer);
-  const [playFeedback, setPlayFeedback] = useState<'added' | 'removed' | null>(null);
-  const [playFeedbackVisible, setPlayFeedbackVisible] = useState(false);
-  const playFeedbackTimeoutRef = useRef<number | null>(null);
-  const playFeedbackClearTimeoutRef = useRef<number | null>(null);
+  const [inlineFeedback, setInlineFeedback] = useState<{ message: string; tone: 'positive' | 'neutral' } | null>(null);
+  const [inlineFeedbackVisible, setInlineFeedbackVisible] = useState(false);
+  const inlineFeedbackTimeoutRef = useRef<number | null>(null);
+  const inlineFeedbackClearTimeoutRef = useRef<number | null>(null);
   const [playPulse, setPlayPulse] = useState(false);
   const playPulseTimeoutRef = useRef<number | null>(null);
   const [playCommitActive, setPlayCommitActive] = useState(false);
@@ -232,11 +231,11 @@ export function GameCard({
       if (collapseTimeoutRef.current) {
         window.clearTimeout(collapseTimeoutRef.current);
       }
-      if (playFeedbackTimeoutRef.current) {
-        window.clearTimeout(playFeedbackTimeoutRef.current);
+      if (inlineFeedbackTimeoutRef.current) {
+        window.clearTimeout(inlineFeedbackTimeoutRef.current);
       }
-      if (playFeedbackClearTimeoutRef.current) {
-        window.clearTimeout(playFeedbackClearTimeoutRef.current);
+      if (inlineFeedbackClearTimeoutRef.current) {
+        window.clearTimeout(inlineFeedbackClearTimeoutRef.current);
       }
       if (playPulseTimeoutRef.current) {
         window.clearTimeout(playPulseTimeoutRef.current);
@@ -250,20 +249,20 @@ export function GameCard({
     }
   }, [isPlayer, playCommitActive]);
 
-  const triggerPlayFeedback = useCallback((adding: boolean) => {
-    if (playFeedbackTimeoutRef.current) {
-      window.clearTimeout(playFeedbackTimeoutRef.current);
+  const triggerInlineFeedback = useCallback((message: string, tone: 'positive' | 'neutral') => {
+    if (inlineFeedbackTimeoutRef.current) {
+      window.clearTimeout(inlineFeedbackTimeoutRef.current);
     }
-    if (playFeedbackClearTimeoutRef.current) {
-      window.clearTimeout(playFeedbackClearTimeoutRef.current);
+    if (inlineFeedbackClearTimeoutRef.current) {
+      window.clearTimeout(inlineFeedbackClearTimeoutRef.current);
     }
-    setPlayFeedback(adding ? 'added' : 'removed');
-    setPlayFeedbackVisible(true);
-    playFeedbackTimeoutRef.current = window.setTimeout(() => {
-      setPlayFeedbackVisible(false);
+    setInlineFeedback({ message, tone });
+    setInlineFeedbackVisible(true);
+    inlineFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setInlineFeedbackVisible(false);
     }, 700);
-    playFeedbackClearTimeoutRef.current = window.setTimeout(() => {
-      setPlayFeedback(null);
+    inlineFeedbackClearTimeoutRef.current = window.setTimeout(() => {
+      setInlineFeedback(null);
     }, 900);
   }, []);
 
@@ -276,6 +275,26 @@ export function GameCard({
       setPlayPulse(false);
     }, 620);
   }, []);
+
+  const handleAddPlayerInline = useCallback(() => {
+    onAddPlayer?.(game.id);
+    triggerInlineFeedback('Du spielst mit', 'positive');
+  }, [game.id, onAddPlayer, triggerInlineFeedback]);
+
+  const handleRemovePlayerInline = useCallback(() => {
+    onRemovePlayer?.(game.id);
+    triggerInlineFeedback('Nicht mehr dabei', 'neutral');
+  }, [game.id, onRemovePlayer, triggerInlineFeedback]);
+
+  const handleAddBringerInline = useCallback(() => {
+    onAddBringer?.(game.id);
+    triggerInlineFeedback('Gepackt und dabei.', 'positive');
+  }, [game.id, onAddBringer, triggerInlineFeedback]);
+
+  const handleRemoveBringerInline = useCallback(() => {
+    onRemoveBringer?.(game.id);
+    triggerInlineFeedback('Aus dem Koffer geflogen.', 'neutral');
+  }, [game.id, onRemoveBringer, triggerInlineFeedback]);
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -353,10 +372,11 @@ export function GameCard({
     setIsSwiping(false);
     if (willAdd) {
       onAddPlayer?.(game.id);
+      triggerInlineFeedback('Du spielst mit', 'positive');
     } else {
       onRemovePlayer?.(game.id);
+      triggerInlineFeedback('Nicht mehr dabei', 'neutral');
     }
-    triggerPlayFeedback(willAdd);
     triggerPlayPulse();
     swipeTimeoutRef.current = window.setTimeout(() => {
       setSwipeX(0);
@@ -370,7 +390,7 @@ export function GameCard({
     onAddPlayer,
     onRemovePlayer,
     game.id,
-    triggerPlayFeedback,
+    triggerInlineFeedback,
     triggerPlayPulse,
   ]);
 
@@ -459,9 +479,11 @@ export function GameCard({
     : 'Ausblenden nicht möglich';
   const swipeBackgroundColor =
     swipeDirection === 'right'
-      ? `rgba(220, 252, 231, ${0.2 + 0.8 * swipeIntensity})`
+      ? `rgba(187, 247, 208, ${0.25 + 0.75 * swipeIntensity})`
       : swipeDirection === 'left'
-        ? `rgba(229, 231, 235, ${0.2 + 0.8 * swipeIntensity})`
+        ? canHide
+          ? `rgba(254, 243, 199, ${0.25 + 0.75 * swipeIntensity})`
+          : `rgba(229, 231, 235, ${0.2 + 0.8 * swipeIntensity})`
         : 'transparent';
   const playIconScale = Math.min(
     1.25,
@@ -477,8 +499,6 @@ export function GameCard({
     transform: `scaleX(${playPulse ? 1 : 0.75})`,
     transition: 'transform 160ms ease-out',
   };
-  const playFeedbackLabel =
-    playFeedback === 'added' ? 'Du spielst mit' : playFeedback === 'removed' ? 'Nicht mehr dabei' : '';
   const cardTransition = isSwiping
     ? 'none'
     : playCommitActive
@@ -525,10 +545,10 @@ export function GameCard({
             <span className="mt-1">{rightActionLabel}</span>
           </div>
           <div
-            className={`flex flex-col items-center text-xs font-semibold ${canHide ? 'text-gray-700' : 'text-gray-400'}`}
+            className={`flex flex-col items-center text-xs font-semibold ${canHide ? 'text-amber-800' : 'text-gray-400'}`}
             style={{ opacity: swipeDirection === 'left' ? swipeIntensity : 0 }}
           >
-            <img src={isHidden ? '/eye.svg' : '/eye-off.svg'} alt="" className="w-6 h-6" />
+            <img src={isHidden ? '/eye.svg?v=3' : '/eye-off.svg?v=3'} alt="" className="w-6 h-6" />
             <span className="mt-1">{leftActionLabel}</span>
           </div>
         </div>
@@ -541,15 +561,15 @@ export function GameCard({
             transition: cardTransition,
           }}
         >
-          {playFeedback && (
+          {inlineFeedback && (
             <div
               className={`pointer-events-none absolute left-4 top-3 z-10 text-xs font-semibold px-2 py-1 rounded-full shadow-sm transition-all duration-200 ${
-                playFeedback === 'added'
+                inlineFeedback.tone === 'positive'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-200 text-gray-700'
-              } ${playFeedbackVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
+              } ${inlineFeedbackVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
             >
-              {playFeedbackLabel}
+              {inlineFeedback.message}
             </div>
           )}
           {/* Game Name with Thumbnail and Actions - Requirement 8.1, 8.2, 8.3 */}
@@ -582,125 +602,104 @@ export function GameCard({
                 </div>
               )}
             </div>
-            {/* Title and Actions column */}
-            <div className="flex-1 min-w-0 flex flex-col">
-              {/* Title row with status indicator */}
-              <div className="flex items-start gap-2">
-                <h3 
-                  ref={titleRef}
-                  className={`font-semibold text-gray-900 leading-tight flex-1 line-clamp-2 ${
-                    isTitleWrapped ? 'text-sm' : 'text-lg'
-                  }`}
-                >
-                  {game.name}
-                  {/* Feature: 014-alternate-names-search - Show alternate name inline on mobile */}
-                  {game.addedAsAlternateName && (
-                    <span className={`font-normal text-gray-500 ${isTitleWrapped ? 'text-sm' : 'text-base'}`}>
-                      {' · '}{game.addedAsAlternateName}
-                    </span>
+            {/* Title, Actions, and Status column */}
+            <div className="flex-1 min-w-0 flex">
+              <div className="flex-1 min-w-0 flex flex-col">
+                {/* Title row */}
+                <div className="flex items-start gap-2">
+                  <h3 
+                    ref={titleRef}
+                    className={`font-semibold text-gray-900 leading-tight flex-1 line-clamp-2 ${
+                      isTitleWrapped ? 'text-sm' : 'text-lg'
+                    }`}
+                  >
+                    {game.name}
+                    {/* Feature: 014-alternate-names-search - Show alternate name inline on mobile */}
+                    {game.addedAsAlternateName && (
+                      <span className={`font-normal text-gray-500 ${isTitleWrapped ? 'text-sm' : 'text-base'}`}>
+                        {' · '}{game.addedAsAlternateName}
+                      </span>
+                    )}
+                  </h3>
+                </div>
+                {/* Actions row - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
+                <div className="flex gap-2 items-center mt-1 flex-wrap">
+                  <GameActions
+                    game={game}
+                    currentUserId={currentUserId}
+                    onAddPlayer={handleAddPlayerInline}
+                    onAddBringer={handleAddBringerInline}
+                    onRemovePlayer={handleRemovePlayerInline}
+                    onRemoveBringer={handleRemoveBringerInline}
+                    isMobile={true}
+                  />
+                  
+                  {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
+                  {game.bggId && game.bggRating && (
+                    <div className="relative">
+                      <button
+                        onClick={() => openBggPage(game.bggId!)}
+                        className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
+                        aria-label="BoardGameGeek Info"
+                      >
+                        <BggRatingBadge rating={game.bggRating} />
+                      </button>
+                      <HelpBubble
+                        text="BoardGameGeek Seite öffnen (neuer Tab)"
+                        position="top-right"
+                      />
+                    </div>
                   )}
-                </h3>
-                {/* Status indicator - colored circle with HelpBubble (no ? shown) */}
-                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  
+                  {/* Thumbnail Upload Modal - rendered via portal */}
+                  <ThumbnailUploadModal
+                    gameId={game.id}
+                    gameName={game.name}
+                    isOpen={uploadModalOpen}
+                    onClose={() => setUploadModalOpen(false)}
+                    onSuccess={handleUploadSuccess}
+                    userId={currentUserId}
+                  />
+                </div>
+              </div>
+              {/* Status indicator column */}
+              <div className="flex flex-col items-center gap-2 flex-shrink-0 self-stretch">
+                <div className="relative">
+                  <div
+                    className={`w-6 h-6 rounded-full ${
+                      isWunsch ? 'bg-yellow-400' : 'bg-green-500'
+                    }`}
+                    aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                  />
+                  <HelpBubble
+                    text={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                    position="top-right"
+                    showIndicator={false}
+                  />
+                </div>
+                {isPrototype && (
                   <div className="relative">
                     <div
-                      className={`w-6 h-6 rounded-full ${
-                        isWunsch ? 'bg-yellow-400' : 'bg-green-500'
-                      }`}
-                      aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
-                    />
+                      className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center"
+                      aria-label="Prototyp"
+                    >
+                      P
+                    </div>
                     <HelpBubble
-                      text={isWunsch ? 'Gesucht' : 'Verfügbar'}
+                      text="Prototyp"
                       position="top-right"
                       showIndicator={false}
                     />
                   </div>
-                  {isPrototype && (
-                    <div className="relative">
-                      <div
-                        className="w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center"
-                        aria-label="Prototyp"
-                      >
-                        P
-                      </div>
-                      <HelpBubble
-                        text="Prototyp"
-                        position="top-right"
-                        showIndicator={false}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* Actions row - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
-              <div className="flex gap-2 items-center mt-1 flex-wrap">
-                <GameActions
+                )}
+                <div className="flex-1" />
+                <MobileActionsMenu
                   game={game}
                   currentUserId={currentUserId}
-                  onAddPlayer={onAddPlayer}
-                  onAddBringer={onAddBringer}
-                  onRemovePlayer={onRemovePlayer}
-                  onRemoveBringer={onRemoveBringer}
-                  isMobile={true}
-                />
-                
-                {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-                {game.bggId && game.bggRating && (
-                  <div className="relative">
-                    <button
-                      onClick={() => openBggPage(game.bggId!)}
-                      className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
-                      aria-label="BoardGameGeek Info"
-                    >
-                      <BggRatingBadge rating={game.bggRating} />
-                    </button>
-                    <HelpBubble
-                      text="BoardGameGeek Seite öffnen (neuer Tab)"
-                      position="top-right"
-                    />
-                  </div>
-                )}
-                
-                {/* Delete button - only for owner, icon only to save space */}
-                {isOwner && (
-                  <ClickNotification
-                    message="Andere Spieler oder Mitbringer sind eingetragen"
-                    enabled={!canDelete}
-                    duration={3000}
-                  >
-                    <button
-                      onClick={() => canDelete && onDeleteGame?.(game.id)}
-                      disabled={!canDelete}
-                      aria-label="Spiel löschen"
-                      className={`p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${
-                        canDelete
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <img src="/trash.svg" alt="" className="w-5 h-5" />
-                    </button>
-                  </ClickNotification>
-                )}
-                
-                {/* Mobile Actions Menu - prototype toggle for owner's non-BGG games */}
-                {onTogglePrototype && (
-                  <MobileActionsMenu
-                    game={game}
-                    currentUserId={currentUserId}
-                    onTogglePrototype={onTogglePrototype}
-                    onUploadThumbnail={handleUploadThumbnail}
-                  />
-                )}
-
-                {/* Thumbnail Upload Modal - rendered via portal */}
-                <ThumbnailUploadModal
-                  gameId={game.id}
-                  gameName={game.name}
-                  isOpen={uploadModalOpen}
-                  onClose={() => setUploadModalOpen(false)}
-                  onSuccess={handleUploadSuccess}
-                  userId={currentUserId}
+                  onTogglePrototype={onTogglePrototype}
+                  onUploadThumbnail={handleUploadThumbnail}
+                  onDeleteGame={onDeleteGame}
+                  canDelete={canDelete}
                 />
               </div>
             </div>

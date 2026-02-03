@@ -95,14 +95,7 @@ export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
                   Konto abmelden
                 </button>
               </>
-            ) : (
-              <Link
-                to="/login"
-                className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-              >
-                Anmelden
-              </Link>
-            )}
+            ) : null}
 
             {/* Event user info */}
             {user && onUserUpdated && (

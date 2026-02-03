@@ -147,13 +147,13 @@ export function UnifiedDropdown({
                     </div>
                     {game.bringerNames.length > 0 ? (
                       <span className="text-sm text-green-700 flex-shrink-0 flex items-center gap-1">
-                        <img src="/package.svg" alt="" className="w-4 h-4" /> {game.bringerNames.length === 1 
+                        <img src="/package.svg?v=2" alt="" className="w-5 h-5" /> {game.bringerNames.length === 1 
                           ? game.bringerNames[0] 
                           : `${game.bringerNames[0]} +${game.bringerNames.length - 1}`}
                       </span>
                     ) : (
                       <span className="text-sm text-red-600 flex-shrink-0 flex items-center gap-1">
-                        <img src="/package.svg" alt="" className="w-4 h-4" /> Keiner
+                        <img src="/package.svg?v=2" alt="" className="w-5 h-5" /> Keiner
                       </span>
                     )}
                   </button>

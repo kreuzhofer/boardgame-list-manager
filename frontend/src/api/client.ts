@@ -166,12 +166,16 @@ export const usersApi = {
 
 // Games API
 export const gamesApi = {
-  getAll: (): Promise<GamesResponse> => {
-    return fetchApi<GamesResponse>('/api/games');
+  getAll: (userId?: string): Promise<GamesResponse> => {
+    return fetchApi<GamesResponse>('/api/games', {
+      headers: userId ? { 'x-user-id': userId } : undefined,
+    });
   },
 
-  getById: (gameId: string): Promise<GameResponse> => {
-    return fetchApi<GameResponse>(`/api/games/${gameId}`);
+  getById: (gameId: string, userId?: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}`, {
+      headers: userId ? { 'x-user-id': userId } : undefined,
+    });
   },
 
   create: (
@@ -245,6 +249,19 @@ export const gamesApi = {
         method: 'DELETE',
       }
     );
+  },
+
+  hideGame: (gameId: string, userId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}/hidden`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+  },
+
+  unhideGame: (gameId: string, userId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}/hidden/${userId}`, {
+      method: 'DELETE',
+    });
   },
 
   /**

@@ -45,6 +45,8 @@
 - Frontend (Vitest): `cd frontend && npm test`
 - Single file: `npm test -- path/to/test.ts --runInBand`
 - Backend tests must run outside the sandbox (escalated) to reach the host Postgres at `localhost:5456`.
+- If a command needs full network access or would be blocked by sandboxing, ask for permission to run it outside the sandbox instead of working around the restriction.
+- After making any frontend or backend changes, build and redeploy with `docker compose up -d --build`.
 - Ask before running any long tests.
 - Determine Docker scope based on what changed (frontend-only, backend-only, or both) and apply it consistently.
 - Finalizing code changes MUST deploy with Docker (build + run). Use:

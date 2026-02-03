@@ -100,6 +100,11 @@ describe('GameService', () => {
       removeBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
       delete: jest.fn<(id: string) => Promise<boolean>>(),
       updatePrototype: jest.fn<(gameId: string, isPrototype: boolean) => Promise<GameEntity>>(),
+      findHiddenGameIdsByUser: jest.fn<(userId: string) => Promise<Set<string>>>(),
+      isGameHiddenForUser: jest.fn<(gameId: string, userId: string) => Promise<boolean>>(),
+      hideGame: jest.fn<(gameId: string, userId: string) => Promise<void>>(),
+      unhideGame: jest.fn<(gameId: string, userId: string) => Promise<boolean>>(),
+      unhideGameIfExists: jest.fn<(gameId: string, userId: string) => Promise<void>>(),
     } as unknown as jest.Mocked<GameRepository>;
 
     // Create mock user repository

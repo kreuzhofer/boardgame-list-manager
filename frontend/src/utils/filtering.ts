@@ -2,7 +2,7 @@
  * Game Filtering Utilities
  * 
  * Utility functions for filtering games by name, player, bringer,
- * and special filters (Wunsch games, My games).
+ * and special filters (Wunsch games, My games, hidden games).
  * 
  * Validates: Requirements 5.4, 5.5, 5.6, 5.7, 5.8, 5.9
  * Property 12: Search Filter Correctness
@@ -30,6 +30,8 @@ export interface FilterState {
   wunschOnly: boolean;
   /** Filter to show only games where current user is involved (Requirement 5.9) */
   myGamesOnly: boolean;
+  /** Filter to show only hidden games */
+  hiddenOnly: boolean;
   /** Filter by prototype status */
   prototypeFilter: PrototypeFilter;
 }
@@ -45,6 +47,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   bringerQuery: '',
   wunschOnly: false,
   myGamesOnly: false,
+  hiddenOnly: false,
   prototypeFilter: 'all',
 };
 
@@ -188,8 +191,19 @@ export function filterPrototypeGames(games: Game[], filter: PrototypeFilter): Ga
 }
 
 /**
+ * Filters games based on hidden status.
+ * - hiddenOnly: return only hidden games
+ * - default: return only visible games
+ */
+export function filterHiddenGames(games: Game[], hiddenOnly: boolean): Game[] {
+  return hiddenOnly
+    ? games.filter((game) => game.isHidden)
+    : games.filter((game) => !game.isHidden);
+}
+
+/**
  * Applies all filters to a game list.
- * Filters are applied in sequence: name → player → bringer → wunsch → myGames.
+ * Filters are applied in sequence: name → player → bringer → wunsch → myGames → prototype → hidden.
  * 
  * @param games - Array of games to filter
  * @param filters - Filter state object
@@ -214,6 +228,7 @@ export function applyAllFilters(
   result = filterWunschGames(result, filters.wunschOnly);
   result = filterMyGames(result, currentUser, filters.myGamesOnly);
   result = filterPrototypeGames(result, filters.prototypeFilter);
+  result = filterHiddenGames(result, filters.hiddenOnly);
   
   return result;
 }
@@ -231,6 +246,7 @@ export function hasActiveFilters(filters: FilterState): boolean {
     filters.bringerQuery.trim() !== '' ||
     filters.wunschOnly ||
     filters.myGamesOnly ||
+    filters.hiddenOnly ||
     filters.prototypeFilter !== 'all'
   );
 }

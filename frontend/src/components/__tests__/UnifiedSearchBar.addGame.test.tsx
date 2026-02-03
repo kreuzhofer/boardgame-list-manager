@@ -65,11 +65,14 @@ describe('UnifiedSearchBar Add Game Flow', () => {
         owner: { id: currentUserId, name: 'Test User' },
         players: [],
         bringers: [],
+        isPrototype: false,
+        isHidden: false,
         bggId: null,
         yearPublished: null,
         bggRating: null,
         addedAsAlternateName: null,
         alternateNames: [],
+        createdAt: new Date(),
       },
     });
   });

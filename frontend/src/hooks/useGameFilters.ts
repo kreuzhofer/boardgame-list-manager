@@ -30,6 +30,8 @@ export interface UseGameFiltersReturn {
   setWunschOnly: (enabled: boolean) => void;
   /** Set the My Games filter toggle */
   setMyGamesOnly: (enabled: boolean) => void;
+  /** Set the Hidden filter toggle */
+  setHiddenOnly: (enabled: boolean) => void;
   /** Set the prototype filter */
   setPrototypeFilter: (filter: PrototypeFilter) => void;
   /** Reset all filters to default state */
@@ -96,6 +98,10 @@ export function useGameFilters(): UseGameFiltersReturn {
     setFilters((prev) => ({ ...prev, myGamesOnly: enabled }));
   }, []);
 
+  const setHiddenOnly = useCallback((enabled: boolean) => {
+    setFilters((prev) => ({ ...prev, hiddenOnly: enabled }));
+  }, []);
+
   const setPrototypeFilter = useCallback((filter: PrototypeFilter) => {
     setFilters((prev) => ({ ...prev, prototypeFilter: filter }));
   }, []);
@@ -120,6 +126,7 @@ export function useGameFilters(): UseGameFiltersReturn {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setHiddenOnly,
     setPrototypeFilter,
     resetFilters,
     hasActiveFilters: activeFilters,

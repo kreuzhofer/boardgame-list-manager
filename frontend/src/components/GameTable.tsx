@@ -22,6 +22,8 @@ interface GameTableProps {
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
+  onHideGame?: (gameId: string) => void;
+  onUnhideGame?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   onThumbnailUploaded?: (gameId: string) => void;
@@ -44,6 +46,8 @@ export function GameTable({
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
+  onHideGame,
+  onUnhideGame,
   onDeleteGame,
   onTogglePrototype,
   onThumbnailUploaded,
@@ -152,6 +156,8 @@ export function GameTable({
               onAddBringer={onAddBringer}
               onRemovePlayer={onRemovePlayer}
               onRemoveBringer={onRemoveBringer}
+              onHideGame={onHideGame}
+              onUnhideGame={onUnhideGame}
               onDeleteGame={onDeleteGame}
               onTogglePrototype={onTogglePrototype}
               onThumbnailUploaded={onThumbnailUploaded}
@@ -197,6 +203,8 @@ export function GameTable({
                   onAddBringer={onAddBringer}
                   onRemovePlayer={onRemovePlayer}
                   onRemoveBringer={onRemoveBringer}
+                  onHideGame={onHideGame}
+                  onUnhideGame={onUnhideGame}
                   onDeleteGame={onDeleteGame}
                   onTogglePrototype={onTogglePrototype}
                   onThumbnailUploaded={onThumbnailUploaded}

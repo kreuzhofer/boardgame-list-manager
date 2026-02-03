@@ -20,6 +20,7 @@ function createTestGame(overrides: Partial<Game> = {}): Game {
     addedAsAlternateName: null,
     alternateNames: [],
     isPrototype: false,
+    isHidden: false,
     players: [],
     bringers: [],
     status: 'wunsch',

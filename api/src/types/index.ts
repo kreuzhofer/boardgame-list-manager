@@ -81,6 +81,7 @@ export interface Game {
   addedAsAlternateName: string | null;
   alternateNames: string[];
   isPrototype: boolean;
+  isHidden: boolean;
   players: Player[];
   bringers: Bringer[];
   status: 'wunsch' | 'verfuegbar';

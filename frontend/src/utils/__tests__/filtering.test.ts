@@ -40,6 +40,7 @@ function createGame(
     addedAsAlternateName: null,
     alternateNames: [],
     isPrototype,
+    isHidden: false,
     players: players.map((p, i) => ({
       id: `player-${id}-${i}`,
       user: {
@@ -296,9 +297,9 @@ describe('applyAllFilters', () => {
 
   it('applies all filters in sequence', () => {
     const filters: FilterState = {
+      ...DEFAULT_FILTER_STATE,
       nameQuery: 'a',
       playerQuery: 'Alice',
-      bringerQuery: '',
       wunschOnly: true,
       myGamesOnly: true,
     };
@@ -338,6 +339,10 @@ describe('hasActiveFilters', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, myGamesOnly: true })).toBe(true);
   });
 
+  it('returns true when hiddenOnly is enabled', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, hiddenOnly: true })).toBe(true);
+  });
+
   it('returns true when prototype filter is not "all"', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, prototypeFilter: 'only' })).toBe(true);
     expect(hasActiveFilters({ ...DEFAULT_FILTER_STATE, prototypeFilter: 'exclude' })).toBe(true);
@@ -355,6 +360,7 @@ describe('DEFAULT_FILTER_STATE', () => {
     expect(DEFAULT_FILTER_STATE.bringerQuery).toBe('');
     expect(DEFAULT_FILTER_STATE.wunschOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.myGamesOnly).toBe(false);
+    expect(DEFAULT_FILTER_STATE.hiddenOnly).toBe(false);
     expect(DEFAULT_FILTER_STATE.prototypeFilter).toBe('all');
   });
 });

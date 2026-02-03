@@ -66,6 +66,7 @@ export function HomePage({ user }: HomePageProps) {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setHiddenOnly,
     setPrototypeFilter,
     filterGames,
     hasActiveFilters,
@@ -81,7 +82,7 @@ export function HomePage({ user }: HomePageProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await gamesApi.getAll();
+      const response = await gamesApi.getAll(currentUserId || undefined);
       setGames(response.games);
     } catch (err) {
       console.error('Failed to fetch games:', err);
@@ -93,7 +94,7 @@ export function HomePage({ user }: HomePageProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUserId]);
 
   // Fetch games on mount
   useEffect(() => {
@@ -103,7 +104,7 @@ export function HomePage({ user }: HomePageProps) {
   // SSE event handlers for real-time updates
   const handleSSEGameCreated = useCallback(async (event: GameCreatedEvent) => {
     try {
-      const response = await gamesApi.getById(event.gameId);
+      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
       setGames((prev) => {
         // Check if game already exists (in case of race condition)
         if (prev.some(g => g.id === event.gameId)) {
@@ -114,7 +115,7 @@ export function HomePage({ user }: HomePageProps) {
     } catch (err) {
       console.error('Failed to fetch new game from SSE event:', err);
     }
-  }, []);
+  }, [currentUserId]);
 
   const handleSSEGameUpdated = useCallback(async (event: SSEEvent) => {
     try {
@@ -127,18 +128,18 @@ export function HomePage({ user }: HomePageProps) {
         }));
       }
       
-      const response = await gamesApi.getById(event.gameId);
+      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
       setGames((prev) =>
         prev.map((g) => (g.id === event.gameId ? response.game : g))
       );
     } catch (err) {
       console.error('Failed to fetch updated game from SSE event:', err);
     }
-  }, []);
+  }, [currentUserId]);
 
   const handleSSEGameDeleted = useCallback((event: SSEEvent) => {
     setGames((prev) => prev.filter((g) => g.id !== event.gameId));
-  }, []);
+  }, [currentUserId]);
 
   // SSE connection for real-time updates
   useSSE({
@@ -159,7 +160,7 @@ export function HomePage({ user }: HomePageProps) {
     setTimeout(() => {
       setScrollToGameId(game.id);
     }, 100);
-  }, []);
+  }, [currentUserId]);
 
   // Handle scroll to game from dropdown click
   // Uses requestAnimationFrame to ensure the list is unfiltered before scrolling
@@ -172,12 +173,12 @@ export function HomePage({ user }: HomePageProps) {
         setScrollToGameId(gameId);
       });
     });
-  }, []);
+  }, [currentUserId]);
 
   // Clear scroll target after scroll
   const handleScrolledToGame = useCallback(() => {
     setScrollToGameId(null);
-  }, []);
+  }, [currentUserId]);
 
   // Handle search query change for highlighting and filtering
   const handleSearchQueryChange = useCallback((query: string) => {
@@ -257,6 +258,42 @@ export function HomePage({ user }: HomePageProps) {
     }
   }, [currentUserId]);
 
+  // Handle hide game action
+  const handleHideGame = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
+    try {
+      const response = await gamesApi.hideGame(gameId, currentUserId);
+      setGames((prev) =>
+        prev.map((g) => (g.id === gameId ? response.game : g))
+      );
+    } catch (err) {
+      console.error('Failed to hide game:', err);
+      if (err instanceof ApiError) {
+        alert(err.message);
+      } else {
+        alert('Fehler beim Ausblenden des Spiels. Bitte erneut versuchen.');
+      }
+    }
+  }, [currentUserId]);
+
+  // Handle unhide game action
+  const handleUnhideGame = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
+    try {
+      const response = await gamesApi.unhideGame(gameId, currentUserId);
+      setGames((prev) =>
+        prev.map((g) => (g.id === gameId ? response.game : g))
+      );
+    } catch (err) {
+      console.error('Failed to unhide game:', err);
+      if (err instanceof ApiError) {
+        alert(err.message);
+      } else {
+        alert('Fehler beim Einblenden des Spiels. Bitte erneut versuchen.');
+      }
+    }
+  }, [currentUserId]);
+
   // Handle toggle prototype status
   // Requirements: 022-prototype-toggle 2.3, 3.2
   const handleTogglePrototype = useCallback(async (gameId: string, isPrototype: boolean) => {
@@ -323,7 +360,7 @@ export function HomePage({ user }: HomePageProps) {
   const handleDeleteModalCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setGameToDelete(null);
-  }, []);
+  }, [currentUserId]);
 
   // Handle thumbnail uploaded - update timestamp for cache-busting
   const handleThumbnailUploaded = useCallback((gameId: string) => {
@@ -481,6 +518,24 @@ export function HomePage({ user }: HomePageProps) {
             {filters.myGamesOnly && <CheckIcon className="w-4 h-4" />}
           </button>
 
+          {/* Ausgeblendet toggle */}
+          <button
+            type="button"
+            onClick={() => setHiddenOnly(!filters.hiddenOnly)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+              filters.hiddenOnly
+                ? 'bg-gray-200 text-gray-800 border-2 border-gray-400'
+                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+            }`}
+            aria-pressed={filters.hiddenOnly}
+            aria-label="Nur ausgeblendete Spiele anzeigen"
+          >
+            <EyeOffIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Ausgeblendet</span>
+            <span className="sm:hidden">Ausbl.</span>
+            {filters.hiddenOnly && <CheckIcon className="w-4 h-4" />}
+          </button>
+
           {/* Prototypen filter - segmented control */}
           <div className="flex items-end">
             <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden bg-gray-100 min-h-[44px]">
@@ -559,6 +614,8 @@ export function HomePage({ user }: HomePageProps) {
         onAddBringer={handleAddBringer}
         onRemovePlayer={handleRemovePlayer}
         onRemoveBringer={handleRemoveBringer}
+        onHideGame={handleHideGame}
+        onUnhideGame={handleUnhideGame}
         onDeleteGame={handleDeleteGameClick}
         onTogglePrototype={handleTogglePrototype}
         onThumbnailUploaded={handleThumbnailUploaded}
@@ -634,6 +691,25 @@ function CheckIcon({ className }: { className?: string }) {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 3l18 18M10.477 10.494a3 3 0 004.242 4.242M6.228 6.228A10.45 10.45 0 001.5 12c2.25 4.5 6 7.5 10.5 7.5 1.88 0 3.63-.5 5.18-1.39M9.88 5.115A9.55 9.55 0 0112 4.5c4.5 0 8.25 3 10.5 7.5a10.66 10.66 0 01-2.7 3.58"
       />
     </svg>
   );

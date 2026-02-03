@@ -26,6 +26,8 @@ interface GameRowProps {
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
+  onHideGame?: (gameId: string) => void;
+  onUnhideGame?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   onThumbnailUploaded?: (gameId: string) => void;
@@ -44,6 +46,8 @@ export function GameRow({
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
+  onHideGame,
+  onUnhideGame,
   onDeleteGame,
   onTogglePrototype,
   onThumbnailUploaded,
@@ -56,6 +60,9 @@ export function GameRow({
   const isWunsch = game.status === 'wunsch';
   const isPrototype = game.isPrototype;
   const isOwner = game.owner?.id === currentUserId;
+  const isHidden = game.isHidden;
+  const isBringer = game.bringers.some((bringer) => bringer.user.id === currentUserId);
+  const canHide = !isBringer;
   
   // Check if current user is the only player/bringer (or lists are empty)
   const onlyCurrentUserIsPlayer = game.players.length === 0 || 
@@ -79,6 +86,15 @@ export function GameRow({
   const handleUploadSuccess = useCallback(() => {
     onThumbnailUploaded?.(game.id);
   }, [onThumbnailUploaded, game.id]);
+
+  const handleToggleHidden = () => {
+    if (!canHide) return;
+    if (isHidden) {
+      onUnhideGame?.(game.id);
+    } else {
+      onHideGame?.(game.id);
+    }
+  };
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -256,6 +272,37 @@ export function GameRow({
                 <img src="/trash.svg" alt="" className="w-4 h-4" />
               </button>
             </ClickNotification>
+          )}
+
+          {/* Hide/Show button */}
+          {(onHideGame || onUnhideGame) && (
+            <div className="relative">
+              <button
+                onClick={handleToggleHidden}
+                disabled={!canHide}
+                aria-label={isHidden ? 'Spiel einblenden' : 'Spiel ausblenden'}
+                className={`p-1.5 rounded transition-colors ${
+                  canHide
+                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+                title={isHidden ? 'Spiel einblenden' : 'Spiel ausblenden'}
+              >
+                <img
+                  src={isHidden ? '/eye.svg' : '/eye-off.svg'}
+                  alt=""
+                  className="w-4 h-4"
+                />
+              </button>
+              <HelpBubble
+                text={
+                  canHide
+                    ? (isHidden ? 'Einblenden' : 'Ausblenden')
+                    : 'Du bringst dieses Spiel mit und kannst es nicht ausblenden.'
+                }
+                position="top-right"
+              />
+            </div>
           )}
           
           {/* Desktop Actions Menu - for owner's non-BGG games */}

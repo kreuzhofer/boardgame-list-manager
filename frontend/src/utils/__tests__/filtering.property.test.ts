@@ -79,6 +79,7 @@ const gameArbitrary: fc.Arbitrary<Game> = fc.record({
   addedAsAlternateName: fc.constant(null),
   alternateNames: fc.array(gameNameArbitrary, { minLength: 0, maxLength: 5 }),
   isPrototype: fc.boolean(),
+  isHidden: fc.boolean(),
 }).map(game => ({
   ...game,
   status: game.bringers.length === 0 ? 'wunsch' as const : 'verfuegbar' as const,

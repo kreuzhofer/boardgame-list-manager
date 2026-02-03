@@ -56,6 +56,9 @@ const createMockGame = (overrides: Partial<Game> = {}): Game => ({
   bggRating: 8.0,
   addedAsAlternateName: null,
   alternateNames: [],
+  isPrototype: false,
+  isHidden: false,
+  createdAt: new Date(),
   ...overrides,
 });
 

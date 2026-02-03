@@ -60,7 +60,7 @@ export class GameService {
    * Requirements: 4.3, 4.4 - Include bggId and yearPublished
    * Feature: 014-alternate-names-search - Include alternate name data
    */
-  private transformGame(entity: GameEntity): Game {
+  private transformGame(entity: GameEntity, isHidden: boolean = false): Game {
     return {
       id: entity.id,
       name: entity.name,
@@ -71,6 +71,7 @@ export class GameService {
       addedAsAlternateName: entity.addedAsAlternateName,
       alternateNames: entity.alternateNames ?? [],
       isPrototype: entity.isPrototype,
+      isHidden,
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
@@ -82,9 +83,14 @@ export class GameService {
    * Get all games with players and bringers
    * @returns Array of all games in API format
    */
-  async getAllGames(): Promise<Game[]> {
+  async getAllGames(userId?: string): Promise<Game[]> {
     const entities = await this.repository.findAll();
-    return entities.map((entity) => this.transformGame(entity));
+    if (!userId) {
+      return entities.map((entity) => this.transformGame(entity, false));
+    }
+
+    const hiddenGameIds = await this.repository.findHiddenGameIdsByUser(userId);
+    return entities.map((entity) => this.transformGame(entity, hiddenGameIds.has(entity.id)));
   }
 
   /**
@@ -94,12 +100,17 @@ export class GameService {
    * 
    * Requirements: 3.1, 3.2 (SSE selective refresh)
    */
-  async getGameById(gameId: string): Promise<Game | null> {
+  async getGameById(gameId: string, userId?: string): Promise<Game | null> {
     const entity = await this.repository.findById(gameId);
     if (!entity) {
       return null;
     }
-    return this.transformGame(entity);
+    if (!userId) {
+      return this.transformGame(entity, false);
+    }
+
+    const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+    return this.transformGame(entity, isHidden);
   }
 
   /**
@@ -196,7 +207,8 @@ export class GameService {
   async addPlayer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.addPlayer(gameId, userId);
-      const game = this.transformGame(entity);
+      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const game = this.transformGame(entity, isHidden);
       
       // Get user name for SSE event
       const user = await this.userRepo.findById(userId);
@@ -238,7 +250,8 @@ export class GameService {
   async removePlayer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.removePlayer(gameId, userId);
-      const game = this.transformGame(entity);
+      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const game = this.transformGame(entity, isHidden);
       
       // Broadcast game:player-removed event
       sseManager.broadcast({
@@ -273,7 +286,8 @@ export class GameService {
   async addBringer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.addBringer(gameId, userId);
-      const game = this.transformGame(entity);
+      await this.repository.unhideGameIfExists(gameId, userId);
+      const game = this.transformGame(entity, false);
       
       // Get user name for SSE event
       const user = await this.userRepo.findById(userId);
@@ -315,7 +329,8 @@ export class GameService {
   async removeBringer(gameId: string, userId: string): Promise<Game> {
     try {
       const entity = await this.repository.removeBringer(gameId, userId);
-      const game = this.transformGame(entity);
+      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const game = this.transformGame(entity, isHidden);
       
       // Broadcast game:bringer-removed event
       sseManager.broadcast({
@@ -436,7 +451,8 @@ export class GameService {
 
     // Update prototype status
     const updatedEntity = await this.repository.updatePrototype(gameId, isPrototype);
-    const game = this.transformGame(updatedEntity);
+    const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+    const game = this.transformGame(updatedEntity, isHidden);
 
     // Broadcast game:prototype-toggled event
     sseManager.broadcast({
@@ -447,6 +463,59 @@ export class GameService {
     });
 
     return game;
+  }
+
+  /**
+   * Hide a game for a user
+   * @param gameId - The game's unique identifier
+   * @param userId - The user's ID hiding the game
+   * @returns The updated game in API format (with isHidden = true)
+   * @throws Error with German message if game not found, user is bringer, or already hidden
+   */
+  async hideGame(gameId: string, userId: string): Promise<Game> {
+    const entity = await this.repository.findById(gameId);
+
+    if (!entity) {
+      throw new Error('Spiel nicht gefunden.');
+    }
+
+    const isBringer = entity.bringers.some((bringer) => bringer.user.id === userId);
+    if (isBringer) {
+      throw new Error('Du bringst dieses Spiel mit und kannst es nicht ausblenden.');
+    }
+
+    try {
+      await this.repository.hideGame(gameId, userId);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Unique constraint')) {
+        throw new Error('Spiel ist bereits ausgeblendet.');
+      }
+      throw error;
+    }
+
+    return this.transformGame(entity, true);
+  }
+
+  /**
+   * Unhide a game for a user
+   * @param gameId - The game's unique identifier
+   * @param userId - The user's ID unhiding the game
+   * @returns The updated game in API format (with isHidden = false)
+   * @throws Error with German message if game not found or not hidden
+   */
+  async unhideGame(gameId: string, userId: string): Promise<Game> {
+    const entity = await this.repository.findById(gameId);
+
+    if (!entity) {
+      throw new Error('Spiel nicht gefunden.');
+    }
+
+    const removed = await this.repository.unhideGame(gameId, userId);
+    if (!removed) {
+      throw new Error('Spiel ist nicht ausgeblendet.');
+    }
+
+    return this.transformGame(entity, false);
   }
 }
 

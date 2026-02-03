@@ -28,8 +28,12 @@ export interface UseGameFiltersReturn {
   setBringerQuery: (query: string) => void;
   /** Set the Wunsch filter toggle */
   setWunschOnly: (enabled: boolean) => void;
-  /** Set the My Games filter toggle */
+  /** Set the Bringer-only filter toggle */
   setMyGamesOnly: (enabled: boolean) => void;
+  /** Set the Player-only filter toggle */
+  setPlayerOnly: (enabled: boolean) => void;
+  /** Set the Hidden filter toggle */
+  setHiddenOnly: (enabled: boolean) => void;
   /** Set the prototype filter */
   setPrototypeFilter: (filter: PrototypeFilter) => void;
   /** Reset all filters to default state */
@@ -54,6 +58,7 @@ export interface UseGameFiltersReturn {
  *   setBringerQuery,
  *   setWunschOnly,
  *   setMyGamesOnly,
+ *   setPlayerOnly,
  *   setPrototypeFilter,
  *   resetFilters,
  *   hasActiveFilters,
@@ -96,6 +101,14 @@ export function useGameFilters(): UseGameFiltersReturn {
     setFilters((prev) => ({ ...prev, myGamesOnly: enabled }));
   }, []);
 
+  const setPlayerOnly = useCallback((enabled: boolean) => {
+    setFilters((prev) => ({ ...prev, playerOnly: enabled }));
+  }, []);
+
+  const setHiddenOnly = useCallback((enabled: boolean) => {
+    setFilters((prev) => ({ ...prev, hiddenOnly: enabled }));
+  }, []);
+
   const setPrototypeFilter = useCallback((filter: PrototypeFilter) => {
     setFilters((prev) => ({ ...prev, prototypeFilter: filter }));
   }, []);
@@ -120,6 +133,8 @@ export function useGameFilters(): UseGameFiltersReturn {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setPlayerOnly,
+    setHiddenOnly,
     setPrototypeFilter,
     resetFilters,
     hasActiveFilters: activeFilters,

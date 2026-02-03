@@ -297,7 +297,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
+              <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
             </button>
 
             {/* Submit button */}

@@ -7,13 +7,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeToggle } from './PrototypeToggle';
+import { ClickNotification } from './ClickNotification';
 import type { Game } from '../types';
 
 interface DesktopActionsMenuProps {
   game: Game;
   currentUserId: string;
-  onTogglePrototype: (gameId: string, isPrototype: boolean) => Promise<void>;
-  onUploadThumbnail: (gameId: string) => void;
+  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
+  onUploadThumbnail?: (gameId: string) => void;
+  onDeleteGame?: (gameId: string) => void;
+  canDelete?: boolean;
 }
 
 export function DesktopActionsMenu({
@@ -21,6 +24,8 @@ export function DesktopActionsMenu({
   currentUserId,
   onTogglePrototype,
   onUploadThumbnail,
+  onDeleteGame,
+  canDelete = false,
 }: DesktopActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -29,7 +34,10 @@ export function DesktopActionsMenu({
   // Check if user is owner and game has no BGG ID
   const isOwner = game.owner?.id === currentUserId;
   const hasNoBggId = game.bggId === null;
-  const canShowMenu = isOwner && hasNoBggId;
+  const canShowPrototype = !!onTogglePrototype && isOwner && hasNoBggId;
+  const canShowUpload = !!onUploadThumbnail && isOwner && hasNoBggId;
+  const canShowDelete = !!onDeleteGame && isOwner;
+  const canShowMenu = canShowPrototype || canShowUpload || canShowDelete;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -70,12 +78,20 @@ export function DesktopActionsMenu({
   }
 
   const handleTogglePrototype = async (gameId: string, isPrototype: boolean) => {
+    if (!onTogglePrototype) return;
     await onTogglePrototype(gameId, isPrototype);
     setIsOpen(false);
   };
 
   const handleUploadThumbnail = () => {
+    if (!onUploadThumbnail) return;
     onUploadThumbnail(game.id);
+    setIsOpen(false);
+  };
+
+  const handleDeleteGame = () => {
+    if (!onDeleteGame || !canDelete) return;
+    onDeleteGame(game.id);
     setIsOpen(false);
   };
 
@@ -123,38 +139,67 @@ export function DesktopActionsMenu({
             role="menu"
             aria-orientation="vertical"
           >
-            {/* Upload Thumbnail option */}
-            <button
-              onClick={handleUploadThumbnail}
-              className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              role="menuitem"
-            >
-              <svg
-                className="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {canShowUpload && (
+              <button
+                onClick={handleUploadThumbnail}
+                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                role="menuitem"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Bild hochladen
+              </button>
+            )}
+
+            {canShowPrototype && (
+              <>
+                {canShowUpload && <div className="border-t border-gray-200 my-1" />}
+                <PrototypeToggle
+                  gameId={game.id}
+                  isPrototype={game.isPrototype}
+                  onToggle={handleTogglePrototype}
+                  compact={true}
                 />
-              </svg>
-              Bild hochladen
-            </button>
+              </>
+            )}
 
-            {/* Divider */}
-            <div className="border-t border-gray-200 my-1" />
-
-            {/* Prototype Toggle */}
-            <PrototypeToggle
-              gameId={game.id}
-              isPrototype={game.isPrototype}
-              onToggle={handleTogglePrototype}
-              compact={true}
-            />
+            {canShowDelete && (
+              <>
+                {(canShowUpload || canShowPrototype) && (
+                  <div className="border-t border-gray-200 my-1" />
+                )}
+                <ClickNotification
+                  message="Andere Spieler oder Mitbringer sind eingetragen"
+                  enabled={!canDelete}
+                  duration={3000}
+                >
+                  <button
+                    onClick={handleDeleteGame}
+                    disabled={!canDelete}
+                    className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
+                      canDelete
+                        ? 'text-red-700 hover:bg-red-50'
+                        : 'text-gray-400 cursor-not-allowed'
+                    }`}
+                    role="menuitem"
+                  >
+                    <img src="/trash.svg" alt="" className="w-5 h-5" />
+                    Spiel löschen
+                  </button>
+                </ClickNotification>
+              </>
+            )}
           </div>,
           document.body
         )}

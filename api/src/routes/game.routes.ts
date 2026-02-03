@@ -11,9 +11,11 @@ const router = Router();
  * 
  * Requirements: 3.1
  */
-router.get('/', async (_req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const games = await gameService.getAllGames();
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = typeof userIdHeader === 'string' ? userIdHeader : undefined;
+    const games = await gameService.getAllGames(userId);
     return res.json({ games });
   } catch (error) {
     console.error('Error fetching games:', error);
@@ -40,7 +42,9 @@ router.get('/', async (_req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const game = await gameService.getGameById(id);
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = typeof userIdHeader === 'string' ? userIdHeader : undefined;
+    const game = await gameService.getGameById(id, userId);
     
     if (!game) {
       return res.status(404).json({
@@ -367,6 +371,116 @@ router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
       }
     }
     console.error('Error removing bringer:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
+/**
+ * POST /api/games/:id/hidden
+ * Hides a game for a user.
+ * 
+ * Request body: { userId: string }
+ * Response: { game: Game }
+ * 
+ * Error responses:
+ *   - 400 if userId is missing or user is a bringer
+ *   - 404 if game not found
+ *   - 409 if already hidden
+ */
+router.post('/:id/hidden', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    // Validate required fields
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Benutzer-ID erforderlich.',
+        },
+      });
+    }
+
+    const game = await gameService.hideGame(id, userId);
+    return res.json({ game });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Spiel nicht gefunden.') {
+        return res.status(404).json({
+          error: {
+            code: 'GAME_NOT_FOUND',
+            message: error.message,
+          },
+        });
+      }
+      if (error.message === 'Du bringst dieses Spiel mit und kannst es nicht ausblenden.') {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: error.message,
+          },
+        });
+      }
+      if (error.message === 'Spiel ist bereits ausgeblendet.') {
+        return res.status(409).json({
+          error: {
+            code: 'ALREADY_HIDDEN',
+            message: error.message,
+          },
+        });
+      }
+    }
+    console.error('Error hiding game:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
+/**
+ * DELETE /api/games/:id/hidden/:userId
+ * Unhides a game for a user.
+ * 
+ * Response: { game: Game }
+ * 
+ * Error responses:
+ *   - 404 if game not found or not hidden
+ */
+router.delete('/:id/hidden/:userId', async (req: Request, res: Response) => {
+  try {
+    const { id, userId } = req.params;
+
+    const game = await gameService.unhideGame(id, userId);
+    return res.json({ game });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Spiel nicht gefunden.') {
+        return res.status(404).json({
+          error: {
+            code: 'GAME_NOT_FOUND',
+            message: error.message,
+          },
+        });
+      }
+      if (error.message === 'Spiel ist nicht ausgeblendet.') {
+        return res.status(404).json({
+          error: {
+            code: 'NOT_HIDDEN',
+            message: error.message,
+          },
+        });
+      }
+    }
+    console.error('Error unhiding game:', error);
     return res.status(500).json({
       error: {
         code: 'INTERNAL_ERROR',

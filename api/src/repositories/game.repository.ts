@@ -328,6 +328,85 @@ export class GameRepository {
       alternateNames: (game.alternateNames as string[]) ?? [],
     } as GameEntity;
   }
+
+  /**
+   * Get all hidden game IDs for a user
+   * @param userId - The user's ID
+   * @returns Set of game IDs hidden by the user
+   */
+  async findHiddenGameIdsByUser(userId: string): Promise<Set<string>> {
+    const hidden = await prisma.hiddenGame.findMany({
+      where: { userId },
+      select: { gameId: true },
+    });
+    return new Set(hidden.map((entry) => entry.gameId));
+  }
+
+  /**
+   * Check if a game is hidden for a user
+   * @param gameId - The game's ID
+   * @param userId - The user's ID
+   * @returns true if hidden, false otherwise
+   */
+  async isGameHiddenForUser(gameId: string, userId: string): Promise<boolean> {
+    const hidden = await prisma.hiddenGame.findUnique({
+      where: {
+        gameId_userId: {
+          gameId,
+          userId,
+        },
+      },
+      select: { id: true },
+    });
+    return Boolean(hidden);
+  }
+
+  /**
+   * Hide a game for a user
+   * @param gameId - The game's ID
+   * @param userId - The user's ID
+   */
+  async hideGame(gameId: string, userId: string): Promise<void> {
+    await prisma.hiddenGame.create({
+      data: {
+        gameId,
+        userId,
+      },
+    });
+  }
+
+  /**
+   * Unhide a game for a user
+   * @param gameId - The game's ID
+   * @param userId - The user's ID
+   * @returns true if a record was deleted, false otherwise
+   */
+  async unhideGame(gameId: string, userId: string): Promise<boolean> {
+    const deleted = await prisma.hiddenGame.delete({
+      where: {
+        gameId_userId: {
+          gameId,
+          userId,
+        },
+      },
+    }).catch(() => null);
+
+    return Boolean(deleted);
+  }
+
+  /**
+   * Remove hidden flag if it exists (no error if missing)
+   * @param gameId - The game's ID
+   * @param userId - The user's ID
+   */
+  async unhideGameIfExists(gameId: string, userId: string): Promise<void> {
+    await prisma.hiddenGame.deleteMany({
+      where: {
+        gameId,
+        userId,
+      },
+    });
+  }
 }
 
 // Export a singleton instance for convenience

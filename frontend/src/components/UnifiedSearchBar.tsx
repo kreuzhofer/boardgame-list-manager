@@ -470,7 +470,7 @@ export function UnifiedSearchBar({
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitbringen<span className="inline-block w-3 text-left">{isBringing ? ' ✓' : ''}</span>
+                <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> Mitbringen<span className="inline-block w-3 text-left">{isBringing ? ' ✓' : ''}</span>
               </button>
 
               {/* Mitspielen toggle */}

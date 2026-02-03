@@ -21,6 +21,8 @@ vi.mock('../../api/client', () => ({
     addBringer: vi.fn(),
     removePlayer: vi.fn(),
     removeBringer: vi.fn(),
+    hideGame: vi.fn(),
+    unhideGame: vi.fn(),
     delete: vi.fn(),
   },
   bggApi: {
@@ -68,6 +70,10 @@ const mockGames: Game[] = [
     bggId: 13,
     yearPublished: 1995,
     bggRating: 7.1,
+    addedAsAlternateName: null,
+    alternateNames: [],
+    isPrototype: false,
+    isHidden: false,
     players: [],
     bringers: [
       { id: 'b1', user: { id: 'user-2', name: 'Thorsten' }, addedAt: new Date() },
@@ -83,6 +89,10 @@ const mockGames: Game[] = [
     bggId: 230802,
     yearPublished: 2017,
     bggRating: 7.8,
+    addedAsAlternateName: null,
+    alternateNames: [],
+    isPrototype: false,
+    isHidden: false,
     players: [],
     bringers: [],
     status: 'wunsch',
@@ -95,6 +105,9 @@ const mockGames: Game[] = [
     bggId: null,
     yearPublished: null,
     bggRating: null,
+    addedAsAlternateName: null,
+    alternateNames: [],
+    isHidden: false,
     players: [],
     bringers: [],
     status: 'verfuegbar',
@@ -330,6 +343,10 @@ describe('HomePage Integration Tests', () => {
         bggId: 266192,
         yearPublished: 2019,
         bggRating: 8.1,
+        addedAsAlternateName: null,
+        alternateNames: [],
+        isPrototype: false,
+        isHidden: false,
         players: [],
         bringers: [],
         status: 'wunsch',
@@ -356,7 +373,7 @@ describe('HomePage Integration Tests', () => {
       });
 
       await waitFor(() => {
-        expect(gamesApi.getById).toHaveBeenCalledWith('game-3');
+        expect(gamesApi.getById).toHaveBeenCalledWith('game-3', 'user-1');
       });
     });
 
@@ -388,7 +405,7 @@ describe('HomePage Integration Tests', () => {
       });
 
       await waitFor(() => {
-        expect(gamesApi.getById).toHaveBeenCalledWith('game-1');
+        expect(gamesApi.getById).toHaveBeenCalledWith('game-1', 'user-1');
       });
     });
 

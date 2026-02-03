@@ -22,6 +22,8 @@ interface GameTableProps {
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
   onRemoveBringer?: (gameId: string) => void;
+  onHideGame?: (gameId: string) => void;
+  onUnhideGame?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   onThumbnailUploaded?: (gameId: string) => void;
@@ -31,6 +33,10 @@ interface GameTableProps {
   highlightedGameIds?: Set<string>;
   /** Total number of games before filtering (to show appropriate empty message) */
   totalGamesCount?: number;
+  /** Total number of hidden games (for header count display) */
+  hiddenCount?: number;
+  /** Whether the hidden-only filter is active */
+  hiddenOnly?: boolean;
   /** Thumbnail timestamps for cache-busting (gameId -> timestamp) */
   thumbnailTimestamps?: Record<string, number>;
 }
@@ -44,6 +50,8 @@ export function GameTable({
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
+  onHideGame,
+  onUnhideGame,
   onDeleteGame,
   onTogglePrototype,
   onThumbnailUploaded,
@@ -51,6 +59,8 @@ export function GameTable({
   onScrolledToGame,
   highlightedGameIds,
   totalGamesCount,
+  hiddenCount = 0,
+  hiddenOnly = false,
   thumbnailTimestamps,
 }: GameTableProps) {
   // Sort games alphabetically by name (Requirements 5.2, 5.3)
@@ -127,6 +137,14 @@ export function GameTable({
     </button>
   );
 
+  const totalCount = totalGamesCount ?? games.length;
+  const showHiddenInfo = hiddenCount > 0;
+  const countLabel = hiddenOnly
+    ? `${games.length} ${games.length === 1 ? 'Spiel' : 'Spiele'} ausgeblendet von ${totalCount}`
+    : showHiddenInfo
+      ? `${totalCount} ${totalCount === 1 ? 'Spiel' : 'Spiele'} (${hiddenCount} ausgeblendet)`
+      : `${totalCount} ${totalCount === 1 ? 'Spiel' : 'Spiele'}`;
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Mobile card layout (Requirement 6.3) - visible on small screens */}
@@ -137,7 +155,7 @@ export function GameTable({
             <SortButton />
           </span>
           <span className="text-sm text-gray-500">
-            {games.length} {games.length === 1 ? 'Spiel' : 'Spiele'}
+            {countLabel}
           </span>
         </div>
         
@@ -160,6 +178,8 @@ export function GameTable({
               onAddBringer={onAddBringer}
               onRemovePlayer={onRemovePlayer}
               onRemoveBringer={onRemoveBringer}
+              onHideGame={onHideGame}
+              onUnhideGame={onUnhideGame}
               onDeleteGame={onDeleteGame}
               onTogglePrototype={onTogglePrototype}
               onThumbnailUploaded={onThumbnailUploaded}
@@ -192,7 +212,12 @@ export function GameTable({
                   Mitspieler
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[280px]">
-                  Aktionen
+                  <div className="flex items-center gap-2 w-full">
+                    <span>Aktionen</span>
+                    <span className="ml-auto text-right text-sm font-normal text-gray-500">
+                      {countLabel}
+                    </span>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -206,6 +231,8 @@ export function GameTable({
                   onAddBringer={onAddBringer}
                   onRemovePlayer={onRemovePlayer}
                   onRemoveBringer={onRemoveBringer}
+                  onHideGame={onHideGame}
+                  onUnhideGame={onUnhideGame}
                   onDeleteGame={onDeleteGame}
                   onTogglePrototype={onTogglePrototype}
                   onThumbnailUploaded={onThumbnailUploaded}
@@ -218,11 +245,11 @@ export function GameTable({
             </tbody>
           </table>
         </div>
-        
+
         {/* Table footer with count */}
         <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            {games.length} {games.length === 1 ? 'Spiel' : 'Spiele'} insgesamt
+            {countLabel}
           </p>
         </div>
       </div>

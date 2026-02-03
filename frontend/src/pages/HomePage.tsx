@@ -66,6 +66,8 @@ export function HomePage({ user }: HomePageProps) {
     setBringerQuery,
     setWunschOnly,
     setMyGamesOnly,
+    setPlayerOnly,
+    setHiddenOnly,
     setPrototypeFilter,
     filterGames,
     hasActiveFilters,
@@ -81,7 +83,7 @@ export function HomePage({ user }: HomePageProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await gamesApi.getAll();
+      const response = await gamesApi.getAll(currentUserId || undefined);
       setGames(response.games);
     } catch (err) {
       console.error('Failed to fetch games:', err);
@@ -93,7 +95,7 @@ export function HomePage({ user }: HomePageProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUserId]);
 
   // Fetch games on mount
   useEffect(() => {
@@ -103,7 +105,7 @@ export function HomePage({ user }: HomePageProps) {
   // SSE event handlers for real-time updates
   const handleSSEGameCreated = useCallback(async (event: GameCreatedEvent) => {
     try {
-      const response = await gamesApi.getById(event.gameId);
+      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
       setGames((prev) => {
         // Check if game already exists (in case of race condition)
         if (prev.some(g => g.id === event.gameId)) {
@@ -114,7 +116,7 @@ export function HomePage({ user }: HomePageProps) {
     } catch (err) {
       console.error('Failed to fetch new game from SSE event:', err);
     }
-  }, []);
+  }, [currentUserId]);
 
   const handleSSEGameUpdated = useCallback(async (event: SSEEvent) => {
     try {
@@ -127,18 +129,18 @@ export function HomePage({ user }: HomePageProps) {
         }));
       }
       
-      const response = await gamesApi.getById(event.gameId);
+      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
       setGames((prev) =>
         prev.map((g) => (g.id === event.gameId ? response.game : g))
       );
     } catch (err) {
       console.error('Failed to fetch updated game from SSE event:', err);
     }
-  }, []);
+  }, [currentUserId]);
 
   const handleSSEGameDeleted = useCallback((event: SSEEvent) => {
     setGames((prev) => prev.filter((g) => g.id !== event.gameId));
-  }, []);
+  }, [currentUserId]);
 
   // SSE connection for real-time updates
   useSSE({
@@ -159,7 +161,7 @@ export function HomePage({ user }: HomePageProps) {
     setTimeout(() => {
       setScrollToGameId(game.id);
     }, 100);
-  }, []);
+  }, [currentUserId]);
 
   // Handle scroll to game from dropdown click
   // Uses requestAnimationFrame to ensure the list is unfiltered before scrolling
@@ -172,18 +174,23 @@ export function HomePage({ user }: HomePageProps) {
         setScrollToGameId(gameId);
       });
     });
-  }, []);
+  }, [currentUserId]);
 
   // Clear scroll target after scroll
   const handleScrolledToGame = useCallback(() => {
     setScrollToGameId(null);
-  }, []);
+  }, [currentUserId]);
 
   // Handle search query change for highlighting and filtering
   const handleSearchQueryChange = useCallback((query: string) => {
     setSearchQuery(query);
     setNameQuery(query);
   }, [setNameQuery]);
+
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    setSearchClearTrigger(prev => prev + 1);
+  }, [resetFilters]);
 
   // Handle add player action
   const handleAddPlayer = useCallback(async (gameId: string) => {
@@ -257,6 +264,52 @@ export function HomePage({ user }: HomePageProps) {
     }
   }, [currentUserId]);
 
+  // Handle hide game action
+  const handleHideGame = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
+    try {
+      const response = await gamesApi.hideGame(gameId, currentUserId);
+      setGames((prev) =>
+        prev.map((g) => (g.id === gameId ? response.game : g))
+      );
+    } catch (err) {
+      console.error('Failed to hide game:', err);
+      if (err instanceof ApiError) {
+        alert(err.message);
+      } else {
+        alert('Fehler beim Ausblenden des Spiels. Bitte erneut versuchen.');
+      }
+    }
+  }, [currentUserId]);
+
+  // Handle unhide game action
+  const handleUnhideGame = useCallback(async (gameId: string) => {
+    if (!currentUserId) return;
+    try {
+      const response = await gamesApi.unhideGame(gameId, currentUserId);
+      let shouldDisableHiddenFilter = false;
+      setGames((prev) => {
+        const hiddenCountBefore = prev.filter((g) => g.isHidden).length;
+        const wasHidden = prev.some((g) => g.id === gameId && g.isHidden);
+        if (filters.hiddenOnly && wasHidden && hiddenCountBefore === 1) {
+          shouldDisableHiddenFilter = true;
+        }
+        return prev.map((g) => (g.id === gameId ? response.game : g));
+      });
+      if (shouldDisableHiddenFilter) {
+        setHiddenOnly(false);
+        showToast('Keine ausgeblendeten Spiele mehr – Filter zurückgesetzt.');
+      }
+    } catch (err) {
+      console.error('Failed to unhide game:', err);
+      if (err instanceof ApiError) {
+        alert(err.message);
+      } else {
+        alert('Fehler beim Einblenden des Spiels. Bitte erneut versuchen.');
+      }
+    }
+  }, [currentUserId, filters.hiddenOnly, setHiddenOnly, showToast]);
+
   // Handle toggle prototype status
   // Requirements: 022-prototype-toggle 2.3, 3.2
   const handleTogglePrototype = useCallback(async (gameId: string, isPrototype: boolean) => {
@@ -323,7 +376,7 @@ export function HomePage({ user }: HomePageProps) {
   const handleDeleteModalCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setGameToDelete(null);
-  }, []);
+  }, [currentUserId]);
 
   // Handle thumbnail uploaded - update timestamp for cache-busting
   const handleThumbnailUploaded = useCallback((gameId: string) => {
@@ -335,6 +388,7 @@ export function HomePage({ user }: HomePageProps) {
 
   // Apply filters to games
   const filteredGames = filterGames(games, currentUserName);
+  const hiddenCount = games.filter((game) => game.isHidden).length;
 
   // Get highlighted game IDs based on search query
   const highlightedGameIds = getHighlightedGameIds(filteredGames, searchQuery);
@@ -414,20 +468,9 @@ export function HomePage({ user }: HomePageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Spieleliste</h2>
-        {(hasActiveFilters || searchQuery) && (
-          <button
-            onClick={() => {
-              resetFilters();
-              setSearchClearTrigger(prev => prev + 1);
-            }}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
-          >
-            Filter zurücksetzen
-          </button>
-        )}
       </div>
 
       {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
@@ -457,13 +500,13 @@ export function HomePage({ user }: HomePageProps) {
             aria-pressed={filters.wunschOnly}
             aria-label="Nur gesuchte Spiele anzeigen"
           >
-            <WunschIcon className="w-4 h-4" />
+            <span className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" aria-hidden="true" />
             <span className="hidden sm:inline">Gesuchte Spiele</span>
             <span className="sm:hidden">Gesucht</span>
             {filters.wunschOnly && <CheckIcon className="w-4 h-4" />}
           </button>
 
-          {/* Meine Spiele toggle */}
+          {/* Bringe ich mit toggle */}
           <button
             type="button"
             onClick={() => setMyGamesOnly(!filters.myGamesOnly)}
@@ -473,12 +516,48 @@ export function HomePage({ user }: HomePageProps) {
                 : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
             }`}
             aria-pressed={filters.myGamesOnly}
-            aria-label="Nur meine Spiele anzeigen"
+            aria-label="Nur Spiele anzeigen, die ich mitbringe"
           >
-            <UserIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Meine Spiele</span>
-            <span className="sm:hidden">Meine</span>
+            <img src="/package.svg?v=2" alt="" className="w-5 h-5" />
+            <span className="hidden sm:inline">Bringe ich mit</span>
+            <span className="sm:hidden">Bringe</span>
             {filters.myGamesOnly && <CheckIcon className="w-4 h-4" />}
+          </button>
+
+          {/* Spiele ich mit toggle */}
+          <button
+            type="button"
+            onClick={() => setPlayerOnly(!filters.playerOnly)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+              filters.playerOnly
+                ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-400'
+                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+            }`}
+            aria-pressed={filters.playerOnly}
+            aria-label="Nur Spiele anzeigen, bei denen ich mitspiele"
+          >
+            <img src="/meeple.svg" alt="" className="w-4 h-4" />
+            <span className="hidden sm:inline">Spiele ich mit</span>
+            <span className="sm:hidden">Spiele</span>
+            {filters.playerOnly && <CheckIcon className="w-4 h-4" />}
+          </button>
+
+          {/* Ausgeblendet toggle */}
+          <button
+            type="button"
+            onClick={() => setHiddenOnly(!filters.hiddenOnly)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+              filters.hiddenOnly
+                ? 'bg-gray-200 text-gray-800 border-2 border-gray-400'
+                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+            }`}
+            aria-pressed={filters.hiddenOnly}
+            aria-label="Nur ausgeblendete Spiele anzeigen"
+          >
+            <img src="/eye-off.svg?v=3" alt="" className="w-4 h-4" />
+            <span className="hidden sm:inline">Ausgeblendet</span>
+            <span className="sm:hidden">Ausbl.</span>
+            {filters.hiddenOnly && <CheckIcon className="w-4 h-4" />}
           </button>
 
           {/* Prototypen filter - segmented control */}
@@ -531,6 +610,16 @@ export function HomePage({ user }: HomePageProps) {
               </button>
             </div>
           </div>
+
+          {(hasActiveFilters || searchQuery) && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] bg-red-100 text-red-800 border-2 border-red-300 hover:bg-red-200 ml-auto order-last"
+            >
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
       </div>
 
@@ -544,12 +633,6 @@ export function HomePage({ user }: HomePageProps) {
         }}
       />
 
-      {hasActiveFilters && filteredGames.length !== games.length && (
-        <div className="text-sm text-gray-500">
-          {filteredGames.length} von {games.length} Spielen angezeigt
-        </div>
-      )}
-
       <GameTable
         games={filteredGames}
         currentUserId={currentUserId}
@@ -559,6 +642,8 @@ export function HomePage({ user }: HomePageProps) {
         onAddBringer={handleAddBringer}
         onRemovePlayer={handleRemovePlayer}
         onRemoveBringer={handleRemoveBringer}
+        onHideGame={handleHideGame}
+        onUnhideGame={handleUnhideGame}
         onDeleteGame={handleDeleteGameClick}
         onTogglePrototype={handleTogglePrototype}
         onThumbnailUploaded={handleThumbnailUploaded}
@@ -566,6 +651,8 @@ export function HomePage({ user }: HomePageProps) {
         onScrolledToGame={handleScrolledToGame}
         highlightedGameIds={highlightedGameIds}
         totalGamesCount={games.length}
+        hiddenCount={hiddenCount}
+        hiddenOnly={filters.hiddenOnly}
         thumbnailTimestamps={thumbnailTimestamps}
       />
 
@@ -577,49 +664,23 @@ export function HomePage({ user }: HomePageProps) {
         onCancel={handleDeleteModalCancel}
         isDeleting={isDeleting}
       />
+
+      {(hasActiveFilters || searchQuery) && (
+        <div className="sm:hidden fixed bottom-4 left-4 right-4 z-40">
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-800 border-2 border-red-300 hover:bg-red-200 shadow-md"
+          >
+            Filter zurücksetzen
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 // Icon components
-function WunschIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-      />
-    </svg>
-  );
-}
-
-function UserIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-      />
-    </svg>
-  );
-}
-
 function CheckIcon({ className }: { className?: string }) {
   return (
     <svg

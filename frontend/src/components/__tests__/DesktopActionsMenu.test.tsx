@@ -21,10 +21,11 @@ describe('DesktopActionsMenu', () => {
     addedAsAlternateName: null,
     alternateNames: [],
     isPrototype: false,
+    isHidden: false,
     players: [],
     bringers: [],
     status: 'wunsch',
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
     ...overrides,
   });
 

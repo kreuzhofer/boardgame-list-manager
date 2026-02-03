@@ -95,12 +95,12 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/package.svg" alt="Mitbringen" className="w-5 h-5" />
+              <img src="/package.svg?v=2" alt="Mitbringen" className="w-5 h-5" />
               {isBringer && <span className="ml-0.5 text-xs">✓</span>}
             </>
           ) : (
             <>
-              <img src="/package.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {bringerText}<span className="inline-block w-3 text-left">{isBringer ? ' ✓' : ''}</span>
+              <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> {bringerText}<span className="inline-block w-3 text-left">{isBringer ? ' ✓' : ''}</span>
             </>
           )}
         </button>

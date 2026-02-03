@@ -17,7 +17,7 @@ export type ImageSize = 'micro' | 'square200';
 export type DisplaySize = 'small' | 'micro' | 'square200';
 
 export interface LazyBggImageProps {
-  bggId: number;
+  bggId?: number;
   size: ImageSize;
   alt: string;
   className?: string;
@@ -26,11 +26,22 @@ export interface LazyBggImageProps {
   displaySize?: DisplaySize;
   /** For testing: override touch detection */
   _forceTouch?: boolean;
+  /** Custom thumbnail game ID - when provided, uses custom thumbnail API instead of BGG */
+  customThumbnailGameId?: string;
+  /** Cache-busting timestamp - append to URL to force reload */
+  thumbnailTimestamp?: number;
 }
 
 function getBggImageUrl(bggId: number, size: ImageSize): string {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   return `${apiUrl}/api/bgg/image/${bggId}/${size}`;
+}
+
+function getCustomThumbnailUrl(gameId: string, size: ImageSize, timestamp?: number): string {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const baseUrl = `${apiUrl}/api/thumbnails/${gameId}/${size}`;
+  // Add timestamp for cache-busting if provided
+  return timestamp ? `${baseUrl}?t=${timestamp}` : baseUrl;
 }
 
 function isTouchDevice(): boolean {
@@ -46,6 +57,8 @@ export function LazyBggImage({
   enableZoom = true,
   displaySize,
   _forceTouch,
+  customThumbnailGameId,
+  thumbnailTimestamp,
 }: LazyBggImageProps) {
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
   const [isInViewport, setIsInViewport] = useState(false);
@@ -53,7 +66,19 @@ export function LazyBggImage({
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = _forceTouch !== undefined ? _forceTouch : isTouchDevice();
 
-  const imageUrl = getBggImageUrl(bggId, size);
+  // Use custom thumbnail URL if gameId provided, otherwise use BGG URL
+  const imageUrl = customThumbnailGameId 
+    ? getCustomThumbnailUrl(customThumbnailGameId, size, thumbnailTimestamp)
+    : bggId 
+      ? getBggImageUrl(bggId, size)
+      : '';
+
+  // Reset load state when URL changes (e.g., when timestamp changes for cache-busting)
+  useEffect(() => {
+    if (imageUrl && isInViewport) {
+      setLoadState('loading');
+    }
+  }, [imageUrl]);
 
   // Intersection Observer for viewport detection
   useEffect(() => {
@@ -199,6 +224,8 @@ export function LazyBggImage({
           alt={alt}
           onClose={() => setShowZoom(false)}
           anchorRect={getAnchorRect()}
+          customThumbnailGameId={customThumbnailGameId}
+          thumbnailTimestamp={thumbnailTimestamp}
         />
       )}
     </>

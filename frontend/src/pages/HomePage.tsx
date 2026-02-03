@@ -22,7 +22,7 @@ import { DeleteGameModal } from '../components/DeleteGameModal';
 import { useToast } from '../components/ToastProvider';
 import { useGameFilters, useSSE } from '../hooks';
 import { getHighlightedGameIds } from '../utils';
-import type { Game, User, SSEEvent, GameCreatedEvent } from '../types';
+import type { Game, User, SSEEvent, GameCreatedEvent, ThumbnailUploadedEvent } from '../types';
 import type { SortOrder } from '../utils';
 
 interface HomePageProps {
@@ -51,6 +51,9 @@ export function HomePage({ user }: HomePageProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Thumbnail timestamps for cache-busting (gameId -> timestamp)
+  const [thumbnailTimestamps, setThumbnailTimestamps] = useState<Record<string, number>>({});
   
   // Toast notifications
   const { showToast } = useToast();
@@ -115,6 +118,15 @@ export function HomePage({ user }: HomePageProps) {
 
   const handleSSEGameUpdated = useCallback(async (event: SSEEvent) => {
     try {
+      // Handle thumbnail-uploaded events specially to extract timestamp for cache-busting
+      if (event.type === 'game:thumbnail-uploaded') {
+        const thumbnailEvent = event as ThumbnailUploadedEvent;
+        setThumbnailTimestamps((prev) => ({
+          ...prev,
+          [thumbnailEvent.gameId]: thumbnailEvent.timestamp,
+        }));
+      }
+      
       const response = await gamesApi.getById(event.gameId);
       setGames((prev) =>
         prev.map((g) => (g.id === event.gameId ? response.game : g))
@@ -311,6 +323,14 @@ export function HomePage({ user }: HomePageProps) {
   const handleDeleteModalCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setGameToDelete(null);
+  }, []);
+
+  // Handle thumbnail uploaded - update timestamp for cache-busting
+  const handleThumbnailUploaded = useCallback((gameId: string) => {
+    setThumbnailTimestamps((prev) => ({
+      ...prev,
+      [gameId]: Date.now(),
+    }));
   }, []);
 
   // Apply filters to games
@@ -541,10 +561,12 @@ export function HomePage({ user }: HomePageProps) {
         onRemoveBringer={handleRemoveBringer}
         onDeleteGame={handleDeleteGameClick}
         onTogglePrototype={handleTogglePrototype}
+        onThumbnailUploaded={handleThumbnailUploaded}
         scrollToGameId={scrollToGameId}
         onScrolledToGame={handleScrolledToGame}
         highlightedGameIds={highlightedGameIds}
         totalGamesCount={games.length}
+        thumbnailTimestamps={thumbnailTimestamps}
       />
 
       {/* Delete confirmation modal */}

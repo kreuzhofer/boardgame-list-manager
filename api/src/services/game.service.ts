@@ -1,5 +1,6 @@
 import { gameRepository, GameRepository, userRepository, UserRepository } from '../repositories';
 import { sseManager } from './sse.service';
+import { thumbnailService } from './thumbnailService';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
 
 /**
@@ -347,6 +348,7 @@ export class GameService {
    *   - Game has other players or bringers besides the owner (400)
    * 
    * Requirements: 3.2, 3.5, 3.6, 3.7
+   * Feature: 023-custom-thumbnail-upload - Clean up thumbnails on deletion
    */
   async deleteGame(gameId: string, userId: string): Promise<void> {
     // Find the game
@@ -374,6 +376,17 @@ export class GameService {
       const error = new Error('Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.');
       (error as Error & { code: string }).code = 'GAME_NOT_EMPTY';
       throw error;
+    }
+
+    // Clean up custom thumbnails for non-BGG games (Requirement 3.1, 3.3)
+    // Only delete thumbnails for games without a BGG ID
+    if (entity.bggId === null) {
+      try {
+        await thumbnailService.deleteThumbnails(gameId);
+      } catch (error) {
+        // Log but don't prevent game deletion (Requirement 3.2)
+        console.error(`[GameService] Failed to delete thumbnails for game ${gameId}:`, error);
+      }
     }
 
     // Delete the game

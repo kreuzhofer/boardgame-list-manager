@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.2.1 (03. Februar 2026)
+- Prototyp Schalter in der Desktop-Ansicht (so kannst Du nachträglich ein Spiel als Prototyp markieren. Du findest das in der Mobil-Ansicht im "..."-Menü zum jeweiligen Spiel)
+- Eigene Thumbnails für nicht-BGG Spiele (auch Prototypen) hochladen, auch nachträglich (findest Du im "..."-Menü bei jedem Eintrag)
+
 ## 0.2 (02. Februar 2026)
 - Prototyp-Flag fuer manuell hinzugefuegte Spiele
 - Filter fuer Prototypen (Alle / Ohne Protos / Nur Protos)

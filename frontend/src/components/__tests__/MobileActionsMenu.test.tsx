@@ -234,4 +234,145 @@ describe('MobileActionsMenu', () => {
       expect(button).toHaveAttribute('aria-expanded', 'true');
     });
   });
+
+  /**
+   * Tests for thumbnail upload functionality
+   * Feature: 023-custom-thumbnail-upload
+   * Validates: Requirements 6.1, 6.2
+   */
+  describe('thumbnail upload (Feature 023)', () => {
+    it('shows "Bild hochladen" option when onUploadThumbnail is provided (Requirement 6.1)', () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+
+      expect(screen.getByText('Bild hochladen')).toBeInTheDocument();
+    });
+
+    it('does NOT show "Bild hochladen" when onUploadThumbnail is not provided', () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+
+      expect(screen.queryByText('Bild hochladen')).not.toBeInTheDocument();
+    });
+
+    it('does NOT show menu for BGG games (Requirement 6.2)', () => {
+      const game = createTestGame({ bggId: 12345 });
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: 'Weitere Aktionen' })).not.toBeInTheDocument();
+    });
+
+    it('does NOT show menu for non-owner (Requirement 6.2)', () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId="different-user"
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      expect(screen.queryByRole('button', { name: 'Weitere Aktionen' })).not.toBeInTheDocument();
+    });
+
+    it('calls onUploadThumbnail with gameId when clicked', async () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+      fireEvent.click(screen.getByText('Bild hochladen'));
+
+      expect(onUploadThumbnail).toHaveBeenCalledWith('test-game-id');
+    });
+
+    it('closes menu after clicking upload option', async () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Bild hochladen'));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      });
+    });
+
+    it('has minimum 44px touch target for upload button', () => {
+      const game = createTestGame();
+      const onTogglePrototype = vi.fn().mockResolvedValue(undefined);
+      const onUploadThumbnail = vi.fn();
+
+      render(
+        <MobileActionsMenu
+          game={game}
+          currentUserId={currentUserId}
+          onTogglePrototype={onTogglePrototype}
+          onUploadThumbnail={onUploadThumbnail}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+      
+      const uploadButton = screen.getByText('Bild hochladen').closest('button');
+      expect(uploadButton).toHaveClass('min-h-[44px]');
+    });
+  });
 });

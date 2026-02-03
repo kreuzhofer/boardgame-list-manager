@@ -12,7 +12,7 @@
 
 import * as fc from 'fast-check';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { GameRow } from '../GameRow';
 import type { Game } from '../../types';
 
@@ -83,6 +83,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           fc.boolean(),
           fc.boolean(),
           (currentUserId, potentialOwnerId, gameName, bggId, isOwnerScenario, isPrototype) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             // Determine if the game owner should be the current user
             const ownerId = isOwnerScenario ? currentUserId : potentialOwnerId;
             
@@ -110,13 +113,14 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
             const hasNoBggId = game.bggId === null;
             const shouldShowToggle = isOwner && hasNoBggId;
 
-            // The toggle button has aria-label containing "Prototyp"
-            const toggleButton = screen.queryByRole('button', { name: /Prototyp/i });
+            // The toggle is now inside DesktopActionsMenu, which shows a "Weitere Aktionen" button
+            // when the user is owner and game has no BGG ID
+            const menuButton = screen.queryByRole('button', { name: /Weitere Aktionen/i });
 
             if (shouldShowToggle) {
-              expect(toggleButton).toBeInTheDocument();
+              expect(menuButton).toBeInTheDocument();
             } else {
-              expect(toggleButton).not.toBeInTheDocument();
+              expect(menuButton).not.toBeInTheDocument();
             }
 
             return true;
@@ -133,6 +137,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           fc.integer({ min: 1, max: 999999 }),
           gameNameArbitrary,
           (currentUserId, bggId, gameName) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             const game: Game = {
               id: 'test-id',
               name: gameName,
@@ -153,8 +160,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
             
             renderGameRow(game, currentUserId, onTogglePrototype);
 
-            const toggleButton = screen.queryByRole('button', { name: /Prototyp/i });
-            expect(toggleButton).not.toBeInTheDocument();
+            // The toggle is now inside DesktopActionsMenu, which shows a "Weitere Aktionen" button
+            const menuButton = screen.queryByRole('button', { name: /Weitere Aktionen/i });
+            expect(menuButton).not.toBeInTheDocument();
 
             return true;
           }
@@ -170,6 +178,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           userIdArbitrary.filter((id) => id !== 'current-user'),
           gameNameArbitrary,
           (currentUserId, ownerId, gameName) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             // Ensure owner is different from current user
             if (currentUserId === ownerId) return true;
 
@@ -193,8 +204,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
             
             renderGameRow(game, currentUserId, onTogglePrototype);
 
-            const toggleButton = screen.queryByRole('button', { name: /Prototyp/i });
-            expect(toggleButton).not.toBeInTheDocument();
+            // The toggle is now inside DesktopActionsMenu, which shows a "Weitere Aktionen" button
+            const menuButton = screen.queryByRole('button', { name: /Weitere Aktionen/i });
+            expect(menuButton).not.toBeInTheDocument();
 
             return true;
           }

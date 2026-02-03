@@ -29,4 +29,9 @@ export const config = {
     scrapeEnabled: process.env.BGG_SCRAPE_ENABLED !== 'false',
     cacheDir: process.env.BGG_IMAGE_CACHE_DIR || '/app/cache/bgg-images',
   },
+  customThumbnails: {
+    cacheDir: process.env.CUSTOM_THUMBNAIL_DIR || '/app/cache/custom-thumbnails',
+    maxFileSize: 5 * 1024 * 1024, // 5 MB
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  },
 };

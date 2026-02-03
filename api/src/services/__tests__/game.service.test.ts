@@ -4,6 +4,18 @@ import { GameRepository } from '../../repositories/game.repository';
 import { UserRepository } from '../../repositories/user.repository';
 import type { GameEntity, PlayerEntity, BringerEntity, UserEntity } from '../../types';
 
+// Mock the thumbnailService
+jest.mock('../thumbnailService', () => ({
+  thumbnailService: {
+    deleteThumbnails: jest.fn<() => Promise<void>>(),
+  },
+}));
+
+// Import the mocked thumbnailService
+import { thumbnailService } from '../thumbnailService';
+
+const mockDeleteThumbnails = thumbnailService.deleteThumbnails as jest.MockedFunction<typeof thumbnailService.deleteThumbnails>;
+
 /**
  * Unit tests for Game Service - Delete functionality
  * Tests validation logic and error handling for game deletion
@@ -73,6 +85,9 @@ describe('GameService', () => {
   });
 
   beforeEach(() => {
+    // Clear all mocks
+    jest.clearAllMocks();
+    
     // Create mock repository with all methods
     mockRepository = {
       findAll: jest.fn<() => Promise<GameEntity[]>>(),
@@ -257,6 +272,66 @@ describe('GameService', () => {
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('GAME_NOT_EMPTY');
       }
+    });
+
+    /**
+     * Feature: 023-custom-thumbnail-upload, Property 6: Cleanup on Deletion
+     * Test that thumbnails are deleted when a non-BGG game is deleted
+     * Validates: Requirements 3.1, 3.3
+     */
+    it('should delete thumbnails when deleting a non-BGG game', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Custom Game', ownerId, 'Owner Name', [], [], null, null);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.delete.mockResolvedValue(true);
+      mockDeleteThumbnails.mockResolvedValue(undefined);
+
+      await gameService.deleteGame(gameId, ownerId);
+
+      expect(mockDeleteThumbnails).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+    });
+
+    /**
+     * Feature: 023-custom-thumbnail-upload
+     * Test that thumbnails are NOT deleted when a BGG game is deleted
+     * Validates: Requirement 3.3
+     */
+    it('should NOT delete thumbnails when deleting a BGG game', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Catan', ownerId, 'Owner Name', [], [], 13, 1995);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.delete.mockResolvedValue(true);
+
+      await gameService.deleteGame(gameId, ownerId);
+
+      expect(mockDeleteThumbnails).not.toHaveBeenCalled();
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+    });
+
+    /**
+     * Feature: 023-custom-thumbnail-upload
+     * Test that game deletion proceeds even if thumbnail deletion fails
+     * Validates: Requirement 3.2
+     */
+    it('should proceed with game deletion even if thumbnail deletion fails', async () => {
+      const ownerId = 'owner-123';
+      const gameId = 'game-123';
+      const mockGame = createMockGameEntity(gameId, 'Custom Game', ownerId, 'Owner Name', [], [], null, null);
+      
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.delete.mockResolvedValue(true);
+      mockDeleteThumbnails.mockRejectedValue(new Error('File system error'));
+
+      // Should not throw
+      await expect(gameService.deleteGame(gameId, ownerId)).resolves.toBeUndefined();
+
+      expect(mockDeleteThumbnails).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
     });
   });
 

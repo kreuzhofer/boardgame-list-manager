@@ -12,7 +12,7 @@
 
 import * as fc from 'fast-check';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { GameCard } from '../GameCard';
 import type { Game } from '../../types';
 
@@ -68,6 +68,9 @@ describe('GameCard Property Tests - Prototype Toggle', () => {
           fc.boolean(),
           fc.boolean(),
           (currentUserId, potentialOwnerId, gameName, bggId, isOwnerScenario, isPrototype) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             // Determine if the game owner should be the current user
             const ownerId = isOwnerScenario ? currentUserId : potentialOwnerId;
             
@@ -123,6 +126,9 @@ describe('GameCard Property Tests - Prototype Toggle', () => {
           fc.integer({ min: 1, max: 999999 }),
           gameNameArbitrary,
           (currentUserId, bggId, gameName) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             const game: Game = {
               id: 'test-id',
               name: gameName,
@@ -166,6 +172,9 @@ describe('GameCard Property Tests - Prototype Toggle', () => {
           userIdArbitrary.filter((id) => id !== 'current-user'),
           gameNameArbitrary,
           (currentUserId, ownerId, gameName) => {
+            // Cleanup before each iteration
+            cleanup();
+            
             // Ensure owner is different from current user
             if (currentUserId === ownerId) return true;
 

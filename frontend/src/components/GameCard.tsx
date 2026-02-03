@@ -7,7 +7,7 @@
  * Requirement 8.1, 8.2, 8.3, 8.4: BGG game thumbnails with lazy loading
  */
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Game, Player, Bringer } from '../types';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
@@ -17,21 +17,7 @@ import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { ClickNotification } from './ClickNotification';
 import { MobileActionsMenu } from './MobileActionsMenu';
-
-interface GameCardProps {
-  game: Game;
-  currentUserId: string;
-  onAddPlayer?: (gameId: string) => void;
-  onAddBringer?: (gameId: string) => void;
-  onRemovePlayer?: (gameId: string) => void;
-  onRemoveBringer?: (gameId: string) => void;
-  onDeleteGame?: (gameId: string) => void;
-  onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
-  scrollIntoView?: boolean;
-  onScrolledIntoView?: () => void;
-  /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
-  isHighlighted?: boolean;
-}
+import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 
 /**
  * Hook to detect if text would wrap at the larger font size
@@ -86,10 +72,13 @@ interface GameCardProps {
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
+  onThumbnailUploaded?: (gameId: string) => void;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
   isHighlighted?: boolean;
+  /** Cache-busting timestamp for custom thumbnails */
+  thumbnailTimestamp?: number;
 }
 
 /** Compact list display for mobile - shows up to 2 names, or 1 name + "+X" if more than 2 */
@@ -145,9 +134,11 @@ export function GameCard({
   onRemoveBringer,
   onDeleteGame,
   onTogglePrototype,
+  onThumbnailUploaded,
   scrollIntoView,
   onScrolledIntoView,
   isHighlighted,
+  thumbnailTimestamp,
 }: GameCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
@@ -163,6 +154,7 @@ export function GameCard({
   
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   
   // Dynamic text sizing - shrink when title wraps to 2 lines
   const [titleRef, isTitleWrapped] = useTextWrap([game.name, game.addedAsAlternateName]);
@@ -175,6 +167,14 @@ export function GameCard({
       setListsExpanded(!listsExpanded);
     }
   };
+
+  const handleUploadThumbnail = useCallback((_gameId: string) => {
+    setUploadModalOpen(true);
+  }, []);
+
+  const handleUploadSuccess = useCallback(() => {
+    onThumbnailUploaded?.(game.id);
+  }, [onThumbnailUploaded, game.id]);
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -222,13 +222,23 @@ export function GameCard({
       <div className="flex gap-3 mb-1">
         {/* Thumbnail with Neuheit overlay - micro size for mobile, fixed outer size for consistency */}
         <div className="flex-shrink-0 relative w-[72px] h-20">
-          {game.bggId && (
+          {game.bggId ? (
             <LazyBggImage
               bggId={game.bggId}
               size="micro"
               alt={game.name}
               className="rounded"
               enableZoom={true}
+            />
+          ) : (
+            /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
+            <LazyBggImage
+              customThumbnailGameId={game.id}
+              size="micro"
+              alt={game.name}
+              className="rounded"
+              enableZoom={true}
+              thumbnailTimestamp={thumbnailTimestamp}
             />
           )}
           {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
@@ -345,8 +355,19 @@ export function GameCard({
                 game={game}
                 currentUserId={currentUserId}
                 onTogglePrototype={onTogglePrototype}
+                onUploadThumbnail={handleUploadThumbnail}
               />
             )}
+
+            {/* Thumbnail Upload Modal - rendered via portal */}
+            <ThumbnailUploadModal
+              gameId={game.id}
+              gameName={game.name}
+              isOpen={uploadModalOpen}
+              onClose={() => setUploadModalOpen(false)}
+              onSuccess={handleUploadSuccess}
+              userId={currentUserId}
+            />
           </div>
         </div>
       </div>

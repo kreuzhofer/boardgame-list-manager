@@ -24,12 +24,15 @@ interface GameTableProps {
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
+  onThumbnailUploaded?: (gameId: string) => void;
   scrollToGameId?: string | null;
   onScrolledToGame?: () => void;
   /** Set of game IDs that should be highlighted (match search) - Requirement 7.1, 7.2 */
   highlightedGameIds?: Set<string>;
   /** Total number of games before filtering (to show appropriate empty message) */
   totalGamesCount?: number;
+  /** Thumbnail timestamps for cache-busting (gameId -> timestamp) */
+  thumbnailTimestamps?: Record<string, number>;
 }
 
 export function GameTable({
@@ -43,10 +46,12 @@ export function GameTable({
   onRemoveBringer,
   onDeleteGame,
   onTogglePrototype,
+  onThumbnailUploaded,
   scrollToGameId,
   onScrolledToGame,
   highlightedGameIds,
   totalGamesCount,
+  thumbnailTimestamps,
 }: GameTableProps) {
   // Sort games alphabetically by name (Requirements 5.2, 5.3)
   const sortedGames = useMemo(() => {
@@ -149,9 +154,11 @@ export function GameTable({
               onRemoveBringer={onRemoveBringer}
               onDeleteGame={onDeleteGame}
               onTogglePrototype={onTogglePrototype}
+              onThumbnailUploaded={onThumbnailUploaded}
               scrollIntoView={game.id === scrollToGameId}
               onScrolledIntoView={onScrolledToGame}
               isHighlighted={highlightedGameIds?.has(game.id)}
+              thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
             />
           ))}
         </div>
@@ -192,9 +199,11 @@ export function GameTable({
                   onRemoveBringer={onRemoveBringer}
                   onDeleteGame={onDeleteGame}
                   onTogglePrototype={onTogglePrototype}
+                  onThumbnailUploaded={onThumbnailUploaded}
                   scrollIntoView={game.id === scrollToGameId}
                   onScrolledIntoView={onScrolledToGame}
                   isHighlighted={highlightedGameIds?.has(game.id)}
+                  thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
                 />
               ))}
             </tbody>

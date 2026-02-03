@@ -5,7 +5,7 @@
  * All UI text in German (Requirement 9.1)
  */
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Game } from '../types';
 import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
@@ -16,7 +16,8 @@ import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { ClickNotification } from './ClickNotification';
-import { PrototypeToggle } from './PrototypeToggle';
+import { DesktopActionsMenu } from './DesktopActionsMenu';
+import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 
 interface GameRowProps {
   game: Game;
@@ -27,10 +28,13 @@ interface GameRowProps {
   onRemoveBringer?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
+  onThumbnailUploaded?: (gameId: string) => void;
   scrollIntoView?: boolean;
   onScrolledIntoView?: () => void;
   /** Whether this game should be highlighted (matches search) - Requirement 7.1, 7.2 */
   isHighlighted?: boolean;
+  /** Cache-busting timestamp for custom thumbnails */
+  thumbnailTimestamp?: number;
 }
 
 export function GameRow({
@@ -42,16 +46,16 @@ export function GameRow({
   onRemoveBringer,
   onDeleteGame,
   onTogglePrototype,
+  onThumbnailUploaded,
   scrollIntoView,
   onScrolledIntoView,
   isHighlighted,
+  thumbnailTimestamp,
 }: GameRowProps) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const isWunsch = game.status === 'wunsch';
   const isPrototype = game.isPrototype;
   const isOwner = game.owner?.id === currentUserId;
-  const hasNoBggId = game.bggId === null;
-  const canTogglePrototype = isOwner && hasNoBggId;
   
   // Check if current user is the only player/bringer (or lists are empty)
   const onlyCurrentUserIsPlayer = game.players.length === 0 || 
@@ -62,10 +66,19 @@ export function GameRow({
   
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handleToggleExpand = () => {
     setListsExpanded(!listsExpanded);
   };
+
+  const handleUploadThumbnail = useCallback((_gameId: string) => {
+    setUploadModalOpen(true);
+  }, []);
+
+  const handleUploadSuccess = useCallback(() => {
+    onThumbnailUploaded?.(game.id);
+  }, [onThumbnailUploaded, game.id]);
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -121,11 +134,15 @@ export function GameRow({
               enableZoom={true}
             />
           ) : (
-            <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C9.24 2 7 4.24 7 7c0 1.1.36 2.12.97 2.95L4 14.5V22h16v-7.5l-3.97-4.55c.61-.83.97-1.85.97-2.95 0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
-              </svg>
-            </div>
+            /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
+            <LazyBggImage
+              customThumbnailGameId={game.id}
+              size="micro"
+              alt={game.name}
+              className="rounded"
+              enableZoom={true}
+              thumbnailTimestamp={thumbnailTimestamp}
+            />
           )}
           {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
           {game.yearPublished && (
@@ -241,14 +258,25 @@ export function GameRow({
             </ClickNotification>
           )}
           
-          {/* Prototype Toggle - only for owner's non-BGG games */}
-          {canTogglePrototype && onTogglePrototype && (
-            <PrototypeToggle
-              gameId={game.id}
-              isPrototype={isPrototype}
-              onToggle={onTogglePrototype}
+          {/* Desktop Actions Menu - for owner's non-BGG games */}
+          {onTogglePrototype && (
+            <DesktopActionsMenu
+              game={game}
+              currentUserId={currentUserId}
+              onTogglePrototype={onTogglePrototype}
+              onUploadThumbnail={handleUploadThumbnail}
             />
           )}
+
+          {/* Thumbnail Upload Modal - rendered via portal so can be here */}
+          <ThumbnailUploadModal
+            gameId={game.id}
+            gameName={game.name}
+            isOpen={uploadModalOpen}
+            onClose={() => setUploadModalOpen(false)}
+            onSuccess={handleUploadSuccess}
+            userId={currentUserId}
+          />
         </div>
       </td>
     </tr>

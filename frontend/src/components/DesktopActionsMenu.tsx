@@ -1,8 +1,7 @@
 /**
- * MobileActionsMenu component
- * A dropdown menu for additional actions on mobile game cards
- * Requirements: 022-prototype-toggle 2.1, 2.2
- * Requirements: 023-custom-thumbnail-upload 6.1, 6.2, 6.3
+ * DesktopActionsMenu component
+ * A dropdown menu for additional actions on desktop game rows
+ * Requirements: 023-custom-thumbnail-upload 5.1, 5.2, 5.3, 5.4
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -10,19 +9,19 @@ import { createPortal } from 'react-dom';
 import { PrototypeToggle } from './PrototypeToggle';
 import type { Game } from '../types';
 
-interface MobileActionsMenuProps {
+interface DesktopActionsMenuProps {
   game: Game;
   currentUserId: string;
   onTogglePrototype: (gameId: string, isPrototype: boolean) => Promise<void>;
-  onUploadThumbnail?: (gameId: string) => void;
+  onUploadThumbnail: (gameId: string) => void;
 }
 
-export function MobileActionsMenu({
+export function DesktopActionsMenu({
   game,
   currentUserId,
   onTogglePrototype,
   onUploadThumbnail,
-}: MobileActionsMenuProps) {
+}: DesktopActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -30,11 +29,11 @@ export function MobileActionsMenu({
   // Check if user is owner and game has no BGG ID
   const isOwner = game.owner?.id === currentUserId;
   const hasNoBggId = game.bggId === null;
-  const canTogglePrototype = isOwner && hasNoBggId;
+  const canShowMenu = isOwner && hasNoBggId;
 
   // Close menu when clicking outside
   useEffect(() => {
-    if (!isOpen || !canTogglePrototype) return;
+    if (!isOpen || !canShowMenu) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -49,11 +48,11 @@ export function MobileActionsMenu({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, canTogglePrototype]);
+  }, [isOpen, canShowMenu]);
 
   // Close menu on escape key
   useEffect(() => {
-    if (!isOpen || !canTogglePrototype) return;
+    if (!isOpen || !canShowMenu) return;
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -63,10 +62,10 @@ export function MobileActionsMenu({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, canTogglePrototype]);
+  }, [isOpen, canShowMenu]);
 
-  // Don't render if user can't toggle prototype
-  if (!canTogglePrototype) {
+  // Don't render if user can't access menu
+  if (!canShowMenu) {
     return null;
   }
 
@@ -76,10 +75,8 @@ export function MobileActionsMenu({
   };
 
   const handleUploadThumbnail = () => {
-    if (onUploadThumbnail) {
-      onUploadThumbnail(game.id);
-      setIsOpen(false);
-    }
+    onUploadThumbnail(game.id);
+    setIsOpen(false);
   };
 
   // Calculate menu position
@@ -127,31 +124,31 @@ export function MobileActionsMenu({
             aria-orientation="vertical"
           >
             {/* Upload Thumbnail option */}
-            {onUploadThumbnail && (
-              <>
-                <button
-                  onClick={handleUploadThumbnail}
-                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2 min-h-[44px]"
-                  role="menuitem"
-                >
-                  <svg
-                    className="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Bild hochladen
-                </button>
-                <div className="border-t border-gray-200 my-1" />
-              </>
-            )}
+            <button
+              onClick={handleUploadThumbnail}
+              className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              role="menuitem"
+            >
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              Bild hochladen
+            </button>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-1" />
+
+            {/* Prototype Toggle */}
             <PrototypeToggle
               gameId={game.id}
               isPrototype={game.isPrototype}
@@ -165,4 +162,4 @@ export function MobileActionsMenu({
   );
 }
 
-export default MobileActionsMenu;
+export default DesktopActionsMenu;

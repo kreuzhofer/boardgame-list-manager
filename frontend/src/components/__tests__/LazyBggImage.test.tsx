@@ -179,4 +179,67 @@ describe('LazyBggImage', () => {
       expect(mockDisconnect).toHaveBeenCalled();
     });
   });
+
+  /**
+   * Feature: 023-custom-thumbnail-upload, Property 9: Display Integration
+   * Tests for custom thumbnail support
+   * Validates: Requirements 8.1
+   */
+  describe('Custom Thumbnail Support (Feature 023)', () => {
+    it('should use custom thumbnail URL when customThumbnailGameId is provided', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="micro" alt="Custom Game" />);
+      act(() => simulateIntersection(true));
+      expect((screen.getByAltText('Custom Game') as HTMLImageElement).src).toContain(`/api/thumbnails/${gameId}/micro`);
+    });
+
+    it('should use custom thumbnail URL for square200 size', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="square200" alt="Custom Game" />);
+      act(() => simulateIntersection(true));
+      expect((screen.getByAltText('Custom Game') as HTMLImageElement).src).toContain(`/api/thumbnails/${gameId}/square200`);
+    });
+
+    it('should prefer customThumbnailGameId over bggId when both provided', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage bggId={12345} customThumbnailGameId={gameId} size="micro" alt="Custom Game" />);
+      act(() => simulateIntersection(true));
+      const imgSrc = (screen.getByAltText('Custom Game') as HTMLImageElement).src;
+      expect(imgSrc).toContain(`/api/thumbnails/${gameId}/micro`);
+      expect(imgSrc).not.toContain('/api/bgg/image/');
+    });
+
+    it('should support lazy loading for custom thumbnails', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="micro" alt="Custom Game" />);
+      // Should not render image until in viewport
+      expect(screen.queryByAltText('Custom Game')).not.toBeInTheDocument();
+      // Simulate entering viewport
+      act(() => simulateIntersection(true));
+      expect(screen.getByAltText('Custom Game')).toBeInTheDocument();
+    });
+
+    it('should support zoom for custom thumbnails', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="micro" alt="Custom Game" _forceTouch={false} />);
+      act(() => simulateIntersection(true));
+      fireEvent.load(screen.getByAltText('Custom Game'));
+      fireEvent.mouseEnter(screen.getByTestId('lazy-bgg-image-container'));
+      expect(screen.getByTestId('zoom-overlay')).toBeInTheDocument();
+    });
+
+    it('should show shimmer placeholder for custom thumbnails', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="micro" alt="Custom Game" />);
+      expect(screen.getByTestId('shimmer-placeholder')).toBeInTheDocument();
+    });
+
+    it('should show error placeholder on custom thumbnail load failure', () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      render(<LazyBggImage customThumbnailGameId={gameId} size="micro" alt="Custom Game" />);
+      act(() => simulateIntersection(true));
+      fireEvent.error(screen.getByAltText('Custom Game'));
+      expect(screen.getByTestId('error-placeholder')).toBeInTheDocument();
+    });
+  });
 });

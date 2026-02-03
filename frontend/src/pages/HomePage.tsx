@@ -281,9 +281,19 @@ export function HomePage({ user }: HomePageProps) {
     if (!currentUserId) return;
     try {
       const response = await gamesApi.unhideGame(gameId, currentUserId);
-      setGames((prev) =>
-        prev.map((g) => (g.id === gameId ? response.game : g))
-      );
+      let shouldDisableHiddenFilter = false;
+      setGames((prev) => {
+        const hiddenCountBefore = prev.filter((g) => g.isHidden).length;
+        const wasHidden = prev.some((g) => g.id === gameId && g.isHidden);
+        if (filters.hiddenOnly && wasHidden && hiddenCountBefore === 1) {
+          shouldDisableHiddenFilter = true;
+        }
+        return prev.map((g) => (g.id === gameId ? response.game : g));
+      });
+      if (shouldDisableHiddenFilter) {
+        setHiddenOnly(false);
+        showToast('Keine ausgeblendeten Spiele mehr – Filter zurückgesetzt.');
+      }
     } catch (err) {
       console.error('Failed to unhide game:', err);
       if (err instanceof ApiError) {
@@ -292,7 +302,7 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Einblenden des Spiels. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentUserId, filters.hiddenOnly, setHiddenOnly, showToast]);
 
   // Handle toggle prototype status
   // Requirements: 022-prototype-toggle 2.3, 3.2
@@ -372,6 +382,7 @@ export function HomePage({ user }: HomePageProps) {
 
   // Apply filters to games
   const filteredGames = filterGames(games, currentUserName);
+  const hiddenCount = games.filter((game) => game.isHidden).length;
 
   // Get highlighted game IDs based on search query
   const highlightedGameIds = getHighlightedGameIds(filteredGames, searchQuery);
@@ -599,12 +610,6 @@ export function HomePage({ user }: HomePageProps) {
         }}
       />
 
-      {hasActiveFilters && filteredGames.length !== games.length && (
-        <div className="text-sm text-gray-500">
-          {filteredGames.length} von {games.length} Spielen angezeigt
-        </div>
-      )}
-
       <GameTable
         games={filteredGames}
         currentUserId={currentUserId}
@@ -623,6 +628,8 @@ export function HomePage({ user }: HomePageProps) {
         onScrolledToGame={handleScrolledToGame}
         highlightedGameIds={highlightedGameIds}
         totalGamesCount={games.length}
+        hiddenCount={hiddenCount}
+        hiddenOnly={filters.hiddenOnly}
         thumbnailTimestamps={thumbnailTimestamps}
       />
 

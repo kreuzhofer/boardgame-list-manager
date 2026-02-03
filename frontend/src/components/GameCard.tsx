@@ -174,6 +174,14 @@ export function GameCard({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const swipeTimeoutRef = useRef<number | null>(null);
   const collapseTimeoutRef = useRef<number | null>(null);
+  const [visualIsPlayer, setVisualIsPlayer] = useState(isPlayer);
+  const [playFeedback, setPlayFeedback] = useState<'added' | 'removed' | null>(null);
+  const [playFeedbackVisible, setPlayFeedbackVisible] = useState(false);
+  const playFeedbackTimeoutRef = useRef<number | null>(null);
+  const playFeedbackClearTimeoutRef = useRef<number | null>(null);
+  const [playPulse, setPlayPulse] = useState(false);
+  const playPulseTimeoutRef = useRef<number | null>(null);
+  const [playCommitActive, setPlayCommitActive] = useState(false);
   
   // Dynamic text sizing - shrink when title wraps to 2 lines
   const [titleRef, isTitleWrapped] = useTextWrap([game.name, game.addedAsAlternateName]);
@@ -224,27 +232,50 @@ export function GameCard({
       if (collapseTimeoutRef.current) {
         window.clearTimeout(collapseTimeoutRef.current);
       }
+      if (playFeedbackTimeoutRef.current) {
+        window.clearTimeout(playFeedbackTimeoutRef.current);
+      }
+      if (playFeedbackClearTimeoutRef.current) {
+        window.clearTimeout(playFeedbackClearTimeoutRef.current);
+      }
+      if (playPulseTimeoutRef.current) {
+        window.clearTimeout(playPulseTimeoutRef.current);
+      }
     };
   }, []);
 
-  const handleSwipeAction = useCallback((deltaX: number) => {
-    if (deltaX > 0) {
-      if (isPlayer) {
-        onRemovePlayer?.(game.id);
-      } else {
-        onAddPlayer?.(game.id);
-      }
-      return;
+  useEffect(() => {
+    if (!playCommitActive) {
+      setVisualIsPlayer(isPlayer);
     }
+  }, [isPlayer, playCommitActive]);
 
-    if (canHide) {
-      if (isHidden) {
-        onUnhideGame?.(game.id);
-      } else {
-        onHideGame?.(game.id);
-      }
+  const triggerPlayFeedback = useCallback((adding: boolean) => {
+    if (playFeedbackTimeoutRef.current) {
+      window.clearTimeout(playFeedbackTimeoutRef.current);
     }
-  }, [canHide, game.id, isHidden, isPlayer, onAddPlayer, onHideGame, onRemovePlayer, onUnhideGame]);
+    if (playFeedbackClearTimeoutRef.current) {
+      window.clearTimeout(playFeedbackClearTimeoutRef.current);
+    }
+    setPlayFeedback(adding ? 'added' : 'removed');
+    setPlayFeedbackVisible(true);
+    playFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setPlayFeedbackVisible(false);
+    }, 700);
+    playFeedbackClearTimeoutRef.current = window.setTimeout(() => {
+      setPlayFeedback(null);
+    }, 900);
+  }, []);
+
+  const triggerPlayPulse = useCallback(() => {
+    if (playPulseTimeoutRef.current) {
+      window.clearTimeout(playPulseTimeoutRef.current);
+    }
+    setPlayPulse(true);
+    playPulseTimeoutRef.current = window.setTimeout(() => {
+      setPlayPulse(false);
+    }, 620);
+  }, []);
 
   useEffect(() => {
     // Reset the scroll flag when scrollIntoView becomes false
@@ -274,6 +305,8 @@ export function GameCard({
   const SWIPE_CAPTURE_THRESHOLD = 14;
   const SWIPE_RESIST = 0.46;
   const SWIPE_CONFIRM_FALLBACK = 180;
+  const SWIPE_PLAY_COMMIT_DISTANCE = 110;
+  const SWIPE_PLAY_RETURN_MS = 280;
   const SWIPE_COMMIT_ANIMATION_MS = 140;
   const COLLAPSE_ANIMATION_MS = 420;
   const isCollapsing = collapsePhase !== 'idle';
@@ -310,6 +343,36 @@ export function GameCard({
       setIsAnimatingSwipe(false);
     }, COLLAPSE_ANIMATION_MS);
   }, [cardHeight, collapsePhase, game.id, isHidden, onHideGame, onUnhideGame]);
+
+  const commitPlaySwipe = useCallback(() => {
+    if (isAnimatingSwipe || isCollapsing) return;
+    const willAdd = !isPlayer;
+    setIsAnimatingSwipe(true);
+    setPlayCommitActive(true);
+    setSwipeX(SWIPE_PLAY_COMMIT_DISTANCE);
+    setIsSwiping(false);
+    if (willAdd) {
+      onAddPlayer?.(game.id);
+    } else {
+      onRemovePlayer?.(game.id);
+    }
+    triggerPlayFeedback(willAdd);
+    triggerPlayPulse();
+    swipeTimeoutRef.current = window.setTimeout(() => {
+      setSwipeX(0);
+      setIsAnimatingSwipe(false);
+      setPlayCommitActive(false);
+    }, SWIPE_PLAY_RETURN_MS);
+  }, [
+    isAnimatingSwipe,
+    isCollapsing,
+    isPlayer,
+    onAddPlayer,
+    onRemovePlayer,
+    game.id,
+    triggerPlayFeedback,
+    triggerPlayPulse,
+  ]);
 
   const handleConfirmedSwipe = useCallback((deltaX: number) => {
     if (isAnimatingSwipe || isCollapsing) return;
@@ -359,9 +422,7 @@ export function GameCard({
       const isLeft = eventData.dir === 'Left';
 
       if (isRight && eventData.absX >= SWIPE_SIMPLE_TRIGGER) {
-        handleSwipeAction(1);
-        setSwipeX(0);
-        setIsSwiping(false);
+        commitPlaySwipe();
         return;
       }
       if (isLeft && eventData.absX >= swipeConfirmDistance) {
@@ -378,7 +439,7 @@ export function GameCard({
 
   // Determine background color: highlight > wunsch > default
   const getCardClassName = () => {
-    const baseClasses = 'px-4 py-2';
+    const baseClasses = 'relative px-4 py-2';
     const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
     
     if (isHighlighted) {
@@ -392,11 +453,37 @@ export function GameCard({
 
   const swipeDirection = swipeX > 0 ? 'right' : swipeX < 0 ? 'left' : 'none';
   const swipeIntensity = Math.min(1, Math.abs(swipeX) / SWIPE_REVEAL);
-  const rightActionLabel = isPlayer ? 'Nicht Mitspielen' : 'Mitspielen';
+  const rightActionLabel = visualIsPlayer ? 'Nicht Mitspielen' : 'Mitspielen';
   const leftActionLabel = canHide
     ? (isHidden ? 'Einblenden' : 'Ausblenden')
     : 'Ausblenden nicht möglich';
-  const cardTransition = isSwiping ? 'none' : 'transform 180ms ease-out';
+  const swipeBackgroundColor =
+    swipeDirection === 'right'
+      ? `rgba(220, 252, 231, ${0.2 + 0.8 * swipeIntensity})`
+      : swipeDirection === 'left'
+        ? `rgba(229, 231, 235, ${0.2 + 0.8 * swipeIntensity})`
+        : 'transparent';
+  const playIconScale = Math.min(
+    1.25,
+    1 + 0.25 * swipeIntensity + (playPulse ? 0.05 : 0)
+  );
+  const playIconStyle = {
+    transform: `scale(${playIconScale})`,
+    transformOrigin: 'center',
+    transition: isSwiping ? 'none' : 'transform 160ms ease-out',
+    willChange: 'transform',
+  };
+  const playStrikeStyle = {
+    transform: `scaleX(${playPulse ? 1 : 0.75})`,
+    transition: 'transform 160ms ease-out',
+  };
+  const playFeedbackLabel =
+    playFeedback === 'added' ? 'Du spielst mit' : playFeedback === 'removed' ? 'Nicht mehr dabei' : '';
+  const cardTransition = isSwiping
+    ? 'none'
+    : playCommitActive
+      ? 'transform 260ms ease-out'
+      : 'transform 180ms ease-out';
   const collapseStyle =
     collapsePhase === 'idle'
       ? {}
@@ -417,22 +504,22 @@ export function GameCard({
         {...swipeHandlers}
       >
         <div
-          className={`absolute inset-0 flex items-center justify-between px-4 pointer-events-none ${
-            swipeDirection === 'right'
-              ? 'bg-green-100'
-              : swipeDirection === 'left'
-                ? 'bg-gray-200'
-                : 'bg-transparent'
-          }`}
+          className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none"
+          style={{ backgroundColor: swipeBackgroundColor }}
         >
           <div
             className="flex flex-col items-center text-xs font-semibold text-green-800"
             style={{ opacity: swipeDirection === 'right' ? swipeIntensity : 0 }}
           >
             <div className="relative w-6 h-6">
-              <img src="/meeple.svg" alt="" className="w-6 h-6" />
-              {isPlayer && (
-                <span className="absolute left-0 right-0 top-1/2 h-[2px] bg-green-800 -rotate-12" />
+              <div style={playIconStyle}>
+                <img src="/meeple.svg" alt="" className="w-6 h-6" />
+              </div>
+              {visualIsPlayer && (
+                <span
+                  className="absolute left-0 right-0 top-1/2 h-[2px] bg-green-800 -rotate-12 origin-left"
+                  style={playStrikeStyle}
+                />
               )}
             </div>
             <span className="mt-1">{rightActionLabel}</span>
@@ -454,6 +541,17 @@ export function GameCard({
             transition: cardTransition,
           }}
         >
+          {playFeedback && (
+            <div
+              className={`pointer-events-none absolute left-4 top-3 z-10 text-xs font-semibold px-2 py-1 rounded-full shadow-sm transition-all duration-200 ${
+                playFeedback === 'added'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-gray-200 text-gray-700'
+              } ${playFeedbackVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
+            >
+              {playFeedbackLabel}
+            </div>
+          )}
           {/* Game Name with Thumbnail and Actions - Requirement 8.1, 8.2, 8.3 */}
           <div className="flex gap-3 mb-1">
             {/* Thumbnail with Neuheit overlay - micro size for mobile, fixed outer size for consistency */}

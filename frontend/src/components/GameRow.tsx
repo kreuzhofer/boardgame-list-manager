@@ -15,7 +15,6 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
-import { ClickNotification } from './ClickNotification';
 import { DesktopActionsMenu } from './DesktopActionsMenu';
 import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 
@@ -236,43 +235,25 @@ export function GameRow({
           />
           
           {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-          {game.bggId && game.bggRating && (
-            <div className="relative">
-              <button
-                onClick={() => openBggPage(game.bggId!)}
-                className="p-1 rounded flex items-center hover:bg-gray-100 transition-colors"
-                aria-label="BoardGameGeek Info"
-              >
-                <BggRatingBadge rating={game.bggRating} />
-              </button>
-              <HelpBubble
-                text="BoardGameGeek Seite öffnen (neuer Tab)"
-                position="top-right"
-              />
-            </div>
-          )}
-          
-          {/* Delete button - only for owner, icon only to save space */}
-          {isOwner && (
-            <ClickNotification
-              message="Andere Spieler oder Mitbringer sind eingetragen"
-              enabled={!canDelete}
-              duration={3000}
-            >
-              <button
-                onClick={() => canDelete && onDeleteGame?.(game.id)}
-                disabled={!canDelete}
-                aria-label="Spiel löschen"
-                className={`p-1.5 rounded transition-colors ${
-                  canDelete
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                <img src="/trash.svg" alt="" className="w-4 h-4" />
-              </button>
-            </ClickNotification>
-          )}
+          <div className="relative w-9 h-8 flex items-center justify-center">
+            {game.bggId && game.bggRating ? (
+              <>
+                <button
+                  onClick={() => openBggPage(game.bggId!)}
+                  className="p-1 rounded flex items-center hover:bg-gray-100 transition-colors"
+                  aria-label="BoardGameGeek Info"
+                >
+                  <BggRatingBadge rating={game.bggRating} />
+                </button>
+                <HelpBubble
+                  text="BoardGameGeek Seite öffnen (neuer Tab)"
+                  position="top-right"
+                />
+              </>
+            ) : (
+              <div className="w-8 h-8 pointer-events-none" aria-hidden="true" />
+            )}
+          </div>
 
           {/* Hide/Show button */}
           {(onHideGame || onUnhideGame) && (
@@ -305,15 +286,15 @@ export function GameRow({
             </div>
           )}
           
-          {/* Desktop Actions Menu - for owner's non-BGG games */}
-          {onTogglePrototype && (
-            <DesktopActionsMenu
-              game={game}
-              currentUserId={currentUserId}
-              onTogglePrototype={onTogglePrototype}
-              onUploadThumbnail={handleUploadThumbnail}
-            />
-          )}
+          {/* Desktop Actions Menu - overflow actions */}
+          <DesktopActionsMenu
+            game={game}
+            currentUserId={currentUserId}
+            onTogglePrototype={onTogglePrototype}
+            onUploadThumbnail={handleUploadThumbnail}
+            onDeleteGame={onDeleteGame}
+            canDelete={canDelete}
+          />
 
           {/* Thumbnail Upload Modal - rendered via portal so can be here */}
           <ThumbnailUploadModal

@@ -81,6 +81,8 @@ interface GameCardProps {
   isHighlighted?: boolean;
   /** Cache-busting timestamp for custom thumbnails */
   thumbnailTimestamp?: number;
+  /** Whether this card is the last item in the list */
+  isLast?: boolean;
 }
 
 /** Compact list display for mobile - shows up to 2 names, or 1 name + "+X" if more than 2 */
@@ -141,8 +143,9 @@ export function GameCard({
   onThumbnailUploaded,
   scrollIntoView,
   onScrolledIntoView,
-  isHighlighted,
+  isHighlighted = false,
   thumbnailTimestamp,
+  isLast = false,
 }: GameCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
@@ -459,7 +462,7 @@ export function GameCard({
 
   // Determine background color: highlight > wunsch > default
   const getCardClassName = () => {
-    const baseClasses = 'relative px-4 py-2';
+    const baseClasses = `relative px-4 py-2 ${isLast ? '' : 'border-b border-gray-200'}`;
     const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
     
     if (isHighlighted) {

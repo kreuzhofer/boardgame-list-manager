@@ -171,7 +171,6 @@ export function GameTable({
                 <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300/50 to-transparent pointer-events-none" />
               )}
             <GameCard
-              key={game.id}
               game={game}
               currentUserId={currentUserId}
               onAddPlayer={onAddPlayer}
@@ -187,6 +186,7 @@ export function GameTable({
               onScrolledIntoView={onScrolledToGame}
               isHighlighted={highlightedGameIds?.has(game.id)}
               thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
+              isLast={index === sortedGames.length - 1}
             />
             </div>
           ))}

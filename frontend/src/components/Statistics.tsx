@@ -164,7 +164,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
         </div>
       </div>
       <div className="mt-4 overflow-x-auto">
-        <div className="flex items-end gap-2 h-[200px] min-w-max pb-2">
+        <div className="flex items-end gap-2 h-[200px] pb-2 w-fit mx-auto">
           {sortedData.map((item) => {
             const heightRatio = maxCount === 0 ? 0 : item.count / maxCount;
             const barHeight = Math.max(6, Math.round(heightRatio * maxBarHeight));

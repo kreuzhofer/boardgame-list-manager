@@ -249,7 +249,7 @@ export function GameRow({
       </td>
 
       {/* Game Name with Status Badge and Owner */}
-      <td className="w-[25%] p-0">
+      <td className="w-[22%] 2xl:w-[25%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex flex-col gap-1">
             <span className="font-medium text-gray-900">{game.name}</span>
@@ -281,7 +281,7 @@ export function GameRow({
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-      <td className="w-[18%] p-0">
+      <td className="w-[15%] 2xl:w-[18%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <BringerList 
             bringers={game.bringers} 
@@ -295,7 +295,7 @@ export function GameRow({
       </td>
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
-      <td className="w-[18%] p-0">
+      <td className="w-[15%] 2xl:w-[18%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <PlayerList 
             players={game.players} 
@@ -309,20 +309,33 @@ export function GameRow({
       </td>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
-      <td className="w-[280px] p-0">
+      <td className="w-[320px] 2xl:w-[300px] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex gap-2 flex-nowrap items-center">
-            <GameActions
-              game={game}
-              currentUserId={currentUserId}
-              onAddPlayer={handleAddPlayerWithToast}
-              onAddBringer={handleAddBringerWithToast}
-              onRemovePlayer={handleRemovePlayerWithToast}
-              onRemoveBringer={handleRemoveBringerWithToast}
-            />
+            <div className="shrink-0 hidden 2xl:flex">
+              <GameActions
+                game={game}
+                currentUserId={currentUserId}
+                onAddPlayer={handleAddPlayerWithToast}
+                onAddBringer={handleAddBringerWithToast}
+                onRemovePlayer={handleRemovePlayerWithToast}
+                onRemoveBringer={handleRemoveBringerWithToast}
+              />
+            </div>
+            <div className="shrink-0 flex 2xl:hidden">
+              <GameActions
+                game={game}
+                currentUserId={currentUserId}
+                onAddPlayer={handleAddPlayerWithToast}
+                onAddBringer={handleAddBringerWithToast}
+                onRemovePlayer={handleRemovePlayerWithToast}
+                onRemoveBringer={handleRemoveBringerWithToast}
+                isMobile={true}
+              />
+            </div>
             
             {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-            <div className="relative w-9 h-8 flex items-center justify-center">
+            <div className="relative w-9 h-8 flex items-center justify-center shrink-0">
               {game.bggId && game.bggRating ? (
                 <>
                   <button
@@ -344,7 +357,7 @@ export function GameRow({
 
             {/* Hide/Show button */}
             {(onHideGame || onUnhideGame) && (
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={handleToggleHidden}
                   disabled={!canHide}
@@ -374,14 +387,16 @@ export function GameRow({
             )}
             
             {/* Desktop Actions Menu - overflow actions */}
-            <DesktopActionsMenu
-              game={game}
-              currentUserId={currentUserId}
-              onTogglePrototype={onTogglePrototype}
-              onUploadThumbnail={handleUploadThumbnail}
-              onDeleteGame={onDeleteGame}
-              canDelete={canDelete}
-            />
+            <div className="shrink-0">
+              <DesktopActionsMenu
+                game={game}
+                currentUserId={currentUserId}
+                onTogglePrototype={onTogglePrototype}
+                onUploadThumbnail={handleUploadThumbnail}
+                onDeleteGame={onDeleteGame}
+                canDelete={canDelete}
+              />
+            </div>
 
             {/* Thumbnail Upload Modal - rendered via portal so can be here */}
             <ThumbnailUploadModal

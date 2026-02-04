@@ -138,7 +138,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
     );
   }
 
-  const sortedData = [...data].sort((a, b) => a.year - b.year);
+  const sortedData = [...data].sort((a, b) => b.year - a.year);
   const counts = sortedData.map((item) => item.count);
   const minCount = Math.min(...counts);
   const maxCount = Math.max(...counts);

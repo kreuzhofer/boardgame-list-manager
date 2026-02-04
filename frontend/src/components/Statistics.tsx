@@ -142,7 +142,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
   const counts = sortedData.map((item) => item.count);
   const minCount = Math.min(...counts);
   const maxCount = Math.max(...counts);
-  const maxBarHeight = 140;
+  const maxBarHeight = 120;
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -164,7 +164,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
         </div>
       </div>
       <div className="mt-4 overflow-x-auto">
-        <div className="flex items-end gap-2 h-[180px] min-w-max pb-2">
+        <div className="flex items-end gap-2 h-[200px] min-w-max pb-2">
           {sortedData.map((item) => {
             const heightRatio = maxCount === 0 ? 0 : item.count / maxCount;
             const barHeight = Math.max(6, Math.round(heightRatio * maxBarHeight));
@@ -222,6 +222,36 @@ function buildLinePath(
     .join(' ');
 }
 
+function formatTickDate(date: string) {
+  const [year, month, day] = date.split('-');
+  if (!year || !month || !day) {
+    return date;
+  }
+  return `${day}.${month}.`;
+}
+
+function buildTickIndices(length: number, maxTicks: number) {
+  if (length <= maxTicks) {
+    return Array.from({ length }, (_, index) => index);
+  }
+  const step = Math.ceil((length - 1) / (maxTicks - 1));
+  const indices: number[] = [];
+  for (let index = 0; index < length; index += step) {
+    indices.push(index);
+  }
+  if (indices[indices.length - 1] !== length - 1) {
+    indices.push(length - 1);
+  }
+  return indices;
+}
+
+function getTickX(index: number, length: number, width: number, padding: number) {
+  const usableWidth = width - padding * 2;
+  return length === 1
+    ? padding + usableWidth / 2
+    : padding + (index / (length - 1)) * usableWidth;
+}
+
 function TimelineChart({ data }: TimelineChartProps) {
   const points = data.points;
   if (points.length === 0) {
@@ -254,10 +284,7 @@ function TimelineChart({ data }: TimelineChartProps) {
   const playerPath = buildLinePath(playersSeries, width, height, padding, maxValue);
   const newUsersPath = buildLinePath(newUsersSeries, width, height, padding, maxValue);
   const activeUsersPath = buildLinePath(activeUsersSeries, width, height, padding, maxValue);
-  const midIndex = Math.floor(points.length / 2);
-  const tickLabels = Array.from(
-    new Set([points[0]?.date, points[midIndex]?.date, points[points.length - 1]?.date])
-  ).filter(Boolean) as string[];
+  const tickIndices = buildTickIndices(points.length, 6);
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -353,12 +380,21 @@ function TimelineChart({ data }: TimelineChartProps) {
             strokeLinejoin="round"
             strokeDasharray="6 4"
           />
+          {tickIndices.map((index) => {
+            const x = getTickX(index, points.length, width, padding);
+            return (
+              <text
+                key={points[index]?.date}
+                x={x}
+                y={height - padding + 16}
+                textAnchor="middle"
+                className="fill-gray-400 text-[10px]"
+              >
+                {formatTickDate(points[index]?.date ?? '')}
+              </text>
+            );
+          })}
         </svg>
-      </div>
-      <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
-        {tickLabels.map((label) => (
-          <span key={label}>{label}</span>
-        ))}
       </div>
     </div>
   );
@@ -376,10 +412,7 @@ function TotalUsersChart({ data }: TimelineChartProps) {
   const height = 200;
   const padding = 28;
   const totalUsersPath = buildLinePath(totalUsersSeries, width, height, padding, maxValue);
-  const midIndex = Math.floor(points.length / 2);
-  const tickLabels = Array.from(
-    new Set([points[0]?.date, points[midIndex]?.date, points[points.length - 1]?.date])
-  ).filter(Boolean) as string[];
+  const tickIndices = buildTickIndices(points.length, 6);
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -437,12 +470,21 @@ function TotalUsersChart({ data }: TimelineChartProps) {
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
+          {tickIndices.map((index) => {
+            const x = getTickX(index, points.length, width, padding);
+            return (
+              <text
+                key={points[index]?.date}
+                x={x}
+                y={height - padding + 16}
+                textAnchor="middle"
+                className="fill-gray-400 text-[10px]"
+              >
+                {formatTickDate(points[index]?.date ?? '')}
+              </text>
+            );
+          })}
         </svg>
-      </div>
-      <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
-        {tickLabels.map((label) => (
-          <span key={label}>{label}</span>
-        ))}
       </div>
     </div>
   );

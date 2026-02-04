@@ -3,7 +3,7 @@
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 9.3, 9.4, 9.5
  * 
- * This service fetches images from BGG pages using ScraperAPI, stores them
+ * This service fetches images from BGG pages using configured fetch providers, stores them
  * locally in a persistent file cache, and serves them through a dedicated
  * API endpoint. All images are converted to JPEG for maximum compatibility.
  */
@@ -13,6 +13,7 @@ import * as path from 'path';
 import sharp from 'sharp';
 import { config } from '../config';
 import { createBggFetchQueue, BggFetchQueue } from './bggFetchQueue';
+import bggPageFetcher from './bggPageFetcher';
 
 export type ImageSize = 'micro' | 'square200';
 
@@ -32,13 +33,11 @@ interface BggImageUrls {
 class BggImageService {
   private cacheDir: string;
   private fetchQueue: BggFetchQueue;
-  private scraperApiKey: string;
   private scrapeEnabled: boolean;
   private initialized: boolean = false;
 
   constructor(customCacheDir?: string) {
     this.cacheDir = customCacheDir || config.bggImages.cacheDir;
-    this.scraperApiKey = config.bggImages.scraperApiKey;
     this.scrapeEnabled = config.bggImages.scrapeEnabled;
     
     // Create the fetch queue with our fetch function
@@ -191,32 +190,11 @@ class BggImageService {
   }
 
   /**
-   * Fetch BGG page HTML using ScraperAPI
+   * Fetch BGG page HTML using configured fetch providers
    */
   private async fetchBggPage(bggId: number): Promise<string> {
-    const bggUrl = `https://boardgamegeek.com/boardgame/${bggId}`;
-    
-    // Use ScraperAPI if key is available
-    let fetchUrl: string;
-    if (this.scraperApiKey) {
-      fetchUrl = `http://api.scraperapi.com?api_key=${this.scraperApiKey}&url=${encodeURIComponent(bggUrl)}`;
-    } else {
-      // Direct fetch for development/testing (may be rate limited)
-      fetchUrl = bggUrl;
-    }
-    
-    const response = await fetch(fetchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch BGG page: ${response.status} ${response.statusText}`);
-    }
-    
-    return response.text();
+    const result = await bggPageFetcher.fetchBggPage(bggId);
+    return result.html;
   }
 
   /**

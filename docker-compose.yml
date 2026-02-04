@@ -31,11 +31,29 @@ services:
       - SCRAPER_API_KEY=${SCRAPER_API_KEY:-}
       - BGG_SCRAPE_ENABLED=${BGG_SCRAPE_ENABLED:-true}
       - BGG_IMAGE_CACHE_DIR=/app/cache/bgg-images
+      - CRAWLER_URL=${CRAWLER_URL:-http://crawler:3001}
     volumes:
       - bgg_image_cache:/app/cache/bgg-images
     depends_on:
       postgresql:
         condition: service_healthy
+
+  crawler:
+    build:
+      context: ./services/crawler
+      dockerfile: Dockerfile
+    pull_policy: build
+    ports:
+      - "${CRAWLER_PORT:-9101}:3001"
+    environment:
+      - CRAWLER_PORT=3001
+      - APIFY_PROXY_PASSWORD=${APIFY_PROXY_PASSWORD:-}
+      - APIFY_PROXY_USERNAME=${APIFY_PROXY_USERNAME:-}
+      - APIFY_PROXY_GROUPS=${APIFY_PROXY_GROUPS:-}
+      - APIFY_PROXY_COUNTRY=${APIFY_PROXY_COUNTRY:-}
+      - APIFY_PROXY_SESSION=${APIFY_PROXY_SESSION:-}
+      - APIFY_PROXY_HOSTNAME=${APIFY_PROXY_HOSTNAME:-proxy.apify.com}
+      - APIFY_PROXY_PORT=${APIFY_PROXY_PORT:-8000}
 
   postgresql:
     image: postgres:15-alpine

@@ -28,6 +28,7 @@ export const config = {
     scraperApiKey: process.env.SCRAPER_API_KEY || '',
     scrapeEnabled: process.env.BGG_SCRAPE_ENABLED !== 'false',
     cacheDir: process.env.BGG_IMAGE_CACHE_DIR || '/app/cache/bgg-images',
+    crawlerUrl: process.env.CRAWLER_URL || '',
   },
   customThumbnails: {
     cacheDir: process.env.CUSTOM_THUMBNAIL_DIR || '/app/cache/custom-thumbnails',

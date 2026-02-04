@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.2.3 (04. Februar 2026)
+- Neue Druckansicht: Liste der Spiele, die Du mitbringst, und Liste der Spiele, bei denen Du mitspielen willst
+- Neue Statistiken: Veröffentlichungsjahre als Balkendiagramm mit Heatmap-Farben
+- Aktivitätsverlauf pro Tag: Spiele hinzugefügt, Spieler hinzugefügt, neue Nutzer, aktive Nutzer
+- Nutzerentwicklung: neue Nutzer pro Tag und Gesamtzahl über die Zeit
+
 ## 0.2.2 (04. Februar 2026)
 - Löschen Button ins "..." Menü verschoben
 - Neue Ausblenden/Einblenden Funktion: Auge-Button im Desktop Modus, Swipe nach links in Mobil Ansicht

@@ -1,4 +1,5 @@
 import { userRepository, UserRepository, UserEntity } from '../repositories/user.repository';
+import { activityLogService } from './activityLog.service';
 
 /**
  * Maximum allowed length for usernames (after trimming whitespace)
@@ -98,6 +99,10 @@ export class UserService {
 
     try {
       const entity = await this.repository.create(trimmedName);
+      await activityLogService.logEvent({
+        actorUserId: entity.id,
+        eventType: 'user_created',
+      });
       return this.transformUser(entity);
     } catch (error) {
       // Handle Prisma unique constraint violation

@@ -8,7 +8,12 @@
 
 import { useEffect, useState } from 'react';
 import { statisticsApi } from '../api/client';
-import type { StatisticsData, PopularGame } from '../types';
+import type {
+  StatisticsData,
+  PopularGame,
+  ReleaseYearCount,
+  StatisticsTimelineData,
+} from '../types';
 
 interface StatCardProps {
   title: string;
@@ -106,6 +111,343 @@ function PopularGamesList({ games }: PopularGamesListProps) {
   );
 }
 
+interface ReleaseYearChartProps {
+  data: ReleaseYearCount[];
+}
+
+function getHeatColor(value: number, min: number, max: number) {
+  if (max === min) {
+    return 'hsl(200, 80%, 55%)';
+  }
+  const ratio = (value - min) / (max - min);
+  const hue = 220 - ratio * 200;
+  return `hsl(${Math.round(hue)}, 80%, 55%)`;
+}
+
+function ReleaseYearChart({ data }: ReleaseYearChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-3">
+          Spiele nach Veröffentlichungsjahr
+        </h3>
+        <p className="text-gray-400 text-sm">
+          Keine Veröffentlichungsjahre vorhanden.
+        </p>
+      </div>
+    );
+  }
+
+  const sortedData = [...data].sort((a, b) => a.year - b.year);
+  const counts = sortedData.map((item) => item.count);
+  const minCount = Math.min(...counts);
+  const maxCount = Math.max(...counts);
+  const maxBarHeight = 140;
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-medium text-gray-500">
+          Spiele nach Veröffentlichungsjahr
+        </h3>
+        <div className="flex items-center gap-2 text-[10px] text-gray-400">
+          <span>Kühl</span>
+          <span
+            className="w-16 h-2 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, hsl(220, 80%, 55%), hsl(15, 80%, 55%))',
+            }}
+            aria-hidden="true"
+          ></span>
+          <span>Heiß</span>
+        </div>
+      </div>
+      <div className="mt-4 overflow-x-auto">
+        <div className="flex items-end gap-2 h-[180px] min-w-max pb-2">
+          {sortedData.map((item) => {
+            const heightRatio = maxCount === 0 ? 0 : item.count / maxCount;
+            const barHeight = Math.max(6, Math.round(heightRatio * maxBarHeight));
+            const barColor = getHeatColor(item.count, minCount, maxCount);
+
+            return (
+              <div key={item.year} className="flex flex-col items-center w-8">
+                <div className="text-[10px] text-gray-500 mb-1">
+                  {item.count}
+                </div>
+                <div
+                  className="w-6 rounded-t shadow-sm"
+                  style={{ height: `${barHeight}px`, backgroundColor: barColor }}
+                  title={`${item.year}: ${item.count}`}
+                  aria-label={`${item.year}: ${item.count} Spiele`}
+                ></div>
+                <div className="mt-1 text-[10px] text-gray-500">
+                  {item.year}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface TimelineChartProps {
+  data: StatisticsTimelineData;
+}
+
+function buildLinePath(
+  values: number[],
+  width: number,
+  height: number,
+  padding: number,
+  maxValue: number
+) {
+  if (values.length === 0) {
+    return '';
+  }
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+
+  return values
+    .map((value, index) => {
+      const x =
+        values.length === 1
+          ? padding + usableWidth / 2
+          : padding + (index / (values.length - 1)) * usableWidth;
+      const y = padding + usableHeight - (value / maxValue) * usableHeight;
+      return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ');
+}
+
+function TimelineChart({ data }: TimelineChartProps) {
+  const points = data.points;
+  if (points.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-3">
+          Tagesverlauf der Aktivität
+        </h3>
+        <p className="text-gray-400 text-sm">Noch keine Aktivität vorhanden.</p>
+      </div>
+    );
+  }
+
+  const gamesSeries = points.map((point) => point.gamesAdded);
+  const playersSeries = points.map((point) => point.playersAdded);
+  const newUsersSeries = points.map((point) => point.newUsers);
+  const activeUsersSeries = points.map((point) => point.activeUsers);
+  const maxValue = Math.max(
+    ...gamesSeries,
+    ...playersSeries,
+    ...newUsersSeries,
+    ...activeUsersSeries,
+    1
+  );
+
+  const width = 640;
+  const height = 200;
+  const padding = 28;
+  const gamePath = buildLinePath(gamesSeries, width, height, padding, maxValue);
+  const playerPath = buildLinePath(playersSeries, width, height, padding, maxValue);
+  const newUsersPath = buildLinePath(newUsersSeries, width, height, padding, maxValue);
+  const activeUsersPath = buildLinePath(activeUsersSeries, width, height, padding, maxValue);
+  const midIndex = Math.floor(points.length / 2);
+  const tickLabels = Array.from(
+    new Set([points[0]?.date, points[midIndex]?.date, points[points.length - 1]?.date])
+  ).filter(Boolean) as string[];
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-sm font-medium text-gray-500">
+          Tagesverlauf der Aktivität
+        </h3>
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-red-500"></span>
+            Spiele hinzugefügt
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-blue-500"></span>
+            Spieler hinzugefügt
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-emerald-500"></span>
+            Neue Nutzer
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-amber-500"></span>
+            Aktive Nutzer
+          </span>
+        </div>
+      </div>
+      <div className="mt-4">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-48"
+          role="img"
+          aria-label="Aktivitätsverlauf pro Tag"
+        >
+          <rect
+            x={padding}
+            y={padding}
+            width={width - padding * 2}
+            height={height - padding * 2}
+            fill="transparent"
+            stroke="#e5e7eb"
+            strokeWidth={1}
+          />
+          {[0, 0.5, 1].map((ratio) => {
+            const y = padding + (height - padding * 2) * ratio;
+            const value = Math.round(maxValue * (1 - ratio));
+            return (
+              <g key={ratio}>
+                <line
+                  x1={padding}
+                  x2={width - padding}
+                  y1={y}
+                  y2={y}
+                  stroke="#f3f4f6"
+                  strokeWidth={1}
+                />
+                <text
+                  x={padding - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  className="fill-gray-400 text-[10px]"
+                >
+                  {value}
+                </text>
+              </g>
+            );
+          })}
+          <path
+            d={gamePath}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+          <path
+            d={playerPath}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+          <path
+            d={newUsersPath}
+            fill="none"
+            stroke="#10b981"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+          <path
+            d={activeUsersPath}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            strokeDasharray="6 4"
+          />
+        </svg>
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+        {tickLabels.map((label) => (
+          <span key={label}>{label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TotalUsersChart({ data }: TimelineChartProps) {
+  const points = data.points;
+  if (points.length === 0) {
+    return null;
+  }
+
+  const totalUsersSeries = points.map((point) => point.totalUsers);
+  const maxValue = Math.max(...totalUsersSeries, 1);
+  const width = 640;
+  const height = 200;
+  const padding = 28;
+  const totalUsersPath = buildLinePath(totalUsersSeries, width, height, padding, maxValue);
+  const midIndex = Math.floor(points.length / 2);
+  const tickLabels = Array.from(
+    new Set([points[0]?.date, points[midIndex]?.date, points[points.length - 1]?.date])
+  ).filter(Boolean) as string[];
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-sm font-medium text-gray-500">Gesamte Nutzerzahl</h3>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="w-3 h-0.5 bg-purple-500"></span>
+          Gesamt
+        </div>
+      </div>
+      <div className="mt-4">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-48"
+          role="img"
+          aria-label="Gesamte Nutzerzahl pro Tag"
+        >
+          <rect
+            x={padding}
+            y={padding}
+            width={width - padding * 2}
+            height={height - padding * 2}
+            fill="transparent"
+            stroke="#e5e7eb"
+            strokeWidth={1}
+          />
+          {[0, 0.5, 1].map((ratio) => {
+            const y = padding + (height - padding * 2) * ratio;
+            const value = Math.round(maxValue * (1 - ratio));
+            return (
+              <g key={ratio}>
+                <line
+                  x1={padding}
+                  x2={width - padding}
+                  y1={y}
+                  y2={y}
+                  stroke="#f3f4f6"
+                  strokeWidth={1}
+                />
+                <text
+                  x={padding - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  className="fill-gray-400 text-[10px]"
+                >
+                  {value}
+                </text>
+              </g>
+            );
+          })}
+          <path
+            d={totalUsersPath}
+            fill="none"
+            stroke="#a855f7"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+        {tickLabels.map((label) => (
+          <span key={label}>{label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface StatisticsProps {
   /** Optional: Refresh trigger - increment to force refresh */
   refreshTrigger?: number;
@@ -123,6 +465,7 @@ interface StatisticsProps {
  */
 export function Statistics({ refreshTrigger }: StatisticsProps) {
   const [statistics, setStatistics] = useState<StatisticsData | null>(null);
+  const [timeline, setTimeline] = useState<StatisticsTimelineData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,8 +474,12 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await statisticsApi.get();
+        const [data, timelineData] = await Promise.all([
+          statisticsApi.get(),
+          statisticsApi.getTimeline(),
+        ]);
         setStatistics(data);
+        setTimeline(timelineData);
       } catch (err) {
         console.error('Failed to fetch statistics:', err);
         setError('Statistiken konnten nicht geladen werden.');
@@ -177,7 +524,7 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
     );
   }
 
-  if (!statistics) {
+  if (!statistics || !timeline) {
     return null;
   }
 
@@ -287,6 +634,10 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
           highlight={statistics.requestedGames > 0}
         />
       </div>
+
+      <TimelineChart data={timeline} />
+      <TotalUsersChart data={timeline} />
+      <ReleaseYearChart data={statistics.releaseYearCounts} />
       
       {/* Requirement 8.4: Popular games list */}
       <PopularGamesList games={statistics.popularGames} />

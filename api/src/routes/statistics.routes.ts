@@ -27,4 +27,23 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/statistics/timeline
+ * Returns timeline statistics for games and player additions grouped by day.
+ */
+router.get('/timeline', async (_req: Request, res: Response) => {
+  try {
+    const timeline = await statisticsService.getTimeline();
+    return res.json(timeline);
+  } catch (error) {
+    console.error('Error fetching statistics timeline:', error);
+    return res.status(500).json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten.',
+      },
+    });
+  }
+});
+
 export default router;

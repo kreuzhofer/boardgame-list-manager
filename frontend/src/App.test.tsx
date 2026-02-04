@@ -35,6 +35,10 @@ vi.mock('./api/client', () => ({
       availableGames: 0,
       requestedGames: 0,
       popularGames: [],
+      releaseYearCounts: [],
+    }),
+    getTimeline: vi.fn().mockResolvedValue({
+      points: [],
     }),
   },
   ApiError: class ApiError extends Error {
@@ -67,6 +71,10 @@ describe('App', () => {
       availableGames: 0,
       requestedGames: 0,
       popularGames: [],
+      releaseYearCounts: [],
+    });
+    vi.mocked(statisticsApi.getTimeline).mockResolvedValue({
+      points: [],
     });
   });
 

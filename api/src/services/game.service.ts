@@ -1,5 +1,6 @@
 import { gameRepository, GameRepository, userRepository, UserRepository } from '../repositories';
 import { sseManager } from './sse.service';
+import { activityLogService } from './activityLog.service';
 import { thumbnailService } from './thumbnailService';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
 
@@ -184,6 +185,18 @@ export class GameService {
         gameName: game.name,
         isBringing,
       });
+
+      await activityLogService.logEvent({
+        actorUserId: userId,
+        eventType: 'game_created',
+        gameId: game.id,
+        metadata: {
+          isBringing,
+          isPlaying,
+          isPrototype: game.isPrototype,
+          bggId: game.bggId,
+        },
+      });
       
       return game;
     } catch (error) {
@@ -222,6 +235,12 @@ export class GameService {
         userName,
         gameName: game.name,
       });
+
+      await activityLogService.logEvent({
+        actorUserId: userId,
+        eventType: 'player_added',
+        gameId,
+      });
       
       return game;
     } catch (error) {
@@ -258,6 +277,12 @@ export class GameService {
         type: 'game:player-removed',
         gameId,
         userId,
+      });
+
+      await activityLogService.logEvent({
+        actorUserId: userId,
+        eventType: 'player_removed',
+        gameId,
       });
       
       return game;
@@ -301,6 +326,12 @@ export class GameService {
         userName,
         gameName: game.name,
       });
+
+      await activityLogService.logEvent({
+        actorUserId: userId,
+        eventType: 'bringer_added',
+        gameId,
+      });
       
       return game;
     } catch (error) {
@@ -337,6 +368,12 @@ export class GameService {
         type: 'game:bringer-removed',
         gameId,
         userId,
+      });
+
+      await activityLogService.logEvent({
+        actorUserId: userId,
+        eventType: 'bringer_removed',
+        gameId,
       });
       
       return game;
@@ -413,6 +450,12 @@ export class GameService {
       gameId,
       userId,
     });
+
+    await activityLogService.logEvent({
+      actorUserId: userId,
+      eventType: 'game_deleted',
+      gameId,
+    });
   }
 
   /**
@@ -462,6 +505,13 @@ export class GameService {
       isPrototype,
     });
 
+    await activityLogService.logEvent({
+      actorUserId: userId,
+      eventType: 'prototype_toggled',
+      gameId,
+      metadata: { isPrototype },
+    });
+
     return game;
   }
 
@@ -493,6 +543,12 @@ export class GameService {
       throw error;
     }
 
+    await activityLogService.logEvent({
+      actorUserId: userId,
+      eventType: 'game_hidden',
+      gameId,
+    });
+
     return this.transformGame(entity, true);
   }
 
@@ -514,6 +570,12 @@ export class GameService {
     if (!removed) {
       throw new Error('Spiel ist nicht ausgeblendet.');
     }
+
+    await activityLogService.logEvent({
+      actorUserId: userId,
+      eventType: 'game_unhidden',
+      gameId,
+    });
 
     return this.transformGame(entity, false);
   }

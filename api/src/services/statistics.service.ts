@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma';
-import type { StatisticsData, PopularGame } from '../types';
+import type { StatisticsData, PopularGame, StatisticsTimelineData } from '../types';
 
 /**
  * StatisticsService handles calculation of event statistics.
@@ -58,13 +58,111 @@ export class StatisticsService {
       }))
       .sort((a, b) => b.playerCount - a.playerCount);
 
+    const releaseYearMap = new Map<number, number>();
+    for (const game of games) {
+      const year = game.yearPublished;
+      if (!year || year <= 0) {
+        continue;
+      }
+      releaseYearMap.set(year, (releaseYearMap.get(year) ?? 0) + 1);
+    }
+
+    const releaseYearCounts = Array.from(releaseYearMap.entries())
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => a.year - b.year);
+
     return {
       totalGames,
       totalParticipants,
       availableGames,
       requestedGames,
       popularGames,
+      releaseYearCounts,
     };
+  }
+
+  async getTimeline(): Promise<StatisticsTimelineData> {
+    type DayCountRow = { day: string; count: number };
+
+    const gameCounts = await prisma.$queryRaw<DayCountRow[]>`
+      SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+             count(*)::int AS count
+      FROM games
+      GROUP BY day
+      ORDER BY day;
+    `;
+
+    const userCounts = await prisma.$queryRaw<DayCountRow[]>`
+      SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+             count(*)::int AS count
+      FROM users
+      GROUP BY day
+      ORDER BY day;
+    `;
+
+    const activeUserCounts = await prisma.$queryRaw<DayCountRow[]>`
+      SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+             count(DISTINCT actor_user_id)::int AS count
+      FROM activity_events
+      GROUP BY day
+      ORDER BY day;
+    `;
+
+    const playerCounts = await prisma.$queryRaw<DayCountRow[]>`
+      SELECT to_char(date_trunc('day', added_at), 'YYYY-MM-DD') AS day,
+             count(*)::int AS count
+      FROM players
+      GROUP BY day
+      ORDER BY day;
+    `;
+
+    if (
+      gameCounts.length === 0 &&
+      playerCounts.length === 0 &&
+      userCounts.length === 0 &&
+      activeUserCounts.length === 0
+    ) {
+      return { points: [] };
+    }
+
+    const gameMap = new Map(gameCounts.map((row) => [row.day, row.count]));
+    const playerMap = new Map(playerCounts.map((row) => [row.day, row.count]));
+    const userMap = new Map(userCounts.map((row) => [row.day, row.count]));
+    const activeUserMap = new Map(activeUserCounts.map((row) => [row.day, row.count]));
+
+    const allDays = [
+      ...gameMap.keys(),
+      ...playerMap.keys(),
+      ...userMap.keys(),
+      ...activeUserMap.keys(),
+    ];
+    const minDay = allDays.reduce((min, day) => (day < min ? day : min), allDays[0]);
+    const maxDay = allDays.reduce((max, day) => (day > max ? day : max), allDays[0]);
+
+    const startDate = new Date(`${minDay}T00:00:00Z`);
+    const endDate = new Date(`${maxDay}T00:00:00Z`);
+    const points: StatisticsTimelineData['points'] = [];
+    let totalUsers = 0;
+
+    for (
+      let cursor = new Date(startDate);
+      cursor <= endDate;
+      cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000)
+    ) {
+      const day = cursor.toISOString().slice(0, 10);
+      const newUsers = userMap.get(day) ?? 0;
+      totalUsers += newUsers;
+      points.push({
+        date: day,
+        gamesAdded: gameMap.get(day) ?? 0,
+        playersAdded: playerMap.get(day) ?? 0,
+        newUsers,
+        totalUsers,
+        activeUsers: activeUserMap.get(day) ?? 0,
+      });
+    }
+
+    return { points };
   }
 }
 

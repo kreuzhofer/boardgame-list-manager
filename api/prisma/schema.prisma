@@ -16,6 +16,7 @@ model User {
   bringers   Bringer[]
   ownedGames Game[]
   hiddenGames HiddenGame[]
+  activityEvents ActivityEvent[]
 
   @@map("users")
 }
@@ -36,6 +37,7 @@ model Game {
   players               Player[]
   bringers              Bringer[]
   hiddenBy              HiddenGame[]
+  activityEvents        ActivityEvent[]
 
   @@index([ownerId])
   @@index([bggId])
@@ -82,6 +84,36 @@ model HiddenGame {
   @@index([gameId])
   @@index([userId])
   @@map("hidden_games")
+}
+
+enum ActivityEventType {
+  game_created
+  player_added
+  player_removed
+  bringer_added
+  bringer_removed
+  game_deleted
+  game_hidden
+  game_unhidden
+  prototype_toggled
+  user_created
+}
+
+model ActivityEvent {
+  id          String            @id @default(uuid())
+  actorUserId String            @map("actor_user_id")
+  eventType   ActivityEventType @map("event_type")
+  gameId      String?           @map("game_id")
+  metadata    Json?             @map("metadata") @db.JsonB
+  createdAt   DateTime          @default(now()) @map("created_at")
+  actor       User              @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  game        Game?             @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([gameId])
+  @@index([createdAt])
+  @@index([eventType])
+  @@map("activity_events")
 }
 
 model BggGame {

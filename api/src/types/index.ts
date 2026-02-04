@@ -107,12 +107,31 @@ export interface StatisticsData {
   availableGames: number;
   requestedGames: number;
   popularGames: PopularGame[];
+  releaseYearCounts: ReleaseYearCount[];
 }
 
 export interface PopularGame {
   id: string;
   name: string;
   playerCount: number;
+}
+
+export interface ReleaseYearCount {
+  year: number;
+  count: number;
+}
+
+export interface StatisticsTimelinePoint {
+  date: string;
+  gamesAdded: number;
+  playersAdded: number;
+  newUsers: number;
+  totalUsers: number;
+  activeUsers: number;
+}
+
+export interface StatisticsTimelineData {
+  points: StatisticsTimelinePoint[];
 }
 
 // Error response type

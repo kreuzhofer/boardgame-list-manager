@@ -11,6 +11,7 @@ export { BggImportService, bggImportService } from './bggImportService';
 export type { ImportStatus } from './bggImportService';
 export { BggEnrichmentService, bggEnrichmentService } from './bggEnrichmentService';
 export type { EnrichmentData, BulkEnrichmentStatus } from './bggEnrichmentService';
+export { ActivityLogService, activityLogService } from './activityLog.service';
 export { GameService, gameService } from './game.service';
 export { SSEManager, sseManager } from './sse.service';
 export { StatisticsService, statisticsService } from './statistics.service';

@@ -16,6 +16,7 @@ import type {
   UsersResponse,
   UserResponse,
   StatisticsData,
+  StatisticsTimelineData,
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
@@ -287,6 +288,9 @@ export const gamesApi = {
 export const statisticsApi = {
   get: (): Promise<StatisticsData> => {
     return fetchApi<StatisticsData>('/api/statistics');
+  },
+  getTimeline: (): Promise<StatisticsTimelineData> => {
+    return fetchApi<StatisticsTimelineData>('/api/statistics/timeline');
   },
 };
 

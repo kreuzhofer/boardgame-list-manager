@@ -13,7 +13,7 @@ import * as path from 'path';
 import sharp from 'sharp';
 import { config } from '../config';
 import { createBggFetchQueue, BggFetchQueue } from './bggFetchQueue';
-import bggPageFetcher from './bggPageFetcher';
+import pageFetchService from './pageFetchService';
 
 export type ImageSize = 'micro' | 'square200';
 
@@ -193,7 +193,7 @@ class BggImageService {
    * Fetch BGG page HTML using configured fetch providers
    */
   private async fetchBggPage(bggId: number): Promise<string> {
-    const result = await bggPageFetcher.fetchBggPage(bggId);
+    const result = await pageFetchService.fetchBggPage(bggId);
     return result.html;
   }
 

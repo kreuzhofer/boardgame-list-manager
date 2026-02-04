@@ -25,7 +25,7 @@ export class ScraperApiError extends Error {
   }
 }
 
-class BggPageFetcher {
+class PageFetchService {
   private readonly scraperApiKey: string;
   private readonly crawlerUrl: string;
   private scraperApiDisabledUntil: number | null = null;
@@ -203,4 +203,4 @@ class BggPageFetcher {
   }
 }
 
-export default new BggPageFetcher();
+export default new PageFetchService();

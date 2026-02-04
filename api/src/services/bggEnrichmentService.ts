@@ -6,7 +6,7 @@
 
 import { prisma } from '../lib/prisma';
 import { bggCache } from './bggCache';
-import bggPageFetcher, { ScraperApiError } from './bggPageFetcher';
+import pageFetchService, { ScraperApiError } from './pageFetchService';
 
 export interface EnrichmentData {
   alternateNames: Array<{ name: string; language?: string }>;
@@ -167,7 +167,7 @@ class BggEnrichmentService {
    * Requirement 4.1, 6c.1: Fetch page and track response size
    */
   async fetchBggPage(bggId: number): Promise<{ html: string; bytes: number }> {
-    const result = await bggPageFetcher.fetchBggPage(bggId);
+    const result = await pageFetchService.fetchBggPage(bggId);
     return { html: result.html, bytes: result.bytes };
   }
 

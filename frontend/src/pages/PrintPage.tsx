@@ -1,6 +1,6 @@
 /**
  * PrintPage - Print view page for generating game lists
- * Displays a printable list of games the user is bringing
+ * Displays a printable list of games the user is bringing or playing
  * All UI text in German (Requirement 9.1)
  * 
  * Requirements: 7.1, 7.2, 7.3, 7.4
@@ -8,7 +8,8 @@
 
 import { useEffect, useState } from 'react';
 import { gamesApi } from '../api/client';
-import { PrintList, filterGamesUserIsBringing } from '../components';
+import { PrintList, filterGamesForPrint, filterGamesUserIsBringing, filterGamesUserIsPlaying } from '../components';
+import type { PrintFilterMode } from '../components';
 import type { Game, User } from '../types';
 
 interface PrintPageProps {
@@ -19,6 +20,7 @@ export function PrintPage({ user }: PrintPageProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [printFilter, setPrintFilter] = useState<PrintFilterMode>('bringing');
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -44,9 +46,27 @@ export function PrintPage({ user }: PrintPageProps) {
   };
 
   // Count games user is bringing
-  const userGamesCount = user 
-    ? filterGamesUserIsBringing(games, user.id).length 
-    : 0;
+  const bringingCount = user ? filterGamesUserIsBringing(games, user.id).length : 0;
+  const playingCount = user ? filterGamesUserIsPlaying(games, user.id).length : 0;
+  const combinedCount = user ? filterGamesForPrint(games, user.id, 'all').length : 0;
+  const userGamesCount = printFilter === 'all'
+    ? combinedCount
+    : printFilter === 'bringing'
+      ? bringingCount
+      : playingCount;
+  const filterSummary = printFilter === 'bringing'
+    ? 'Liste der Spiele, die Du mitbringst'
+    : printFilter === 'playing'
+      ? 'Liste der Spiele, bei denen Du mitspielst'
+      : 'Liste der Spiele, die Du mitbringst oder bei denen Du mitspielst';
+  const countSummary = printFilter === 'all'
+    ? `Mitbringen: ${bringingCount} · Mitspielen: ${playingCount}`
+    : `${userGamesCount} ${userGamesCount === 1 ? 'Spiel' : 'Spiele'}`;
+  const emptyHint = printFilter === 'bringing'
+    ? 'Du bringst derzeit keine Spiele mit. Füge Dich als Mitbringer bei Spielen hinzu, um eine Druckliste zu erstellen.'
+    : printFilter === 'playing'
+      ? 'Du spielst derzeit bei keinen Spielen mit. Füge Dich als Mitspieler hinzu, um eine Druckliste zu erstellen.'
+      : 'Du bringst derzeit keine Spiele mit und spielst bei keinen Spielen mit. Füge Dich als Mitbringer oder Mitspieler hinzu, um eine Druckliste zu erstellen.';
 
   if (loading) {
     return (
@@ -106,8 +126,52 @@ export function PrintPage({ user }: PrintPageProps) {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
           <p className="text-gray-600 text-sm mt-1">
-            Liste der Spiele, die Du mitbringst ({userGamesCount} {userGamesCount === 1 ? 'Spiel' : 'Spiele'})
+            {filterSummary} ({countSummary})
           </p>
+          <div className="mt-3 inline-flex rounded-lg border border-gray-200 overflow-hidden bg-gray-100 min-h-[44px]">
+            <button
+              type="button"
+              onClick={() => setPrintFilter('all')}
+              className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+                printFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+              aria-pressed={printFilter === 'all'}
+              aria-label="Alle relevanten Spiele anzeigen"
+              title="Alle"
+            >
+              Alle
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrintFilter('bringing')}
+              className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+                printFilter === 'bringing'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+              aria-pressed={printFilter === 'bringing'}
+              aria-label="Nur Spiele anzeigen, die ich mitbringe"
+              title="Bringe ich mit"
+            >
+              Bringe ich mit
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrintFilter('playing')}
+              className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+                printFilter === 'playing'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+              aria-pressed={printFilter === 'playing'}
+              aria-label="Nur Spiele anzeigen, bei denen ich mitspiele"
+              title="Spiele ich mit"
+            >
+              Spiele ich mit
+            </button>
+          </div>
         </div>
         
         {/* Print button */}
@@ -144,20 +208,36 @@ export function PrintPage({ user }: PrintPageProps) {
       {userGamesCount === 0 && (
         <div className="no-print bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
-            Du bringst derzeit keine Spiele mit. Fügen Dich als Mitbringer bei Spielen hinzu, 
-            um eine Druckliste zu erstellen.
+            {emptyHint}
           </p>
         </div>
       )}
 
       {/* Print preview container */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <PrintList userName={user.name} userId={user.id} games={games} />
-      </div>
+      {printFilter === 'all' ? (
+        <div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <PrintList userName={user.name} userId={user.id} games={games} mode="bringing" />
+          </div>
+          <div className="print-page-break" aria-hidden="true" />
+          <div className="bg-white rounded-lg shadow p-6">
+            <PrintList userName={user.name} userId={user.id} games={games} mode="playing" />
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-6">
+          <PrintList userName={user.name} userId={user.id} games={games} mode={printFilter} />
+        </div>
+      )}
 
       {/* Print-specific global styles */}
       <style>
         {`
+          .print-page-break {
+            border-top: 1px dashed #d1d5db;
+            margin: 1.5rem 0;
+          }
+
           @media print {
             /* Hide navigation, header, footer, and other non-print elements */
             .no-print,
@@ -165,6 +245,14 @@ export function PrintPage({ user }: PrintPageProps) {
             header,
             footer {
               display: none !important;
+            }
+
+            .print-page-break {
+              border: 0 !important;
+              break-before: page;
+              page-break-before: always;
+              height: 0 !important;
+              margin: 0 !important;
             }
             
             .shadow {

@@ -119,12 +119,23 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
             /* Make borders visible in print */
             .print-list table {
               border-collapse: collapse;
+              table-layout: fixed;
+              width: 100%;
             }
-            
+
             .print-list th,
             .print-list td {
               border: 1px solid black !important;
               padding: 8px 12px !important;
+            }
+
+            .print-list col.col-number {
+              width: 8%;
+            }
+
+            .print-list col.col-name,
+            .print-list col.col-players {
+              width: 46%;
             }
             
             /* Ensure header is prominent */
@@ -169,6 +180,11 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
         </div>
       ) : (
         <table className="w-full border-collapse">
+          <colgroup>
+            <col className="col-number" />
+            <col className="col-name" />
+            <col className="col-players" />
+          </colgroup>
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-800">

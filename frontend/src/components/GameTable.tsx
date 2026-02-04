@@ -201,16 +201,16 @@ export function GameTable({
                 <th className="px-2 py-3 text-left text-sm font-semibold text-gray-700 w-20">
                   {/* Thumbnail column - Requirement 7.1 */}
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[25%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[22%] 2xl:w-[25%]">
                   <SortButton />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[18%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[15%] 2xl:w-[18%]">
                   Bringt mit
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[18%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[15%] 2xl:w-[18%]">
                   Mitspieler
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[280px]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[320px] 2xl:w-[300px]">
                   <div className="flex items-center gap-2 w-full">
                     <span>Aktionen</span>
                     <span className="ml-auto text-right text-sm font-normal text-gray-500">

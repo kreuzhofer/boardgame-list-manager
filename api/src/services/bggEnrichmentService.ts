@@ -4,9 +4,9 @@
  * Requirements: 4.1-4.5, 5.5, 6.1-6.5, 6a.1-6a.4, 6b.1-6b.6, 6c.1-6c.5, 7.1-7.5
  */
 
-import { config } from '../config';
 import { prisma } from '../lib/prisma';
 import { bggCache } from './bggCache';
+import bggPageFetcher, { ScraperApiError } from './bggPageFetcher';
 
 export interface EnrichmentData {
   alternateNames: Array<{ name: string; language?: string }>;
@@ -34,21 +34,6 @@ export interface BulkEnrichmentStatus {
   stopReason?: string;
 }
 
-/**
- * Custom error class for ScraperAPI-specific errors
- */
-export class ScraperApiError extends Error {
-  constructor(
-    public statusCode: number,
-    public isFatal: boolean,
-    public shouldRetry: boolean,
-    message: string
-  ) {
-    super(message);
-    this.name = 'ScraperApiError';
-  }
-}
-
 class BggEnrichmentService {
   private bulkStatus: BulkEnrichmentStatus = {
     running: false,
@@ -60,7 +45,6 @@ class BggEnrichmentService {
     etaSeconds: null,
   };
 
-  private scraperApiKey: string;
   private stopRequested: boolean = false;
   
   // Error handling constants
@@ -68,9 +52,7 @@ class BggEnrichmentService {
   private static readonly RATE_LIMIT_DELAY_MS = 5000; // Wait 5s on 429
   private static readonly MAX_RETRIES = 3;
 
-  constructor() {
-    this.scraperApiKey = config.bggImages.scraperApiKey;
-  }
+  constructor() {}
 
 
   /**
@@ -181,83 +163,12 @@ class BggEnrichmentService {
 
 
   /**
-   * Fetch BGG page HTML using ScraperAPI
+   * Fetch BGG page HTML using configured fetch providers
    * Requirement 4.1, 6c.1: Fetch page and track response size
-   * 
-   * ScraperAPI Status Codes:
-   * - 200: Success (charged)
-   * - 404: Page not found (charged, valid response)
-   * - 429: Too many concurrent requests (not charged, retry)
-   * - 400: Malformed request (not charged)
-   * - 403: Credits exhausted or unauthorized (not charged, fatal)
-   * - 500: Failed after 70s of retries (not charged)
    */
   async fetchBggPage(bggId: number): Promise<{ html: string; bytes: number }> {
-    const bggUrl = `https://boardgamegeek.com/boardgame/${bggId}`;
-    
-    let fetchUrl: string;
-    if (this.scraperApiKey) {
-      fetchUrl = `http://api.scraperapi.com?api_key=${this.scraperApiKey}&url=${encodeURIComponent(bggUrl)}`;
-    } else {
-      fetchUrl = bggUrl;
-    }
-    
-    const response = await fetch(fetchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    
-    if (!response.ok) {
-      const statusCode = response.status;
-      
-      // 403: Credits exhausted or unauthorized - fatal, stop immediately
-      if (statusCode === 403) {
-        throw new ScraperApiError(
-          statusCode,
-          true, // fatal
-          false, // don't retry
-          'ScraperAPI credits exhausted or API key invalid'
-        );
-      }
-      
-      // 429: Too many concurrent requests - retry after delay
-      if (statusCode === 429) {
-        throw new ScraperApiError(
-          statusCode,
-          false, // not fatal
-          true, // should retry
-          'ScraperAPI rate limit exceeded'
-        );
-      }
-      
-      // 500: Failed after retries - not fatal, but don't retry (ScraperAPI already retried)
-      if (statusCode === 500) {
-        throw new ScraperApiError(
-          statusCode,
-          false, // not fatal
-          false, // don't retry (ScraperAPI already retried for 70s)
-          'ScraperAPI failed to fetch page after retries'
-        );
-      }
-      
-      // 400: Malformed request - not fatal, don't retry
-      if (statusCode === 400) {
-        throw new ScraperApiError(
-          statusCode,
-          false,
-          false,
-          'Malformed request to ScraperAPI'
-        );
-      }
-      
-      // Other errors
-      throw new Error(`Failed to fetch BGG page: ${response.status} ${response.statusText}`);
-    }
-    
-    const html = await response.text();
-    return { html, bytes: Buffer.byteLength(html, 'utf8') };
+    const result = await bggPageFetcher.fetchBggPage(bggId);
+    return { html: result.html, bytes: result.bytes };
   }
 
   /**

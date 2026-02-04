@@ -160,8 +160,8 @@ export function GameTable({
         </div>
         
         {/* Mobile card list */}
-        <div className="divide-y divide-gray-200">
-          {sortedGames.map((game) => (
+        <div>
+          {sortedGames.map((game, index) => (
             <GameCard
               key={game.id}
               game={game}
@@ -179,6 +179,7 @@ export function GameTable({
               onScrolledIntoView={onScrolledToGame}
               isHighlighted={highlightedGameIds?.has(game.id)}
               thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
+              isLast={index === sortedGames.length - 1}
             />
           ))}
         </div>

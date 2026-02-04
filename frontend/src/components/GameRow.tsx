@@ -37,6 +37,8 @@ interface GameRowProps {
   isHighlighted?: boolean;
   /** Cache-busting timestamp for custom thumbnails */
   thumbnailTimestamp?: number;
+  /** Show top shadow divider (skip for first row) */
+  showTopShadow?: boolean;
 }
 
 export function GameRow({
@@ -55,6 +57,7 @@ export function GameRow({
   onScrolledIntoView,
   isHighlighted,
   thumbnailTimestamp,
+  showTopShadow = false,
 }: GameRowProps) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const isWunsch = game.status === 'wunsch';
@@ -197,10 +200,20 @@ export function GameRow({
           transition: `max-height ${COLLAPSE_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${COLLAPSE_ANIMATION_MS}ms ease-in-out, padding ${COLLAPSE_ANIMATION_MS}ms ease-in-out`,
         };
 
+  const rowShadowStyle = showTopShadow
+    ? {
+        backgroundImage: 'linear-gradient(to bottom, rgba(156, 163, 175, 0.22), rgba(156, 163, 175, 0))',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 6px',
+        backgroundPosition: 'top',
+      }
+    : undefined;
+
   return (
     <tr
       ref={rowRef}
       className={getRowClassName()}
+      style={rowShadowStyle}
     >
       {/* Thumbnail with Neuheit overlay - Requirement 7.1: square200 thumbnail in first column (desktop) */}
       <td className="w-20 p-0">

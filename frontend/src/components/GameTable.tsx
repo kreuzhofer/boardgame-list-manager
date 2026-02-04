@@ -162,25 +162,32 @@ export function GameTable({
         {/* Mobile card list */}
         <div>
           {sortedGames.map((game, index) => (
-            <GameCard
+            <div
               key={game.id}
-              game={game}
-              currentUserId={currentUserId}
-              onAddPlayer={onAddPlayer}
-              onAddBringer={onAddBringer}
-              onRemovePlayer={onRemovePlayer}
-              onRemoveBringer={onRemoveBringer}
-              onHideGame={onHideGame}
-              onUnhideGame={onUnhideGame}
-              onDeleteGame={onDeleteGame}
-              onTogglePrototype={onTogglePrototype}
-              onThumbnailUploaded={onThumbnailUploaded}
-              scrollIntoView={game.id === scrollToGameId}
-              onScrolledIntoView={onScrolledToGame}
-              isHighlighted={highlightedGameIds?.has(game.id)}
-              thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
-              isLast={index === sortedGames.length - 1}
-            />
+              className="relative"
+            >
+              {index > 0 && (
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300/35 to-transparent pointer-events-none z-10" />
+              )}
+              <GameCard
+                game={game}
+                currentUserId={currentUserId}
+                onAddPlayer={onAddPlayer}
+                onAddBringer={onAddBringer}
+                onRemovePlayer={onRemovePlayer}
+                onRemoveBringer={onRemoveBringer}
+                onHideGame={onHideGame}
+                onUnhideGame={onUnhideGame}
+                onDeleteGame={onDeleteGame}
+                onTogglePrototype={onTogglePrototype}
+                onThumbnailUploaded={onThumbnailUploaded}
+                scrollIntoView={game.id === scrollToGameId}
+                onScrolledIntoView={onScrolledToGame}
+                isHighlighted={highlightedGameIds?.has(game.id)}
+                thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
+                isLast={index === sortedGames.length - 1}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -214,7 +221,7 @@ export function GameTable({
               </tr>
             </thead>
             <tbody>
-              {sortedGames.map((game) => (
+              {sortedGames.map((game, index) => (
                 <GameRow
                   key={game.id}
                   game={game}
@@ -232,6 +239,7 @@ export function GameTable({
                   onScrolledIntoView={onScrolledToGame}
                   isHighlighted={highlightedGameIds?.has(game.id)}
                   thumbnailTimestamp={thumbnailTimestamps?.[game.id]}
+                  showTopShadow={index > 0}
                 />
               ))}
             </tbody>

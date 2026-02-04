@@ -37,7 +37,17 @@ export function Layout({ children, user, onUserUpdated, onLogout }: LayoutProps)
           {children}
         </main>
         <footer className="no-print bg-gray-200 text-gray-600 text-center py-4 text-sm mb-16 md:mb-0">
-          <p>© {new Date().getFullYear()} Daniel Kreuzhofer</p>
+          <p>
+            © {new Date().getFullYear()}{' '}
+            <a
+              href="https://danielkreuzhofer.de"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-dotted underline-offset-4 hover:text-gray-900"
+            >
+              Daniel Kreuzhofer
+            </a>
+          </p>
         </footer>
       </PullToRefresh>
       {/* Mobile Bottom Tabs - only visible on mobile */}

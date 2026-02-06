@@ -29,7 +29,7 @@ describe('ThumbnailUploadModal', () => {
     isOpen: true,
     onClose: vi.fn(),
     onSuccess: vi.fn(),
-    userId: 'test-user-id',
+    participantId: 'test-participant-id',
   };
 
   beforeEach(() => {
@@ -197,7 +197,7 @@ describe('ThumbnailUploadModal', () => {
         expect(thumbnailsApi.upload).toHaveBeenCalledWith(
           'test-game-id',
           expect.any(File),
-          'test-user-id'
+          'test-participant-id'
         );
         expect(defaultProps.onSuccess).toHaveBeenCalled();
         expect(defaultProps.onClose).toHaveBeenCalled();

@@ -1,7 +1,7 @@
 /**
  * PrintList component
- * Generates a printable list of games the user is bringing or playing
- * Formatted for table labels with user name prominently displayed
+ * Generates a printable list of games the participant is bringing or playing
+ * Formatted for table labels with participant name prominently displayed
  * Print-friendly CSS styling (no unnecessary colors, good contrast)
  * All UI text in German (Requirement 9.1)
  * 
@@ -13,10 +13,10 @@ import type { Game } from '../types';
 export type PrintFilterMode = 'all' | 'bringing' | 'playing';
 
 export interface PrintListProps {
-  /** The name of the user whose games are being printed */
-  userName: string;
-  /** The ID of the user whose games are being printed */
-  userId: string;
+  /** The name of the participant whose games are being printed */
+  participantName: string;
+  /** The ID of the participant whose games are being printed */
+  participantId: string;
   /** List of all games - will be filtered based on the selected mode */
   games: Game[];
   /** Filter mode for which games to include */
@@ -24,32 +24,32 @@ export interface PrintListProps {
 }
 
 /**
- * Filters games to only include those where the user is a bringer
- * Property 15: Print List Contains User's Games
+ * Filters games to only include those where the participant is a bringer
+ * Property 15: Print List Contains Participant's Games
  * Validates: Requirements 7.2
  */
-export function filterGamesUserIsBringing(games: Game[], userId: string): Game[] {
+export function filterGamesParticipantIsBringing(games: Game[], participantId: string): Game[] {
   return games.filter(game => 
-    game.bringers.some(bringer => bringer.user.id === userId)
+    game.bringers.some(bringer => bringer.participant.id === participantId)
   );
 }
 
 /**
- * Filters games to only include those where the user is a player
+ * Filters games to only include those where the participant is a player
  */
-export function filterGamesUserIsPlaying(games: Game[], userId: string): Game[] {
+export function filterGamesParticipantIsPlaying(games: Game[], participantId: string): Game[] {
   return games.filter(game =>
-    game.players.some(player => player.user.id === userId)
+    game.players.some(player => player.participant.id === participantId)
   );
 }
 
 /**
- * Filters games to include those where the user is a bringer or a player
+ * Filters games to include those where the participant is a bringer or a player
  */
-export function filterGamesUserIsInvolved(games: Game[], userId: string): Game[] {
+export function filterGamesParticipantIsInvolved(games: Game[], participantId: string): Game[] {
   return games.filter(game =>
-    game.bringers.some(bringer => bringer.user.id === userId) ||
-    game.players.some(player => player.user.id === userId)
+    game.bringers.some(bringer => bringer.participant.id === participantId) ||
+    game.players.some(player => player.participant.id === participantId)
   );
 }
 
@@ -58,17 +58,17 @@ export function filterGamesUserIsInvolved(games: Game[], userId: string): Game[]
  */
 export function filterGamesForPrint(
   games: Game[],
-  userId: string,
+  participantId: string,
   mode: PrintFilterMode
 ): Game[] {
   switch (mode) {
     case 'playing':
-      return filterGamesUserIsPlaying(games, userId);
+      return filterGamesParticipantIsPlaying(games, participantId);
     case 'all':
-      return filterGamesUserIsInvolved(games, userId);
+      return filterGamesParticipantIsInvolved(games, participantId);
     case 'bringing':
     default:
-      return filterGamesUserIsBringing(games, userId);
+      return filterGamesParticipantIsBringing(games, participantId);
   }
 }
 
@@ -76,13 +76,13 @@ export function filterGamesForPrint(
  * PrintList component
  * 
  * Requirements:
- * - 7.1: Provide a print-friendly view of games the user is bringing
- * - 7.2: Print list shows only games where user is a bringer
- * - 7.3: Format suitable for table labels (user name prominently displayed)
+ * - 7.1: Provide a print-friendly view of games the participant is bringing
+ * - 7.2: Print list shows only games where participant is a bringer
+ * - 7.3: Format suitable for table labels (participant name prominently displayed)
  * - 7.4: Print-friendly CSS (no unnecessary colors, good contrast)
  */
-export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintListProps) {
-  const userGames = filterGamesForPrint(games, userId, mode);
+export function PrintList({ participantName, participantId, games, mode = 'bringing' }: PrintListProps) {
+  const participantGames = filterGamesForPrint(games, participantId, mode);
   const modeSubtitle = mode === 'bringing'
     ? 'Mitgebrachte Spiele'
     : mode === 'playing'
@@ -156,10 +156,10 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
         `}
       </style>
 
-      {/* Header with user name - prominently displayed for table labels (Requirement 7.3) */}
+      {/* Header with participant name - prominently displayed for table labels (Requirement 7.3) */}
       <div className="print-header text-center mb-6 pb-4 border-b-2 border-gray-800">
         <h1 className="text-3xl font-bold text-gray-900">
-          {userName}
+          {participantName}
         </h1>
         <p className="text-lg text-gray-600 mt-2">
           {modeSubtitle}
@@ -169,12 +169,12 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
       {/* Game count summary */}
       <div className="mb-4 text-gray-700">
         <p className="text-sm">
-          Anzahl Spiele: <span className="font-semibold">{userGames.length}</span>
+          Anzahl Spiele: <span className="font-semibold">{participantGames.length}</span>
         </p>
       </div>
 
       {/* Games list */}
-      {userGames.length === 0 ? (
+      {participantGames.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p>{emptyMessage}</p>
         </div>
@@ -199,7 +199,7 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
             </tr>
           </thead>
           <tbody>
-            {userGames.map((game, index) => (
+            {participantGames.map((game, index) => (
               <tr key={game.id} className="game-item">
                 <td className="border border-gray-300 px-4 py-2 text-gray-700 w-12">
                   {index + 1}
@@ -209,7 +209,7 @@ export function PrintList({ userName, userId, games, mode = 'bringing' }: PrintL
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-gray-600">
                   {game.players.length > 0 
-                    ? game.players.map(p => p.user.name).join(', ')
+                    ? game.players.map(p => p.participant.name).join(', ')
                     : '—'
                   }
                 </td>

@@ -2,9 +2,10 @@ import { prisma } from '../db/prisma';
 import type { ActivityEventType, Prisma } from '@prisma/client';
 
 interface ActivityLogEventInput {
-  actorUserId: string;
+  actorParticipantId: string;
   eventType: ActivityEventType;
   gameId?: string;
+  eventId?: string;
   metadata?: Prisma.InputJsonValue;
 }
 
@@ -13,9 +14,10 @@ export class ActivityLogService {
     try {
       await prisma.activityEvent.create({
         data: {
-          actorUserId: event.actorUserId,
+          actorUserId: event.actorParticipantId,
           eventType: event.eventType,
           gameId: event.gameId ?? null,
+          eventId: event.eventId ?? null,
           metadata: event.metadata ?? undefined,
         },
       });

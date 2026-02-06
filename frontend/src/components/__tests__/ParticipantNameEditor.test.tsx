@@ -1,16 +1,16 @@
 /**
- * Unit tests for UserNameEditor component
+ * Unit tests for ParticipantNameEditor component
  * 
  * **Validates: Requirements 7.2, 7.3, 7.4**
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { UserNameEditor } from '../UserNameEditor';
+import { ParticipantNameEditor } from '../ParticipantNameEditor';
 
 // Mock the API client
 vi.mock('../../api/client', () => ({
-  usersApi: {
+  participantsApi: {
     update: vi.fn(),
   },
   ApiError: class ApiError extends Error {
@@ -22,15 +22,15 @@ vi.mock('../../api/client', () => ({
   },
 }));
 
-import { usersApi, ApiError } from '../../api/client';
+import { participantsApi, ApiError } from '../../api/client';
 
-const mockUsersApi = usersApi as {
+const mockParticipantsApi = participantsApi as {
   update: ReturnType<typeof vi.fn>;
 };
 
-describe('UserNameEditor', () => {
-  const mockUser = { id: 'user-123', name: 'Test User' };
-  const mockOnUserUpdated = vi.fn();
+describe('ParticipantNameEditor', () => {
+  const mockParticipant = { id: 'user-123', name: 'Test User' };
+  const mockOnParticipantUpdated = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,7 +46,7 @@ describe('UserNameEditor', () => {
      */
     it('should display user name', () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       expect(screen.getByText('Test User')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('UserNameEditor', () => {
      */
     it('should display edit button', () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       expect(screen.getByLabelText('Namen bearbeiten')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('UserNameEditor', () => {
      */
     it('should show input when edit button is clicked', () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -86,7 +86,7 @@ describe('UserNameEditor', () => {
      */
     it('should hide input when cancel button is clicked', () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -105,10 +105,10 @@ describe('UserNameEditor', () => {
      * Validates: Requirement 7.2
      */
     it('should call API when form is submitted', async () => {
-      mockUsersApi.update.mockResolvedValue({ user: { id: 'user-123', name: 'New Name' } });
+      mockParticipantsApi.update.mockResolvedValue({ participant: { id: 'user-123', name: 'New Name' } });
 
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -119,7 +119,7 @@ describe('UserNameEditor', () => {
       fireEvent.click(screen.getByText('✓'));
 
       await waitFor(() => {
-        expect(mockUsersApi.update).toHaveBeenCalledWith('user-123', 'New Name');
+        expect(mockParticipantsApi.update).toHaveBeenCalledWith('user-123', 'New Name');
       });
     });
 
@@ -128,11 +128,11 @@ describe('UserNameEditor', () => {
      * Validates: Requirement 7.3
      */
     it('should call onUserUpdated on successful update', async () => {
-      const updatedUser = { id: 'user-123', name: 'New Name' };
-      mockUsersApi.update.mockResolvedValue({ user: updatedUser });
+      const updatedParticipant = { id: 'user-123', name: 'New Name' };
+      mockParticipantsApi.update.mockResolvedValue({ participant: updatedParticipant });
 
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -143,7 +143,7 @@ describe('UserNameEditor', () => {
       fireEvent.click(screen.getByText('✓'));
 
       await waitFor(() => {
-        expect(mockOnUserUpdated).toHaveBeenCalledWith(updatedUser);
+        expect(mockOnParticipantUpdated).toHaveBeenCalledWith(updatedParticipant);
       });
     });
 
@@ -151,10 +151,10 @@ describe('UserNameEditor', () => {
      * Test that edit mode closes on success
      */
     it('should close edit mode on successful update', async () => {
-      mockUsersApi.update.mockResolvedValue({ user: { id: 'user-123', name: 'New Name' } });
+      mockParticipantsApi.update.mockResolvedValue({ participant: { id: 'user-123', name: 'New Name' } });
 
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -174,7 +174,7 @@ describe('UserNameEditor', () => {
      */
     it('should not call API when name is unchanged', async () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -184,7 +184,7 @@ describe('UserNameEditor', () => {
         expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
       });
 
-      expect(mockUsersApi.update).not.toHaveBeenCalled();
+      expect(mockParticipantsApi.update).not.toHaveBeenCalled();
     });
   });
 
@@ -194,12 +194,12 @@ describe('UserNameEditor', () => {
      * Validates: Requirement 7.4 (German error messages)
      */
     it('should display API error message', async () => {
-      mockUsersApi.update.mockRejectedValue(
-        new ApiError('Ein Benutzer mit diesem Namen existiert bereits.', 'DUPLICATE_USER')
+      mockParticipantsApi.update.mockRejectedValue(
+        new ApiError('Ein Teilnehmer mit diesem Namen existiert bereits.', 'DUPLICATE_PARTICIPANT')
       );
 
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -210,7 +210,7 @@ describe('UserNameEditor', () => {
       fireEvent.click(screen.getByText('✓'));
 
       await waitFor(() => {
-        expect(screen.getByText('Ein Benutzer mit diesem Namen existiert bereits.')).toBeInTheDocument();
+        expect(screen.getByText('Ein Teilnehmer mit diesem Namen existiert bereits.')).toBeInTheDocument();
       });
     });
 
@@ -219,7 +219,7 @@ describe('UserNameEditor', () => {
      */
     it('should disable submit button when name is empty', () => {
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));
@@ -234,10 +234,10 @@ describe('UserNameEditor', () => {
      * Test that generic error is displayed for non-API errors
      */
     it('should display generic error for non-API errors', async () => {
-      mockUsersApi.update.mockRejectedValue(new Error('Network error'));
+      mockParticipantsApi.update.mockRejectedValue(new Error('Network error'));
 
       render(
-        <UserNameEditor user={mockUser} onUserUpdated={mockOnUserUpdated} />
+        <ParticipantNameEditor participant={mockParticipant} onParticipantUpdated={mockOnParticipantUpdated} />
       );
 
       fireEvent.click(screen.getByLabelText('Namen bearbeiten'));

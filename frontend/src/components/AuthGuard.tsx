@@ -17,7 +17,7 @@ interface AuthGuardProps {
 }
 
 /**
- * Check if user is authenticated by reading from sessionStorage
+ * Check if event access is authenticated by reading from sessionStorage
  */
 function checkAuthentication(): boolean {
   try {
@@ -77,9 +77,9 @@ export function clearAuthentication(): void {
 }
 
 /**
- * Utility function to check if user is authenticated
+ * Utility function to check if event access is authenticated
  */
-export function isUserAuthenticated(): boolean {
+export function isEventAuthenticated(): boolean {
   return checkAuthentication();
 }
 

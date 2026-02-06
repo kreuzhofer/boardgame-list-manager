@@ -5,11 +5,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { sortGamesByName, toggleSortOrder, DEFAULT_SORT_ORDER } from '../sorting';
+import { sortGamesByName, sortGamesByAddedAt, toggleSortOrder, DEFAULT_SORT_ORDER, DEFAULT_SORT_KEY } from '../sorting';
 import type { Game } from '../../types';
 
 // Helper to create a minimal game object for testing
-const createGame = (name: string): Game => ({
+const createGame = (name: string, createdAt: Date = new Date()): Game => ({
   id: `id-${name}`,
   name,
   owner: null,
@@ -23,7 +23,7 @@ const createGame = (name: string): Game => ({
   players: [],
   bringers: [],
   status: 'wunsch',
-  createdAt: new Date(),
+  createdAt,
 });
 
 describe('sorting utilities', () => {
@@ -124,6 +124,44 @@ describe('sorting utilities', () => {
     });
   });
 
+  describe('sortGamesByAddedAt', () => {
+    it('should sort games by createdAt ascending (oldest → newest) when order is "asc"', () => {
+      const games = [
+        createGame('Catan', new Date('2024-03-01T10:00:00Z')),
+        createGame('Azul', new Date('2024-01-15T10:00:00Z')),
+        createGame('Brass', new Date('2024-02-10T10:00:00Z')),
+      ];
+
+      const sorted = sortGamesByAddedAt(games, 'asc');
+
+      expect(sorted.map((g) => g.name)).toEqual(['Azul', 'Brass', 'Catan']);
+    });
+
+    it('should sort games by createdAt descending (newest → oldest) when order is "desc"', () => {
+      const games = [
+        createGame('Catan', new Date('2024-03-01T10:00:00Z')),
+        createGame('Azul', new Date('2024-01-15T10:00:00Z')),
+        createGame('Brass', new Date('2024-02-10T10:00:00Z')),
+      ];
+
+      const sorted = sortGamesByAddedAt(games, 'desc');
+
+      expect(sorted.map((g) => g.name)).toEqual(['Catan', 'Brass', 'Azul']);
+    });
+
+    it('should not mutate the original array', () => {
+      const games = [
+        createGame('Catan', new Date('2024-03-01T10:00:00Z')),
+        createGame('Azul', new Date('2024-01-15T10:00:00Z')),
+      ];
+      const originalOrder = games.map((g) => g.name);
+
+      sortGamesByAddedAt(games, 'asc');
+
+      expect(games.map((g) => g.name)).toEqual(originalOrder);
+    });
+  });
+
   describe('toggleSortOrder', () => {
     it('should return "desc" when current order is "asc"', () => {
       expect(toggleSortOrder('asc')).toBe('desc');
@@ -137,6 +175,12 @@ describe('sorting utilities', () => {
   describe('DEFAULT_SORT_ORDER', () => {
     it('should be "asc" (ascending) per Requirements 5.2', () => {
       expect(DEFAULT_SORT_ORDER).toBe('asc');
+    });
+  });
+
+  describe('DEFAULT_SORT_KEY', () => {
+    it('should be "name" (default sort by name)', () => {
+      expect(DEFAULT_SORT_KEY).toBe('name');
     });
   });
 });

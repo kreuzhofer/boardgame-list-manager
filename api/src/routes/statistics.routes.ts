@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { statisticsService } from '../services/statistics.service';
+import { resolveEventId } from '../middleware/event.middleware';
 
 const router = Router();
 
@@ -14,7 +15,8 @@ const router = Router();
  */
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const statistics = await statisticsService.getStatistics();
+    const eventId = await resolveEventId(_req);
+    const statistics = await statisticsService.getStatistics(eventId);
     return res.json(statistics);
   } catch (error) {
     console.error('Error fetching statistics:', error);
@@ -33,7 +35,8 @@ router.get('/', async (_req: Request, res: Response) => {
  */
 router.get('/timeline', async (_req: Request, res: Response) => {
   try {
-    const timeline = await statisticsService.getTimeline();
+    const eventId = await resolveEventId(_req);
+    const timeline = await statisticsService.getTimeline(eventId);
     return res.json(timeline);
   } catch (error) {
     console.error('Error fetching statistics timeline:', error);

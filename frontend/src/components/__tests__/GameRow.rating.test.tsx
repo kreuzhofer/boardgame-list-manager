@@ -9,6 +9,10 @@ import { render, screen } from '@testing-library/react';
 import { GameRow } from '../GameRow';
 import type { Game } from '../../types';
 
+vi.mock('../ToastProvider', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}));
+
 // Mock the BggModal module
 vi.mock('../BggModal', () => ({
   openBggPage: vi.fn(),
@@ -35,7 +39,7 @@ const createMockGame = (overrides: Partial<Game> = {}): Game => ({
 // Helper to render GameRow in a table context
 const renderGameRow = (game: Game, props = {}) => {
   const defaultProps = {
-    currentUserId: 'user-1',
+    currentParticipantId: 'user-1',
     onAddPlayer: vi.fn(),
     onAddBringer: vi.fn(),
     onRemovePlayer: vi.fn(),

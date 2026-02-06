@@ -1,19 +1,19 @@
 /**
- * Property-based tests for useUserName hook
+ * Property-based tests for useParticipantName hook
  * 
  * **Validates: Requirements 2.2, 2.3**
  * 
  * Property 2: Name Persistence Round-Trip
- * For any valid user name string, storing it in localStorage and then 
+ * For any valid participant name string, storing it in localStorage and then 
  * retrieving it SHALL return the exact same string.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import * as fc from 'fast-check';
-import { useUserName, USER_NAME_STORAGE_KEY } from '../useUserName';
+import { useParticipantName, PARTICIPANT_NAME_STORAGE_KEY, LEGACY_PARTICIPANT_NAME_STORAGE_KEY } from '../useParticipantName';
 
-describe('useUserName - Property-Based Tests', () => {
+describe('useParticipantName - Property-Based Tests', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
@@ -28,43 +28,53 @@ describe('useUserName - Property-Based Tests', () => {
    * Property 2: Name Persistence Round-Trip
    * **Validates: Requirements 2.2, 2.3**
    * 
-   * For any valid user name string, storing it in localStorage and then
+   * For any valid participant name string, storing it in localStorage and then
    * retrieving it SHALL return the exact same string.
    */
   describe('Property 2: Name Persistence Round-Trip', () => {
-    it('should persist and retrieve any valid user name string exactly', () => {
+    it('should migrate legacy participant name storage key', () => {
+      localStorage.setItem(LEGACY_PARTICIPANT_NAME_STORAGE_KEY, 'Legacy Name');
+
+      const { result } = renderHook(() => useParticipantName());
+
+      expect(result.current.participantName).toBe('Legacy Name');
+      expect(localStorage.getItem(PARTICIPANT_NAME_STORAGE_KEY)).toBe('Legacy Name');
+      expect(localStorage.getItem(LEGACY_PARTICIPANT_NAME_STORAGE_KEY)).toBeNull();
+    });
+
+    it('should persist and retrieve any valid participant name string exactly', () => {
       fc.assert(
         fc.property(
-          // Generate valid user name strings:
+          // Generate valid participant name strings:
           // - Non-empty after trimming
           // - Reasonable length (1-100 chars as per design doc)
           fc.string({ minLength: 1, maxLength: 100 })
             .filter(s => s.trim().length > 0)
             .map(s => s.trim()), // Pre-trim since the hook trims input
-          (userName) => {
+          (participantName) => {
             // Clear localStorage for each property test iteration
             localStorage.clear();
 
             // Step 1: Render the hook
-            const { result, rerender } = renderHook(() => useUserName());
+            const { result, rerender } = renderHook(() => useParticipantName());
 
-            // Step 2: Store the name using setUserName
+            // Step 2: Store the name using setParticipantName
             act(() => {
-              result.current.setUserName(userName);
+              result.current.setParticipantName(participantName);
             });
 
             // Step 3: Verify the name is immediately available in state
-            expect(result.current.userName).toBe(userName);
+            expect(result.current.participantName).toBe(participantName);
 
             // Step 4: Verify the name was persisted to localStorage
-            expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe(userName);
+            expect(localStorage.getItem(PARTICIPANT_NAME_STORAGE_KEY)).toBe(participantName);
 
             // Step 5: Simulate a new hook instance (like page reload)
             // by rendering a fresh hook that reads from localStorage
-            const { result: freshResult } = renderHook(() => useUserName());
+            const { result: freshResult } = renderHook(() => useParticipantName());
 
             // Step 6: Verify the retrieved name matches the original exactly
-            expect(freshResult.current.userName).toBe(userName);
+            expect(freshResult.current.participantName).toBe(participantName);
 
             return true;
           }
@@ -86,22 +96,22 @@ describe('useUserName - Property-Based Tests', () => {
             { minLength: 1, maxLength: 50 }
           ).filter(s => s.trim().length > 0)
            .map(s => s.trim()),
-          (userName) => {
+          (participantName) => {
             localStorage.clear();
 
-            const { result } = renderHook(() => useUserName());
+            const { result } = renderHook(() => useParticipantName());
 
             act(() => {
-              result.current.setUserName(userName);
+              result.current.setParticipantName(participantName);
             });
 
             // Verify round-trip preserves special characters
-            expect(result.current.userName).toBe(userName);
-            expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe(userName);
+            expect(result.current.participantName).toBe(participantName);
+            expect(localStorage.getItem(PARTICIPANT_NAME_STORAGE_KEY)).toBe(participantName);
 
             // Fresh hook should retrieve the same value
-            const { result: freshResult } = renderHook(() => useUserName());
-            expect(freshResult.current.userName).toBe(userName);
+            const { result: freshResult } = renderHook(() => useParticipantName());
+            expect(freshResult.current.participantName).toBe(participantName);
 
             return true;
           }
@@ -125,15 +135,15 @@ describe('useUserName - Property-Based Tests', () => {
           ({ input, expected }) => {
             localStorage.clear();
 
-            const { result } = renderHook(() => useUserName());
+            const { result } = renderHook(() => useParticipantName());
 
             act(() => {
-              result.current.setUserName(input);
+              result.current.setParticipantName(input);
             });
 
             // The hook should trim the input
-            expect(result.current.userName).toBe(expected);
-            expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe(expected);
+            expect(result.current.participantName).toBe(expected);
+            expect(localStorage.getItem(PARTICIPANT_NAME_STORAGE_KEY)).toBe(expected);
 
             return true;
           }
@@ -150,23 +160,23 @@ describe('useUserName - Property-Based Tests', () => {
           (whitespaceOnly) => {
             localStorage.clear();
 
-            const { result } = renderHook(() => useUserName());
+            const { result } = renderHook(() => useParticipantName());
 
             // Set initial valid name
             act(() => {
-              result.current.setUserName('Initial Name');
+              result.current.setParticipantName('Initial Name');
             });
 
-            expect(result.current.userName).toBe('Initial Name');
+            expect(result.current.participantName).toBe('Initial Name');
 
             // Try to set whitespace-only name
             act(() => {
-              result.current.setUserName(whitespaceOnly);
+              result.current.setParticipantName(whitespaceOnly);
             });
 
             // Should keep the previous name (whitespace-only is rejected)
-            expect(result.current.userName).toBe('Initial Name');
-            expect(localStorage.getItem(USER_NAME_STORAGE_KEY)).toBe('Initial Name');
+            expect(result.current.participantName).toBe('Initial Name');
+            expect(localStorage.getItem(PARTICIPANT_NAME_STORAGE_KEY)).toBe('Initial Name');
 
             return true;
           }

@@ -12,17 +12,17 @@ import type { SSEEvent, GameCreatedEvent, BringerAddedEvent, PlayerAddedEvent } 
  */
 
 // Arbitraries for generating test data
-const userNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
+const participantNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
 const gameNameArb = fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0);
 const gameIdArb = fc.uuid();
-const userIdArb = fc.uuid();
+const participantIdArb = fc.uuid();
 
 // Generate GameCreatedEvent with isBringing: true
 const gameCreatedBringingEventArb: fc.Arbitrary<GameCreatedEvent> = fc.record({
   type: fc.constant('game:created' as const),
   gameId: gameIdArb,
-  userId: userIdArb,
-  userName: userNameArb,
+  participantId: participantIdArb,
+  participantName: participantNameArb,
   gameName: gameNameArb,
   isBringing: fc.constant(true),
 });
@@ -31,8 +31,8 @@ const gameCreatedBringingEventArb: fc.Arbitrary<GameCreatedEvent> = fc.record({
 const gameCreatedNotBringingEventArb: fc.Arbitrary<GameCreatedEvent> = fc.record({
   type: fc.constant('game:created' as const),
   gameId: gameIdArb,
-  userId: userIdArb,
-  userName: userNameArb,
+  participantId: participantIdArb,
+  participantName: participantNameArb,
   gameName: gameNameArb,
   isBringing: fc.constant(false),
 });
@@ -41,8 +41,8 @@ const gameCreatedNotBringingEventArb: fc.Arbitrary<GameCreatedEvent> = fc.record
 const bringerAddedEventArb: fc.Arbitrary<BringerAddedEvent> = fc.record({
   type: fc.constant('game:bringer-added' as const),
   gameId: gameIdArb,
-  userId: userIdArb,
-  userName: userNameArb,
+  participantId: participantIdArb,
+  participantName: participantNameArb,
   gameName: gameNameArb,
 });
 
@@ -50,8 +50,8 @@ const bringerAddedEventArb: fc.Arbitrary<BringerAddedEvent> = fc.record({
 const playerAddedEventArb: fc.Arbitrary<PlayerAddedEvent> = fc.record({
   type: fc.constant('game:player-added' as const),
   gameId: gameIdArb,
-  userId: userIdArb,
-  userName: userNameArb,
+  participantId: participantIdArb,
+  participantName: participantNameArb,
   gameName: gameNameArb,
 });
 
@@ -60,17 +60,17 @@ const noToastEventArb: fc.Arbitrary<SSEEvent> = fc.oneof(
   fc.record({
     type: fc.constant('game:bringer-removed' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   }),
   fc.record({
     type: fc.constant('game:player-removed' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   }),
   fc.record({
     type: fc.constant('game:deleted' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   })
 );
 
@@ -78,7 +78,7 @@ describe('Toast Message Formatting Properties', () => {
   /**
    * Property 4: Toast Message Formatting
    * For any game:created event with isBringing: true, the toast message SHALL be
-   * formatted as "{userName} bringt {gameName} mit".
+   * formatted as "{participantName} bringt {gameName} mit".
    */
   describe('Property 4.1: game:created with isBringing: true', () => {
     it('should format message as "NAME bringt GAME_NAME mit"', () => {
@@ -87,7 +87,7 @@ describe('Toast Message Formatting Properties', () => {
           const message = getToastMessage(event);
           
           expect(message).not.toBeNull();
-          expect(message).toBe(`${event.userName} bringt ${event.gameName} mit`);
+          expect(message).toBe(`${event.participantName} bringt ${event.gameName} mit`);
         }),
         { numRuns: 10 }
       );
@@ -97,7 +97,7 @@ describe('Toast Message Formatting Properties', () => {
   /**
    * Property 4: Toast Message Formatting
    * For any game:created event with isBringing: false, the toast message SHALL be
-   * formatted as "{userName} wünscht sich {gameName}".
+   * formatted as "{participantName} wünscht sich {gameName}".
    */
   describe('Property 4.2: game:created with isBringing: false', () => {
     it('should format message as "NAME wünscht sich GAME_NAME"', () => {
@@ -106,7 +106,7 @@ describe('Toast Message Formatting Properties', () => {
           const message = getToastMessage(event);
           
           expect(message).not.toBeNull();
-          expect(message).toBe(`${event.userName} wünscht sich ${event.gameName}`);
+          expect(message).toBe(`${event.participantName} wünscht sich ${event.gameName}`);
         }),
         { numRuns: 10 }
       );
@@ -116,7 +116,7 @@ describe('Toast Message Formatting Properties', () => {
   /**
    * Property 4.3: game:bringer-added
    * For any game:bringer-added event, the toast message SHALL be
-   * formatted as "{userName} bringt {gameName} mit".
+   * formatted as "{participantName} bringt {gameName} mit".
    */
   describe('Property 4.3: game:bringer-added', () => {
     it('should format message as "NAME bringt GAME_NAME mit"', () => {
@@ -125,7 +125,7 @@ describe('Toast Message Formatting Properties', () => {
           const message = getToastMessage(event);
           
           expect(message).not.toBeNull();
-          expect(message).toBe(`${event.userName} bringt ${event.gameName} mit`);
+          expect(message).toBe(`${event.participantName} bringt ${event.gameName} mit`);
         }),
         { numRuns: 10 }
       );
@@ -135,7 +135,7 @@ describe('Toast Message Formatting Properties', () => {
   /**
    * Property 4.4: game:player-added
    * For any game:player-added event, the toast message SHALL be
-   * formatted as "{userName} spielt mit bei {gameName}".
+   * formatted as "{participantName} spielt mit bei {gameName}".
    */
   describe('Property 4.4: game:player-added', () => {
     it('should format message as "NAME spielt mit bei GAME_NAME"', () => {
@@ -144,7 +144,7 @@ describe('Toast Message Formatting Properties', () => {
           const message = getToastMessage(event);
           
           expect(message).not.toBeNull();
-          expect(message).toBe(`${event.userName} spielt mit bei ${event.gameName}`);
+          expect(message).toBe(`${event.participantName} spielt mit bei ${event.gameName}`);
         }),
         { numRuns: 10 }
       );

@@ -25,6 +25,36 @@ function extractToken(req: Request): string | null {
 }
 
 /**
+ * Resolve optional account from Authorization header.
+ * Returns null when token is missing or invalid.
+ */
+export async function resolveOptionalAccount(req: Request): Promise<AccountResponse | null> {
+  const token = extractToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  const payload = await sessionService.validateToken(token);
+
+  if (!payload) {
+    return null;
+  }
+
+  const account = await accountService.getById(payload.accountId);
+
+  if (!account) {
+    return null;
+  }
+
+  if (account.status === 'deactivated') {
+    return null;
+  }
+
+  return account;
+}
+
+/**
  * Middleware that requires valid JWT token
  * Attaches account and sessionId to request
  */

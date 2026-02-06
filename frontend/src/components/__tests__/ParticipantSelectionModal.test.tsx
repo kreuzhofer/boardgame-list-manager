@@ -1,16 +1,16 @@
 /**
- * Unit tests for UserSelectionModal component
+ * Unit tests for ParticipantSelectionModal component
  * 
  * **Validates: Requirements 5.1, 5.2, 5.3**
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { UserSelectionModal } from '../UserSelectionModal';
+import { ParticipantSelectionModal } from '../ParticipantSelectionModal';
 
 // Mock the API client
 vi.mock('../../api/client', () => ({
-  usersApi: {
+  participantsApi: {
     getAll: vi.fn(),
     create: vi.fn(),
   },
@@ -23,15 +23,15 @@ vi.mock('../../api/client', () => ({
   },
 }));
 
-import { usersApi, ApiError } from '../../api/client';
+import { participantsApi, ApiError } from '../../api/client';
 
-const mockUsersApi = usersApi as {
+const mockParticipantsApi = participantsApi as {
   getAll: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
 };
 
-describe('UserSelectionModal', () => {
-  const mockOnUserSelected = vi.fn();
+describe('ParticipantSelectionModal', () => {
+  const mockOnParticipantSelected = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,10 +46,10 @@ describe('UserSelectionModal', () => {
      * Test that modal renders when isOpen is true
      */
     it('should render modal when isOpen is true', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [] });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [] });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       expect(screen.getByText('Wer bist du?')).toBeInTheDocument();
@@ -60,28 +60,28 @@ describe('UserSelectionModal', () => {
      */
     it('should not render modal when isOpen is false', () => {
       render(
-        <UserSelectionModal isOpen={false} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={false} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
     });
   });
 
-  describe('User list rendering', () => {
+  describe('Participant list rendering', () => {
     /**
      * Test that existing users are displayed
      * Validates: Requirement 5.2
      */
-    it('should display list of existing users', async () => {
-      const mockUsers = [
+    it('should display list of existing participants', async () => {
+      const mockParticipants = [
         { id: 'user-1', name: 'Alice' },
         { id: 'user-2', name: 'Bob' },
         { id: 'user-3', name: 'Charlie' },
       ];
-      mockUsersApi.getAll.mockResolvedValue({ users: mockUsers });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: mockParticipants });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
@@ -95,10 +95,10 @@ describe('UserSelectionModal', () => {
      * Test loading state
      */
     it('should show loading spinner while fetching users', async () => {
-      mockUsersApi.getAll.mockImplementation(() => new Promise(() => {}));
+      mockParticipantsApi.getAll.mockImplementation(() => new Promise(() => {}));
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       // Should show loading spinner (animate-spin class)
@@ -109,32 +109,32 @@ describe('UserSelectionModal', () => {
      * Test error state
      */
     it('should show error message when fetching users fails', async () => {
-      mockUsersApi.getAll.mockRejectedValue(new Error('Network error'));
+      mockParticipantsApi.getAll.mockRejectedValue(new Error('Network error'));
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Fehler beim Laden der Benutzer: Network error')).toBeInTheDocument();
+        expect(screen.getByText('Fehler beim Laden der Teilnehmer: Network error')).toBeInTheDocument();
       });
     });
   });
 
-  describe('User selection', () => {
+  describe('Participant selection', () => {
     /**
      * Test that clicking a user shows confirmation and then calls onUserSelected
      * Validates: Requirement 5.2
      */
-    it('should show confirmation and call onUserSelected when confirmed', async () => {
-      const mockUsers = [
+    it('should show confirmation and call onParticipantSelected when confirmed', async () => {
+      const mockParticipants = [
         { id: 'user-1', name: 'Alice' },
         { id: 'user-2', name: 'Bob' },
       ];
-      mockUsersApi.getAll.mockResolvedValue({ users: mockUsers });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: mockParticipants });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
@@ -153,18 +153,18 @@ describe('UserSelectionModal', () => {
       // Click "Ja" to confirm
       fireEvent.click(screen.getByText('Ja'));
 
-      expect(mockOnUserSelected).toHaveBeenCalledWith({ id: 'user-1', name: 'Alice' });
+      expect(mockOnParticipantSelected).toHaveBeenCalledWith({ id: 'user-1', name: 'Alice' });
     });
 
-    it('should go back to user list when clicking "Nein, nochmal zurück"', async () => {
-      const mockUsers = [
+    it('should go back to participant list when clicking "Nein, nochmal zurück"', async () => {
+      const mockParticipants = [
         { id: 'user-1', name: 'Alice' },
         { id: 'user-2', name: 'Bob' },
       ];
-      mockUsersApi.getAll.mockResolvedValue({ users: mockUsers });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: mockParticipants });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
@@ -188,27 +188,27 @@ describe('UserSelectionModal', () => {
         expect(screen.getByText('Bob')).toBeInTheDocument();
       });
 
-      expect(mockOnUserSelected).not.toHaveBeenCalled();
+      expect(mockOnParticipantSelected).not.toHaveBeenCalled();
     });
   });
 
-  describe('New user creation', () => {
+  describe('New participant creation', () => {
     /**
      * Test that create form can be shown
      * Validates: Requirement 5.3
      */
-    it('should show create form when clicking "Neuen Benutzer erstellen"', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [{ id: 'user-1', name: 'Alice' }] });
+    it('should show create form when clicking "Neuen Teilnehmer erstellen"', async () => {
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [{ id: 'user-1', name: 'Alice' }] });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      fireEvent.click(screen.getByText('+ Neuen Teilnehmer erstellen'));
 
       expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
     });
@@ -217,19 +217,19 @@ describe('UserSelectionModal', () => {
      * Test successful user creation
      * Validates: Requirement 5.3
      */
-    it('should create new user and call onUserSelected', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [] });
-      mockUsersApi.create.mockResolvedValue({ user: { id: 'new-user-id', name: 'New User' } });
+    it('should create new participant and call onParticipantSelected', async () => {
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [] });
+      mockParticipantsApi.create.mockResolvedValue({ participant: { id: 'new-user-id', name: 'New User' } });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Ersten Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('Ersten Teilnehmer erstellen')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Ersten Benutzer erstellen'));
+      fireEvent.click(screen.getByText('Ersten Teilnehmer erstellen'));
 
       const input = screen.getByPlaceholderText('Dein Name');
       fireEvent.change(input, { target: { value: 'New User' } });
@@ -237,8 +237,8 @@ describe('UserSelectionModal', () => {
       fireEvent.click(screen.getByText('Erstellen'));
 
       await waitFor(() => {
-        expect(mockUsersApi.create).toHaveBeenCalledWith('New User');
-        expect(mockOnUserSelected).toHaveBeenCalledWith({ id: 'new-user-id', name: 'New User' });
+        expect(mockParticipantsApi.create).toHaveBeenCalledWith('New User');
+        expect(mockOnParticipantSelected).toHaveBeenCalledWith({ id: 'new-user-id', name: 'New User' });
       });
     });
 
@@ -247,23 +247,23 @@ describe('UserSelectionModal', () => {
      * Validates: Requirement 5.3
      */
     it('should disable create button when name is empty', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [] });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [] });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Ersten Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('Ersten Teilnehmer erstellen')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Ersten Benutzer erstellen'));
+      fireEvent.click(screen.getByText('Ersten Teilnehmer erstellen'));
       
       // The create button should be disabled when input is empty
       const createButton = screen.getByText('Erstellen');
       expect(createButton).toBeDisabled();
 
-      expect(mockUsersApi.create).not.toHaveBeenCalled();
+      expect(mockParticipantsApi.create).not.toHaveBeenCalled();
     });
 
     /**
@@ -271,20 +271,20 @@ describe('UserSelectionModal', () => {
      * Validates: Requirement 7.4 (German error messages)
      */
     it('should show API error message for duplicate name', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [] });
-      mockUsersApi.create.mockRejectedValue(
-        new ApiError('Ein Benutzer mit diesem Namen existiert bereits.', 'DUPLICATE_USER')
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [] });
+      mockParticipantsApi.create.mockRejectedValue(
+        new ApiError('Ein Teilnehmer mit diesem Namen existiert bereits.', 'DUPLICATE_PARTICIPANT')
       );
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Ersten Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('Ersten Teilnehmer erstellen')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Ersten Benutzer erstellen'));
+      fireEvent.click(screen.getByText('Ersten Teilnehmer erstellen'));
 
       const input = screen.getByPlaceholderText('Dein Name');
       fireEvent.change(input, { target: { value: 'Existing User' } });
@@ -292,7 +292,7 @@ describe('UserSelectionModal', () => {
       fireEvent.click(screen.getByText('Erstellen'));
 
       await waitFor(() => {
-        expect(screen.getByText('Ein Benutzer mit diesem Namen existiert bereits.')).toBeInTheDocument();
+        expect(screen.getByText('Ein Teilnehmer mit diesem Namen existiert bereits.')).toBeInTheDocument();
       });
     });
 
@@ -300,23 +300,23 @@ describe('UserSelectionModal', () => {
      * Test cancel button
      */
     it('should hide create form when clicking cancel', async () => {
-      mockUsersApi.getAll.mockResolvedValue({ users: [{ id: 'user-1', name: 'Alice' }] });
+      mockParticipantsApi.getAll.mockResolvedValue({ participants: [{ id: 'user-1', name: 'Alice' }] });
 
       render(
-        <UserSelectionModal isOpen={true} onUserSelected={mockOnUserSelected} />
+        <ParticipantSelectionModal isOpen={true} onParticipantSelected={mockOnParticipantSelected} />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      fireEvent.click(screen.getByText('+ Neuen Teilnehmer erstellen'));
       expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
 
       fireEvent.click(screen.getByText('Abbrechen'));
 
       expect(screen.queryByPlaceholderText('Dein Name')).not.toBeInTheDocument();
-      expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+      expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
     });
   });
 });

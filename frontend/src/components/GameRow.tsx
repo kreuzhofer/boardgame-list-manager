@@ -21,7 +21,8 @@ import { useToast } from './ToastProvider';
 
 interface GameRowProps {
   game: Game;
-  currentUserId: string;
+  currentParticipantId: string;
+  canManageGames?: boolean;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -43,7 +44,8 @@ interface GameRowProps {
 
 export function GameRow({
   game,
-  currentUserId,
+  currentParticipantId,
+  canManageGames = false,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -62,17 +64,20 @@ export function GameRow({
   const rowRef = useRef<HTMLTableRowElement>(null);
   const isWunsch = game.status === 'wunsch';
   const isPrototype = game.isPrototype;
-  const isOwner = game.owner?.id === currentUserId;
+  const isOwner = game.owner?.id === currentParticipantId;
   const isHidden = game.isHidden;
-  const isBringer = game.bringers.some((bringer) => bringer.user.id === currentUserId);
+  const isBringer = game.bringers.some((bringer) => bringer.participant.id === currentParticipantId);
   const canHide = !isBringer;
   
-  // Check if current user is the only player/bringer (or lists are empty)
-  const onlyCurrentUserIsPlayer = game.players.length === 0 || 
-    (game.players.length === 1 && game.players[0].user.id === currentUserId);
-  const onlyCurrentUserIsBringer = game.bringers.length === 0 || 
-    (game.bringers.length === 1 && game.bringers[0].user.id === currentUserId);
-  const canDelete = isOwner && onlyCurrentUserIsPlayer && onlyCurrentUserIsBringer;
+  // Check if current participant is the only player/bringer (or lists are empty)
+  const onlyCurrentParticipantIsPlayer = game.players.length === 0 || 
+    (game.players.length === 1 && game.players[0].participant.id === currentParticipantId);
+  const onlyCurrentParticipantIsBringer = game.bringers.length === 0 || 
+    (game.bringers.length === 1 && game.bringers[0].participant.id === currentParticipantId);
+  const canForceDelete = canManageGames;
+  const canDeleteAsOwner = isOwner && onlyCurrentParticipantIsPlayer && onlyCurrentParticipantIsBringer;
+  const canDelete = canDeleteAsOwner || canForceDelete;
+  const canShowDelete = isOwner || canForceDelete;
   
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
@@ -285,7 +290,7 @@ export function GameRow({
         <div className="px-4 py-3" style={collapseStyle}>
           <BringerList 
             bringers={game.bringers} 
-            currentUserId={currentUserId} 
+            currentParticipantId={currentParticipantId} 
             maxVisible={5}
             expanded={listsExpanded}
             onToggleExpand={handleToggleExpand}
@@ -299,7 +304,7 @@ export function GameRow({
         <div className="px-4 py-3" style={collapseStyle}>
           <PlayerList 
             players={game.players} 
-            currentUserId={currentUserId} 
+            currentParticipantId={currentParticipantId} 
             maxVisible={5}
             expanded={listsExpanded}
             onToggleExpand={handleToggleExpand}
@@ -315,7 +320,7 @@ export function GameRow({
             <div className="shrink-0 hidden 2xl:flex">
               <GameActions
                 game={game}
-                currentUserId={currentUserId}
+                currentParticipantId={currentParticipantId}
                 onAddPlayer={handleAddPlayerWithToast}
                 onAddBringer={handleAddBringerWithToast}
                 onRemovePlayer={handleRemovePlayerWithToast}
@@ -325,7 +330,7 @@ export function GameRow({
             <div className="shrink-0 flex 2xl:hidden">
               <GameActions
                 game={game}
-                currentUserId={currentUserId}
+                currentParticipantId={currentParticipantId}
                 onAddPlayer={handleAddPlayerWithToast}
                 onAddBringer={handleAddBringerWithToast}
                 onRemovePlayer={handleRemovePlayerWithToast}
@@ -390,11 +395,12 @@ export function GameRow({
             <div className="shrink-0">
               <DesktopActionsMenu
                 game={game}
-                currentUserId={currentUserId}
+                currentParticipantId={currentParticipantId}
                 onTogglePrototype={onTogglePrototype}
                 onUploadThumbnail={handleUploadThumbnail}
                 onDeleteGame={onDeleteGame}
                 canDelete={canDelete}
+                canShowDelete={canShowDelete}
               />
             </div>
 
@@ -405,7 +411,7 @@ export function GameRow({
               isOpen={uploadModalOpen}
               onClose={() => setUploadModalOpen(false)}
               onSuccess={handleUploadSuccess}
-              userId={currentUserId}
+              participantId={currentParticipantId}
             />
           </div>
         </div>

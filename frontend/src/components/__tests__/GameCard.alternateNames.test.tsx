@@ -63,7 +63,7 @@ const createMockGame = (overrides: Partial<Game> = {}): Game => ({
 });
 
 describe('GameCard Alternate Names Display', () => {
-  const currentUserId = 'user-1';
+  const currentParticipantId = 'user-1';
 
   describe('Requirement 11.1, 11.3: Inline alternate name display', () => {
     it('should show alternate name inline with primary name when addedAsAlternateName is set', () => {
@@ -72,7 +72,7 @@ describe('GameCard Alternate Names Display', () => {
         addedAsAlternateName: 'Der Ringkrieg',
       });
 
-      render(<GameCard game={game} currentUserId={currentUserId} />);
+      render(<GameCard game={game} currentParticipantId={currentParticipantId} />);
 
       // Primary name should be visible
       expect(screen.getByText(/War of the Ring: Second Edition/)).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('GameCard Alternate Names Display', () => {
         addedAsAlternateName: 'Arche Nova',
       });
 
-      render(<GameCard game={game} currentUserId={currentUserId} />);
+      render(<GameCard game={game} currentParticipantId={currentParticipantId} />);
 
       // The h3 element should contain both names with separator
       const titleElement = screen.getByRole('heading', { level: 3 });
@@ -105,7 +105,7 @@ describe('GameCard Alternate Names Display', () => {
         addedAsAlternateName: null,
       });
 
-      render(<GameCard game={game} currentUserId={currentUserId} />);
+      render(<GameCard game={game} currentParticipantId={currentParticipantId} />);
 
       expect(screen.getByText('Gloomhaven')).toBeInTheDocument();
       // Should not have the separator
@@ -120,7 +120,7 @@ describe('GameCard Alternate Names Display', () => {
       // Remove the property entirely
       delete (game as Partial<Game>).addedAsAlternateName;
 
-      render(<GameCard game={game} currentUserId={currentUserId} />);
+      render(<GameCard game={game} currentParticipantId={currentParticipantId} />);
 
       expect(screen.getByText('Terraforming Mars')).toBeInTheDocument();
       const titleElement = screen.getByRole('heading', { level: 3 });
@@ -135,7 +135,7 @@ describe('GameCard Alternate Names Display', () => {
         addedAsAlternateName: 'Alternate Name',
       });
 
-      render(<GameCard game={game} currentUserId={currentUserId} />);
+      render(<GameCard game={game} currentParticipantId={currentParticipantId} />);
 
       // The alternate name should be in a span with muted styling
       const alternateNameSpan = screen.getByText(/Alternate Name/).closest('span');

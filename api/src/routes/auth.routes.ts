@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { authService } from '../services/auth.service';
+import { prisma } from '../db/prisma';
+import { EventService } from '../services/event.service';
+import { resolveEventId } from '../middleware/event.middleware';
 
 const router = Router();
+const eventService = new EventService(prisma);
 
 /**
  * POST /api/auth/verify
@@ -13,8 +16,8 @@ const router = Router();
  *   - 401 { success: false, message: "Falsches Passwort" } if password is incorrect
  *   - 400 { success: false, message: "Bitte Passwort eingeben." } if password is missing
  */
-router.post('/verify', (req: Request, res: Response) => {
-  const { password } = req.body;
+router.post('/verify', async (req: Request, res: Response) => {
+  const { password, eventId: bodyEventId } = req.body;
 
   // Check if password is provided
   if (!password || typeof password !== 'string') {
@@ -24,8 +27,8 @@ router.post('/verify', (req: Request, res: Response) => {
     });
   }
 
-  // Verify password
-  const isValid = authService.verifyPassword(password);
+  const eventId = typeof bodyEventId === 'string' ? bodyEventId : await resolveEventId(req);
+  const isValid = await eventService.verifyEventPassword(eventId, password);
 
   if (isValid) {
     return res.json({ success: true });

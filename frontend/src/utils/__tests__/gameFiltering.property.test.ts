@@ -248,8 +248,8 @@ describe('getMatchingGamesWithBringers', () => {
     const game = createTestGame({
       name: 'Catan',
       bringers: [
-        { id: '1', user: { id: 'u1', name: 'Thorsten' }, addedAt: new Date() },
-        { id: '2', user: { id: 'u2', name: 'Daniel' }, addedAt: new Date() },
+        { id: '1', participant: { id: 'u1', name: 'Thorsten' }, addedAt: new Date() },
+        { id: '2', participant: { id: 'u2', name: 'Daniel' }, addedAt: new Date() },
       ],
     });
 

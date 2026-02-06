@@ -12,32 +12,34 @@ import type { Game } from '../types';
 
 interface DesktopActionsMenuProps {
   game: Game;
-  currentUserId: string;
+  currentParticipantId: string;
   onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>;
   onUploadThumbnail?: (gameId: string) => void;
   onDeleteGame?: (gameId: string) => void;
   canDelete?: boolean;
+  canShowDelete?: boolean;
 }
 
 export function DesktopActionsMenu({
   game,
-  currentUserId,
+  currentParticipantId,
   onTogglePrototype,
   onUploadThumbnail,
   onDeleteGame,
   canDelete = false,
+  canShowDelete = false,
 }: DesktopActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Check if user is owner and game has no BGG ID
-  const isOwner = game.owner?.id === currentUserId;
+  const isOwner = game.owner?.id === currentParticipantId;
   const hasNoBggId = game.bggId === null;
   const canShowPrototype = !!onTogglePrototype && isOwner && hasNoBggId;
   const canShowUpload = !!onUploadThumbnail && isOwner && hasNoBggId;
-  const canShowDelete = !!onDeleteGame && isOwner;
-  const canShowMenu = canShowPrototype || canShowUpload || canShowDelete;
+  const canShowDeleteAction = !!onDeleteGame && (isOwner || canShowDelete);
+  const canShowMenu = canShowPrototype || canShowUpload || canShowDeleteAction;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -174,7 +176,7 @@ export function DesktopActionsMenu({
               </>
             )}
 
-            {canShowDelete && (
+            {canShowDeleteAction && (
               <>
                 {(canShowUpload || canShowPrototype) && (
                   <div className="border-t border-gray-200 my-1" />

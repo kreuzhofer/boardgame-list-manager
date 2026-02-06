@@ -1,6 +1,6 @@
 /**
  * PlayerList component
- * Displays a list of player names with current user highlighting
+ * Displays a list of player names with current participant highlighting
  * All UI text in German (Requirement 9.1)
  */
 
@@ -8,7 +8,7 @@ import { Player } from '../types';
 
 interface PlayerListProps {
   players: Player[];
-  currentUserId: string;
+  currentParticipantId: string;
   /** Maximum number of players to show before using +X overflow */
   maxVisible?: number;
   /** Whether the list is expanded (shows all) */
@@ -21,7 +21,7 @@ interface PlayerListProps {
 
 export function PlayerList({ 
   players, 
-  currentUserId, 
+  currentParticipantId, 
   maxVisible, 
   expanded = false,
   onToggleExpand,
@@ -49,13 +49,13 @@ export function PlayerList({
           <div key={player.id} className="truncate">
             <span
               className={
-                player.user.id === currentUserId
+                player.participant.id === currentParticipantId
                   ? 'font-semibold text-blue-600'
                   : 'text-gray-700'
               }
-              title={player.user.id === currentUserId ? 'Das bist du!' : undefined}
+              title={player.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
             >
-              {player.user.name}
+              {player.participant.name}
             </span>
           </div>
         ))}
@@ -78,13 +78,13 @@ export function PlayerList({
         <span key={player.id}>
           <span
             className={
-              player.user.id === currentUserId
+              player.participant.id === currentParticipantId
                 ? 'font-semibold text-blue-600'
                 : 'text-gray-700'
             }
-            title={player.user.id === currentUserId ? 'Das bist du!' : undefined}
+            title={player.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
           >
-            {player.user.name}
+            {player.participant.name}
           </span>
           {index < visiblePlayers.length - 1 && (
             <span className="text-gray-400">, </span>

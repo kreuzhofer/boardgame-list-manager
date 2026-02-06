@@ -1,8 +1,13 @@
-import { gameRepository, GameRepository, userRepository, UserRepository } from '../repositories';
+import { gameRepository, GameRepository, participantRepository, ParticipantRepository } from '../repositories';
 import { sseManager } from './sse.service';
 import { activityLogService } from './activityLog.service';
 import { thumbnailService } from './thumbnailService';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
+
+interface DeleteGameOptions {
+  allowNonOwner?: boolean;
+  allowNonEmpty?: boolean;
+}
 
 /**
  * GameService handles business logic for game management.
@@ -13,19 +18,19 @@ import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } f
 export class GameService {
   constructor(
     private readonly repository: GameRepository = gameRepository,
-    private readonly userRepo: UserRepository = userRepository
+    private readonly participantRepo: ParticipantRepository = participantRepository
   ) {}
 
   /**
    * Transforms a PlayerEntity to the API Player format
-   * Requirements: 4.6 - Include full user object (id and name) for each player
+   * Requirements: 4.6 - Include full participant object (id and name) for each player
    */
   private transformPlayer(player: PlayerEntity): Player {
     return {
       id: player.id,
-      user: {
-        id: player.user.id,
-        name: player.user.name,
+      participant: {
+        id: player.participant.id,
+        name: player.participant.name,
       },
       addedAt: player.addedAt,
     };
@@ -33,14 +38,14 @@ export class GameService {
 
   /**
    * Transforms a BringerEntity to the API Bringer format
-   * Requirements: 4.6 - Include full user object (id and name) for each bringer
+   * Requirements: 4.6 - Include full participant object (id and name) for each bringer
    */
   private transformBringer(bringer: BringerEntity): Bringer {
     return {
       id: bringer.id,
-      user: {
-        id: bringer.user.id,
-        name: bringer.user.name,
+      participant: {
+        id: bringer.participant.id,
+        name: bringer.participant.name,
       },
       addedAt: bringer.addedAt,
     };
@@ -84,13 +89,13 @@ export class GameService {
    * Get all games with players and bringers
    * @returns Array of all games in API format
    */
-  async getAllGames(userId?: string): Promise<Game[]> {
-    const entities = await this.repository.findAll();
-    if (!userId) {
+  async getAllGames(eventId: string, participantId?: string): Promise<Game[]> {
+    const entities = await this.repository.findAll(eventId);
+    if (!participantId) {
       return entities.map((entity) => this.transformGame(entity, false));
     }
 
-    const hiddenGameIds = await this.repository.findHiddenGameIdsByUser(userId);
+    const hiddenGameIds = await this.repository.findHiddenGameIdsByParticipant(participantId);
     return entities.map((entity) => this.transformGame(entity, hiddenGameIds.has(entity.id)));
   }
 
@@ -101,25 +106,25 @@ export class GameService {
    * 
    * Requirements: 3.1, 3.2 (SSE selective refresh)
    */
-  async getGameById(gameId: string, userId?: string): Promise<Game | null> {
-    const entity = await this.repository.findById(gameId);
+  async getGameById(eventId: string, gameId: string, participantId?: string): Promise<Game | null> {
+    const entity = await this.repository.findById(gameId, eventId);
     if (!entity) {
       return null;
     }
-    if (!userId) {
+    if (!participantId) {
       return this.transformGame(entity, false);
     }
 
-    const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+    const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
     return this.transformGame(entity, isHidden);
   }
 
   /**
    * Create a new game
    * @param name - The game name
-   * @param userId - The user ID of the user creating the game
-   * @param isBringing - Whether the user is bringing the game
-   * @param isPlaying - Whether the user wants to play the game
+   * @param participantId - The participant ID of the participant creating the game
+   * @param isBringing - Whether the participant is bringing the game
+   * @param isPlaying - Whether the participant wants to play the game
    * @param isPrototype - Whether the game is marked as a prototype
    * @param bggId - Optional BoardGameGeek ID
    * @param yearPublished - Optional year the game was published
@@ -133,8 +138,9 @@ export class GameService {
    * Feature: 014-alternate-names-search - Store alternate name data
    */
   async createGame(
+    eventId: string,
     name: string,
-    userId: string,
+    participantId: string,
     isBringing: boolean,
     isPlaying: boolean,
     isPrototype: boolean = false,
@@ -151,15 +157,16 @@ export class GameService {
     }
 
     // Check for duplicate game name
-    const existingGame = await this.repository.findByName(trimmedName);
+    const existingGame = await this.repository.findByName(trimmedName, eventId);
     if (existingGame) {
       throw new Error('Ein Spiel mit diesem Namen existiert bereits.');
     }
 
     try {
       const entity = await this.repository.create({
+        eventId,
         name: trimmedName,
-        userId,
+        participantId,
         isBringing,
         isPlaying,
         isPrototype,
@@ -172,24 +179,25 @@ export class GameService {
       
       const game = this.transformGame(entity);
       
-      // Get user name for SSE event
-      const user = await this.userRepo.findById(userId);
-      const userName = user?.name || 'Unbekannt';
+      // Get participant name for SSE event
+      const participant = await this.participantRepo.findById(participantId, eventId);
+      const participantName = participant?.name || 'Unbekannt';
       
       // Broadcast game:created event
       sseManager.broadcast({
         type: 'game:created',
         gameId: game.id,
-        userId,
-        userName,
+        participantId,
+        participantName,
         gameName: game.name,
         isBringing,
       });
 
       await activityLogService.logEvent({
-        actorUserId: userId,
+        actorParticipantId: participantId,
         eventType: 'game_created',
         gameId: game.id,
+        eventId,
         metadata: {
           isBringing,
           isPlaying,
@@ -211,35 +219,36 @@ export class GameService {
   /**
    * Add a player to a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID to add as a player
+   * @param participantId - The participant's ID to add as a player
    * @returns The updated game in API format
-   * @throws Error with German message if game not found or user already a player
+   * @throws Error with German message if game not found or participant already a player
    * 
    * Requirements: 3.5, 4.2
    */
-  async addPlayer(gameId: string, userId: string): Promise<Game> {
+  async addPlayer(eventId: string, gameId: string, participantId: string): Promise<Game> {
     try {
-      const entity = await this.repository.addPlayer(gameId, userId);
-      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const entity = await this.repository.addPlayer(gameId, participantId, eventId);
+      const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
       const game = this.transformGame(entity, isHidden);
       
-      // Get user name for SSE event
-      const user = await this.userRepo.findById(userId);
-      const userName = user?.name || 'Unbekannt';
+      // Get participant name for SSE event
+      const participant = await this.participantRepo.findById(participantId, eventId);
+      const participantName = participant?.name || 'Unbekannt';
       
       // Broadcast game:player-added event
       sseManager.broadcast({
         type: 'game:player-added',
         gameId,
-        userId,
-        userName,
+        participantId,
+        participantName,
         gameName: game.name,
       });
 
       await activityLogService.logEvent({
-        actorUserId: userId,
+        actorParticipantId: participantId,
         eventType: 'player_added',
         gameId,
+        eventId,
       });
       
       return game;
@@ -260,29 +269,30 @@ export class GameService {
   /**
    * Remove a player from a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID to remove as a player
+   * @param participantId - The participant's ID to remove as a player
    * @returns The updated game in API format
-   * @throws Error with German message if game not found or user not a player
+   * @throws Error with German message if game not found or participant not a player
    * 
    * Requirements: 3.5, 4.4
    */
-  async removePlayer(gameId: string, userId: string): Promise<Game> {
+  async removePlayer(eventId: string, gameId: string, participantId: string): Promise<Game> {
     try {
-      const entity = await this.repository.removePlayer(gameId, userId);
-      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const entity = await this.repository.removePlayer(gameId, participantId, eventId);
+      const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
       const game = this.transformGame(entity, isHidden);
       
       // Broadcast game:player-removed event
       sseManager.broadcast({
         type: 'game:player-removed',
         gameId,
-        userId,
+        participantId: participantId,
       });
 
       await activityLogService.logEvent({
-        actorUserId: userId,
+        actorParticipantId: participantId,
         eventType: 'player_removed',
         gameId,
+        eventId,
       });
       
       return game;
@@ -291,7 +301,7 @@ export class GameService {
         if (error.message === 'Game not found') {
           throw new Error('Spiel nicht gefunden.');
         }
-        if (error.message === 'User is not a player of this game') {
+        if (error.message === 'Participant is not a player of this game') {
           throw new Error('Du bist nicht in dieser Liste eingetragen.');
         }
       }
@@ -302,35 +312,36 @@ export class GameService {
   /**
    * Add a bringer to a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID to add as a bringer
+   * @param participantId - The participant's ID to add as a bringer
    * @returns The updated game in API format
-   * @throws Error with German message if game not found or user already a bringer
+   * @throws Error with German message if game not found or participant already a bringer
    * 
    * Requirements: 3.6, 3.7, 4.3
    */
-  async addBringer(gameId: string, userId: string): Promise<Game> {
+  async addBringer(eventId: string, gameId: string, participantId: string): Promise<Game> {
     try {
-      const entity = await this.repository.addBringer(gameId, userId);
-      await this.repository.unhideGameIfExists(gameId, userId);
+      const entity = await this.repository.addBringer(gameId, participantId, eventId);
+      await this.repository.unhideGameIfExists(gameId, participantId);
       const game = this.transformGame(entity, false);
       
-      // Get user name for SSE event
-      const user = await this.userRepo.findById(userId);
-      const userName = user?.name || 'Unbekannt';
+      // Get participant name for SSE event
+      const participant = await this.participantRepo.findById(participantId, eventId);
+      const participantName = participant?.name || 'Unbekannt';
       
       // Broadcast game:bringer-added event
       sseManager.broadcast({
         type: 'game:bringer-added',
         gameId,
-        userId,
-        userName,
+        participantId,
+        participantName,
         gameName: game.name,
       });
 
       await activityLogService.logEvent({
-        actorUserId: userId,
+        actorParticipantId: participantId,
         eventType: 'bringer_added',
         gameId,
+        eventId,
       });
       
       return game;
@@ -351,29 +362,30 @@ export class GameService {
   /**
    * Remove a bringer from a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID to remove as a bringer
+   * @param participantId - The participant's ID to remove as a bringer
    * @returns The updated game in API format
-   * @throws Error with German message if game not found or user not a bringer
+   * @throws Error with German message if game not found or participant not a bringer
    * 
    * Requirements: 3.6, 4.5
    */
-  async removeBringer(gameId: string, userId: string): Promise<Game> {
+  async removeBringer(eventId: string, gameId: string, participantId: string): Promise<Game> {
     try {
-      const entity = await this.repository.removeBringer(gameId, userId);
-      const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+      const entity = await this.repository.removeBringer(gameId, participantId, eventId);
+      const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
       const game = this.transformGame(entity, isHidden);
       
       // Broadcast game:bringer-removed event
       sseManager.broadcast({
         type: 'game:bringer-removed',
         gameId,
-        userId,
+        participantId: participantId,
       });
 
       await activityLogService.logEvent({
-        actorUserId: userId,
+        actorParticipantId: participantId,
         eventType: 'bringer_removed',
         gameId,
+        eventId,
       });
       
       return game;
@@ -382,7 +394,7 @@ export class GameService {
         if (error.message === 'Game not found') {
           throw new Error('Spiel nicht gefunden.');
         }
-        if (error.message === 'User is not a bringer of this game') {
+        if (error.message === 'Participant is not a bringer of this game') {
           throw new Error('Du bist nicht in dieser Liste eingetragen.');
         }
       }
@@ -393,18 +405,24 @@ export class GameService {
   /**
    * Delete a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID requesting deletion (must be owner)
+   * @param participantId - The participant's ID requesting deletion (must be owner unless overridden)
+   * @param options - Optional overrides for event owner/admin deletes
    * @throws Error with German message if:
    *   - Game not found (404)
-   *   - User is not the owner (403)
+   *   - Participant is not the owner (403)
    *   - Game has other players or bringers besides the owner (400)
    * 
    * Requirements: 3.2, 3.5, 3.6, 3.7
    * Feature: 023-custom-thumbnail-upload - Clean up thumbnails on deletion
    */
-  async deleteGame(gameId: string, userId: string): Promise<void> {
+  async deleteGame(
+    eventId: string,
+    gameId: string,
+    participantId: string,
+    options: DeleteGameOptions = {}
+  ): Promise<void> {
     // Find the game
-    const entity = await this.repository.findById(gameId);
+    const entity = await this.repository.findById(gameId, eventId);
     
     if (!entity) {
       const error = new Error('Spiel nicht gefunden.');
@@ -412,8 +430,8 @@ export class GameService {
       throw error;
     }
 
-    // Check ownership - user must be the owner
-    if (entity.ownerId !== userId) {
+    // Check ownership - participant must be the owner
+    if (!options.allowNonOwner && entity.ownerId !== participantId) {
       const error = new Error('Du bist nicht berechtigt, dieses Spiel zu löschen.');
       (error as Error & { code: string }).code = 'FORBIDDEN';
       throw error;
@@ -421,10 +439,10 @@ export class GameService {
 
     // Check if game has other players or bringers besides the owner
     // Allow deletion if the only player/bringer is the owner themselves
-    const hasOtherPlayers = entity.players.some(p => p.user.id !== userId);
-    const hasOtherBringers = entity.bringers.some(b => b.user.id !== userId);
+    const hasOtherPlayers = entity.players.some(p => p.participant.id !== participantId);
+    const hasOtherBringers = entity.bringers.some(b => b.participant.id !== participantId);
     
-    if (hasOtherPlayers || hasOtherBringers) {
+    if (!options.allowNonEmpty && (hasOtherPlayers || hasOtherBringers)) {
       const error = new Error('Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.');
       (error as Error & { code: string }).code = 'GAME_NOT_EMPTY';
       throw error;
@@ -442,35 +460,36 @@ export class GameService {
     }
 
     // Delete the game
-    await this.repository.delete(gameId);
+    await this.repository.delete(gameId, eventId);
     
     // Broadcast game:deleted event
     sseManager.broadcast({
       type: 'game:deleted',
       gameId,
-      userId,
+      participantId: participantId,
     });
 
     await activityLogService.logEvent({
-      actorUserId: userId,
+      actorParticipantId: participantId,
       eventType: 'game_deleted',
       gameId,
+      eventId,
     });
   }
 
   /**
    * Toggle prototype status for a game
    * @param gameId - The game's unique identifier
-   * @param userId - The user requesting the change (must be owner)
+   * @param participantId - The participant requesting the change (must be owner)
    * @param isPrototype - The new prototype status
    * @returns The updated game
    * @throws Error if not owner, game has BGG ID, or game not found
    * 
    * Requirements: 022-prototype-toggle 1.1, 1.2, 1.3, 1.4
    */
-  async togglePrototype(gameId: string, userId: string, isPrototype: boolean): Promise<Game> {
+  async togglePrototype(eventId: string, gameId: string, participantId: string, isPrototype: boolean): Promise<Game> {
     // Find the game
-    const entity = await this.repository.findById(gameId);
+    const entity = await this.repository.findById(gameId, eventId);
     
     if (!entity) {
       const error = new Error('Spiel nicht gefunden.');
@@ -478,8 +497,8 @@ export class GameService {
       throw error;
     }
 
-    // Check ownership - user must be the owner
-    if (entity.ownerId !== userId) {
+    // Check ownership - participant must be the owner
+    if (entity.ownerId !== participantId) {
       const error = new Error('Du bist nicht berechtigt, dieses Spiel zu bearbeiten.');
       (error as Error & { code: string }).code = 'FORBIDDEN';
       throw error;
@@ -493,22 +512,23 @@ export class GameService {
     }
 
     // Update prototype status
-    const updatedEntity = await this.repository.updatePrototype(gameId, isPrototype);
-    const isHidden = await this.repository.isGameHiddenForUser(gameId, userId);
+    const updatedEntity = await this.repository.updatePrototype(gameId, isPrototype, eventId);
+    const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
     const game = this.transformGame(updatedEntity, isHidden);
 
     // Broadcast game:prototype-toggled event
     sseManager.broadcast({
       type: 'game:prototype-toggled',
       gameId,
-      userId,
+      participantId: participantId,
       isPrototype,
     });
 
     await activityLogService.logEvent({
-      actorUserId: userId,
+      actorParticipantId: participantId,
       eventType: 'prototype_toggled',
       gameId,
+      eventId,
       metadata: { isPrototype },
     });
 
@@ -516,26 +536,26 @@ export class GameService {
   }
 
   /**
-   * Hide a game for a user
+   * Hide a game for a participant
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID hiding the game
+   * @param participantId - The participant's ID hiding the game
    * @returns The updated game in API format (with isHidden = true)
-   * @throws Error with German message if game not found, user is bringer, or already hidden
+   * @throws Error with German message if game not found, participant is bringer, or already hidden
    */
-  async hideGame(gameId: string, userId: string): Promise<Game> {
-    const entity = await this.repository.findById(gameId);
+  async hideGame(eventId: string, gameId: string, participantId: string): Promise<Game> {
+    const entity = await this.repository.findById(gameId, eventId);
 
     if (!entity) {
       throw new Error('Spiel nicht gefunden.');
     }
 
-    const isBringer = entity.bringers.some((bringer) => bringer.user.id === userId);
+    const isBringer = entity.bringers.some((bringer) => bringer.participant.id === participantId);
     if (isBringer) {
       throw new Error('Du bringst dieses Spiel mit und kannst es nicht ausblenden.');
     }
 
     try {
-      await this.repository.hideGame(gameId, userId);
+      await this.repository.hideGame(gameId, participantId);
     } catch (error) {
       if (error instanceof Error && error.message.includes('Unique constraint')) {
         throw new Error('Spiel ist bereits ausgeblendet.');
@@ -544,37 +564,39 @@ export class GameService {
     }
 
     await activityLogService.logEvent({
-      actorUserId: userId,
+      actorParticipantId: participantId,
       eventType: 'game_hidden',
       gameId,
+      eventId,
     });
 
     return this.transformGame(entity, true);
   }
 
   /**
-   * Unhide a game for a user
+   * Unhide a game for a participant
    * @param gameId - The game's unique identifier
-   * @param userId - The user's ID unhiding the game
+   * @param participantId - The participant's ID unhiding the game
    * @returns The updated game in API format (with isHidden = false)
    * @throws Error with German message if game not found or not hidden
    */
-  async unhideGame(gameId: string, userId: string): Promise<Game> {
-    const entity = await this.repository.findById(gameId);
+  async unhideGame(eventId: string, gameId: string, participantId: string): Promise<Game> {
+    const entity = await this.repository.findById(gameId, eventId);
 
     if (!entity) {
       throw new Error('Spiel nicht gefunden.');
     }
 
-    const removed = await this.repository.unhideGame(gameId, userId);
+    const removed = await this.repository.unhideGame(gameId, participantId);
     if (!removed) {
       throw new Error('Spiel ist nicht ausgeblendet.');
     }
 
     await activityLogService.logEvent({
-      actorUserId: userId,
+      actorParticipantId: participantId,
       eventType: 'game_unhidden',
       gameId,
+      eventId,
     });
 
     return this.transformGame(entity, false);

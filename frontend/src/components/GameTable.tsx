@@ -3,7 +3,7 @@
  * Displays games in table format with Name, Mitspieler, Bringt mit, Aktionen columns
  * All UI text in German (Requirement 9.1)
  * Requirement 5.1: Display each game as a row in a table format
- * Requirement 5.2, 5.3: Sorting by game name with toggle
+ * Requirement 5.2, 5.3: Sorting by game name or date added with toggle
  * Requirement 6.1, 6.2, 6.3, 6.4: Responsive design with desktop table and mobile card layout
  */
 
@@ -11,13 +11,22 @@ import { useMemo } from 'react';
 import { Game } from '../types';
 import { GameRow } from './GameRow';
 import { GameCard } from './GameCard';
-import { sortGamesByName, type SortOrder, DEFAULT_SORT_ORDER } from '../utils';
+import {
+  sortGamesByName,
+  sortGamesByAddedAt,
+  toggleSortOrder,
+  type SortOrder,
+  type SortKey,
+  DEFAULT_SORT_ORDER,
+  DEFAULT_SORT_KEY,
+} from '../utils';
 
 interface GameTableProps {
   games: Game[];
-  currentUserId: string;
+  currentParticipantId: string;
+  sortKey?: SortKey;
   sortOrder?: SortOrder;
-  onSortOrderChange?: (order: SortOrder) => void;
+  onSortChange?: (key: SortKey, order: SortOrder) => void;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -39,13 +48,16 @@ interface GameTableProps {
   hiddenOnly?: boolean;
   /** Thumbnail timestamps for cache-busting (gameId -> timestamp) */
   thumbnailTimestamps?: Record<string, number>;
+  /** Organizer/admin can manage all games */
+  canManageGames?: boolean;
 }
 
 export function GameTable({
   games,
-  currentUserId,
+  currentParticipantId,
+  sortKey = DEFAULT_SORT_KEY,
   sortOrder = DEFAULT_SORT_ORDER,
-  onSortOrderChange,
+  onSortChange,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -62,17 +74,47 @@ export function GameTable({
   hiddenCount = 0,
   hiddenOnly = false,
   thumbnailTimestamps,
+  canManageGames = false,
 }: GameTableProps) {
-  // Sort games alphabetically by name (Requirements 5.2, 5.3)
+  // Sort games by selected key (name or added date)
   const sortedGames = useMemo(() => {
-    return sortGamesByName(games, sortOrder);
-  }, [games, sortOrder]);
+    return sortKey === 'addedAt'
+      ? sortGamesByAddedAt(games, sortOrder)
+      : sortGamesByName(games, sortOrder);
+  }, [games, sortKey, sortOrder]);
 
-  // Handle sort toggle when clicking the Name header
-  const handleSortToggle = () => {
-    if (onSortOrderChange) {
-      onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc');
+  const getDefaultSortOrder = (key: SortKey): SortOrder => {
+    return key === 'name' ? DEFAULT_SORT_ORDER : 'desc';
+  };
+
+  const getSortAriaLabel = (key: SortKey, order: SortOrder, isActive: boolean): string => {
+    if (key === 'name') {
+      if (isActive) {
+        return order === 'asc'
+          ? 'Sortiert A bis Z, klicken für Z bis A'
+          : 'Sortiert Z bis A, klicken für A bis Z';
+      }
+      return 'Sortieren nach Name (A bis Z)';
     }
+
+    if (isActive) {
+      return order === 'asc'
+        ? 'Sortiert nach hinzugefügt, älteste zuerst, klicken für neueste zuerst'
+        : 'Sortiert nach hinzugefügt, neueste zuerst, klicken für älteste zuerst';
+    }
+    return 'Sortieren nach hinzugefügt (neueste zuerst)';
+  };
+
+  // Handle sort toggle when clicking a header
+  const handleSortToggle = (key: SortKey) => {
+    if (!onSortChange) return;
+
+    if (key === sortKey) {
+      onSortChange(key, toggleSortOrder(sortOrder));
+      return;
+    }
+
+    onSortChange(key, getDefaultSortOrder(key));
   };
 
   if (games.length === 0) {
@@ -96,46 +138,64 @@ export function GameTable({
   }
 
   // Sort header button component (shared between desktop and mobile)
-  const SortButton = () => (
-    <button
-      onClick={handleSortToggle}
-      className="inline-flex items-center gap-1 hover:text-blue-600 focus:outline-none focus:text-blue-600 transition-colors"
-      aria-label={sortOrder === 'asc' ? 'Sortiert A bis Z, klicken für Z bis A' : 'Sortiert Z bis A, klicken für A bis Z'}
-    >
-      <span>Name</span>
-      {sortOrder === 'asc' ? (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 15l7-7 7 7"
-          />
-        </svg>
-      ) : (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      )}
-    </button>
+  const SortIcon = ({ order }: { order: SortOrder }) => (
+    order === 'asc' ? (
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"
+        />
+      </svg>
+    ) : (
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    )
   );
+
+  const SortButton = ({
+    label,
+    targetKey,
+    className = '',
+  }: {
+    label: string;
+    targetKey: SortKey;
+    className?: string;
+  }) => {
+    const isActive = sortKey === targetKey;
+    const displayOrder = isActive ? sortOrder : getDefaultSortOrder(targetKey);
+    const ariaLabel = getSortAriaLabel(targetKey, displayOrder, isActive);
+
+    return (
+      <button
+        onClick={() => handleSortToggle(targetKey)}
+        className={`inline-flex items-center gap-1 focus:outline-none focus:text-blue-600 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'} ${className}`.trim()}
+        aria-label={ariaLabel}
+      >
+        <span>{label}</span>
+        {isActive && <SortIcon order={sortOrder} />}
+      </button>
+    );
+  };
 
   const totalCount = totalGamesCount ?? games.length;
   const showHiddenInfo = hiddenCount > 0;
@@ -151,9 +211,14 @@ export function GameTable({
       <div className="lg:hidden">
         {/* Mobile sort header */}
         <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-700">
-            <SortButton />
-          </span>
+          <div className="flex items-center gap-4 text-sm font-semibold">
+            <SortButton
+              label="Hinzugefügt"
+              targetKey="addedAt"
+              className="w-28 shrink-0"
+            />
+            <SortButton label="Name" targetKey="name" />
+          </div>
           <span className="text-sm text-gray-500">
             {countLabel}
           </span>
@@ -171,7 +236,8 @@ export function GameTable({
               )}
               <GameCard
                 game={game}
-                currentUserId={currentUserId}
+                currentParticipantId={currentParticipantId}
+                canManageGames={canManageGames}
                 onAddPlayer={onAddPlayer}
                 onAddBringer={onAddBringer}
                 onRemovePlayer={onRemovePlayer}
@@ -199,10 +265,10 @@ export function GameTable({
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-2 py-3 text-left text-sm font-semibold text-gray-700 w-20">
-                  {/* Thumbnail column - Requirement 7.1 */}
+                  <SortButton label="Hinzugefügt" targetKey="addedAt" className="leading-tight whitespace-normal break-words" />
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[22%] 2xl:w-[25%]">
-                  <SortButton />
+                  <SortButton label="Name" targetKey="name" />
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[15%] 2xl:w-[18%]">
                   Bringt mit
@@ -225,7 +291,8 @@ export function GameTable({
                 <GameRow
                   key={game.id}
                   game={game}
-                  currentUserId={currentUserId}
+                  currentParticipantId={currentParticipantId}
+                  canManageGames={canManageGames}
                   onAddPlayer={onAddPlayer}
                   onAddBringer={onAddBringer}
                   onRemovePlayer={onRemovePlayer}

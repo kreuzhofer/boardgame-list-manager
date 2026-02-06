@@ -237,7 +237,7 @@ export function getMatchingGamesWithBringers(
       id: sg.game.id,
       name: sg.game.name,
       bggId: sg.game.bggId,
-      bringerNames: sg.game.bringers.map((b) => b.user.name),
+      bringerNames: sg.game.bringers.map((b) => b.participant.name),
       matchedAlternateName: sg.matchedAlternateName,
     }));
 }

@@ -14,9 +14,10 @@ export class StatisticsService {
    * 
    * Requirements: 8.1, 8.2, 8.3, 8.4
    */
-  async getStatistics(): Promise<StatisticsData> {
+  async getStatistics(eventId: string): Promise<StatisticsData> {
     // Get all games with players and bringers
     const games = await prisma.game.findMany({
+      where: { eventId },
       include: {
         players: true,
         bringers: true,
@@ -81,29 +82,32 @@ export class StatisticsService {
     };
   }
 
-  async getTimeline(): Promise<StatisticsTimelineData> {
+  async getTimeline(eventId: string): Promise<StatisticsTimelineData> {
     type DayCountRow = { day: string; count: number };
 
     const gameCounts = await prisma.$queryRaw<DayCountRow[]>`
       SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
              count(*)::int AS count
       FROM games
+      WHERE event_id = ${eventId}
       GROUP BY day
       ORDER BY day;
     `;
 
-    const userCounts = await prisma.$queryRaw<DayCountRow[]>`
+    const participantCounts = await prisma.$queryRaw<DayCountRow[]>`
       SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
              count(*)::int AS count
       FROM users
+      WHERE event_id = ${eventId}
       GROUP BY day
       ORDER BY day;
     `;
 
-    const activeUserCounts = await prisma.$queryRaw<DayCountRow[]>`
+    const activeParticipantCounts = await prisma.$queryRaw<DayCountRow[]>`
       SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
              count(DISTINCT actor_user_id)::int AS count
       FROM activity_events
+      WHERE event_id = ${eventId}
       GROUP BY day
       ORDER BY day;
     `;
@@ -112,6 +116,8 @@ export class StatisticsService {
       SELECT to_char(date_trunc('day', added_at), 'YYYY-MM-DD') AS day,
              count(*)::int AS count
       FROM players
+      INNER JOIN games ON games.id = players.game_id
+      WHERE games.event_id = ${eventId}
       GROUP BY day
       ORDER BY day;
     `;
@@ -119,22 +125,22 @@ export class StatisticsService {
     if (
       gameCounts.length === 0 &&
       playerCounts.length === 0 &&
-      userCounts.length === 0 &&
-      activeUserCounts.length === 0
+      participantCounts.length === 0 &&
+      activeParticipantCounts.length === 0
     ) {
       return { points: [] };
     }
 
     const gameMap = new Map(gameCounts.map((row) => [row.day, row.count]));
     const playerMap = new Map(playerCounts.map((row) => [row.day, row.count]));
-    const userMap = new Map(userCounts.map((row) => [row.day, row.count]));
-    const activeUserMap = new Map(activeUserCounts.map((row) => [row.day, row.count]));
+    const participantMap = new Map(participantCounts.map((row) => [row.day, row.count]));
+    const activeParticipantMap = new Map(activeParticipantCounts.map((row) => [row.day, row.count]));
 
     const allDays = [
       ...gameMap.keys(),
       ...playerMap.keys(),
-      ...userMap.keys(),
-      ...activeUserMap.keys(),
+      ...participantMap.keys(),
+      ...activeParticipantMap.keys(),
     ];
     const minDay = allDays.reduce((min, day) => (day < min ? day : min), allDays[0]);
     const maxDay = allDays.reduce((max, day) => (day > max ? day : max), allDays[0]);
@@ -142,7 +148,7 @@ export class StatisticsService {
     const startDate = new Date(`${minDay}T00:00:00Z`);
     const endDate = new Date(`${maxDay}T00:00:00Z`);
     const points: StatisticsTimelineData['points'] = [];
-    let totalUsers = 0;
+    let totalParticipants = 0;
 
     for (
       let cursor = new Date(startDate);
@@ -150,15 +156,15 @@ export class StatisticsService {
       cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000)
     ) {
       const day = cursor.toISOString().slice(0, 10);
-      const newUsers = userMap.get(day) ?? 0;
-      totalUsers += newUsers;
+      const newParticipants = participantMap.get(day) ?? 0;
+      totalParticipants += newParticipants;
       points.push({
         date: day,
         gamesAdded: gameMap.get(day) ?? 0,
         playersAdded: playerMap.get(day) ?? 0,
-        newUsers,
-        totalUsers,
-        activeUsers: activeUserMap.get(day) ?? 0,
+        newParticipants,
+        totalParticipants,
+        activeParticipants: activeParticipantMap.get(day) ?? 0,
       });
     }
 

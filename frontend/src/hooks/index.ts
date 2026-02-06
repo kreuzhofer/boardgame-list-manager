@@ -2,13 +2,13 @@
  * Hooks barrel export
  */
 
-// User hook (new - replaces useUserName)
-export { useUser, USER_ID_STORAGE_KEY } from './useUser';
-export type { UseUserReturn } from './useUser';
+// Participant hook (new - replaces legacy participant-name storage)
+export { useParticipant, PARTICIPANT_ID_STORAGE_KEY } from './useParticipant';
+export type { UseParticipantReturn } from './useParticipant';
 
-// Legacy user name hook (deprecated - use useUser instead)
-export { useUserName, USER_NAME_STORAGE_KEY } from './useUserName';
-export type { UseUserNameReturn } from './useUserName';
+// Legacy participant name hook (deprecated - use useParticipant instead)
+export { useParticipantName, PARTICIPANT_NAME_STORAGE_KEY } from './useParticipantName';
+export type { UseParticipantNameReturn } from './useParticipantName';
 
 export { useSortOrder } from './useSortOrder';
 export type { UseSortOrderReturn } from './useSortOrder';

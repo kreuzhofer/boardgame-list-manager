@@ -9,7 +9,8 @@ datasource db {
 
 model User {
   id         String   @id @default(uuid())
-  name       String   @unique @db.VarChar(30)
+  eventId    String?   @map("event_id")
+  name       String   @db.VarChar(30)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
   players    Player[]
@@ -17,13 +18,17 @@ model User {
   ownedGames Game[]
   hiddenGames HiddenGame[]
   activityEvents ActivityEvent[]
+  event      Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@unique([eventId, name])
+  @@index([eventId])
   @@map("users")
 }
 
 model Game {
   id                    String   @id @default(uuid())
-  name                  String   @unique
+  eventId               String?   @map("event_id")
+  name                  String
   ownerId               String?  @map("owner_id")
   bggId                 Int?     @map("bgg_id")
   yearPublished         Int?     @map("year_published")
@@ -38,9 +43,12 @@ model Game {
   bringers              Bringer[]
   hiddenBy              HiddenGame[]
   activityEvents        ActivityEvent[]
+  event                 Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@index([bggId])
+  @@index([eventId])
+  @@unique([eventId, name])
   @@map("games")
 }
 
@@ -86,6 +94,29 @@ model HiddenGame {
   @@map("hidden_games")
 }
 
+model Event {
+  id             String   @id @default(uuid())
+  name           String
+  passwordHash   String   @map("password_hash")
+  startsAt       DateTime? @map("starts_at")
+  endsAt         DateTime? @map("ends_at")
+  location       String?  @db.VarChar(255)
+  capacity       Int?
+  notes          String?  @db.Text
+  fees           String?  @db.Text
+  isDefault      Boolean  @default(false) @map("is_default")
+  ownerAccountId String   @map("owner_account_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  ownerAccount   Account  @relation(fields: [ownerAccountId], references: [id], onDelete: Cascade)
+  participants   User[]
+  games          Game[]
+  activityEvents ActivityEvent[]
+
+  @@index([ownerAccountId])
+  @@map("events")
+}
+
 enum ActivityEventType {
   game_created
   player_added
@@ -104,13 +135,16 @@ model ActivityEvent {
   actorUserId String            @map("actor_user_id")
   eventType   ActivityEventType @map("event_type")
   gameId      String?           @map("game_id")
+  eventId     String?           @map("event_id")
   metadata    Json?             @map("metadata") @db.JsonB
   createdAt   DateTime          @default(now()) @map("created_at")
   actor       User              @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
   game        Game?             @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  event       Event?            @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
   @@index([actorUserId])
   @@index([gameId])
+  @@index([eventId])
   @@index([createdAt])
   @@index([eventType])
   @@map("activity_events")
@@ -169,6 +203,7 @@ model Account {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   sessions     Session[]
+  events       Event[]
 
   @@map("accounts")
 }

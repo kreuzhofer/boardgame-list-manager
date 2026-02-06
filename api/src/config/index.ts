@@ -13,6 +13,10 @@ export const config = {
   auth: {
     eventPassword: process.env.EVENT_PASSWORD || 'default-password',
   },
+  admin: {
+    defaultEmail: process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com',
+    defaultPassword: process.env.DEFAULT_ADMIN_PASSWORD || 'admin',
+  },
   jwt: {
     secret: process.env.JWT_SECRET || 'development-jwt-secret-change-in-production',
     expiresIn: '7d',

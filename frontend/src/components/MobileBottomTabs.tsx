@@ -9,13 +9,13 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { UserOptionsDialog } from './UserOptionsDialog';
-import type { User } from '../types';
+import { ParticipantOptionsDialog } from './ParticipantOptionsDialog';
+import type { Participant } from '../types';
 
 interface MobileBottomTabsProps {
-  user: User | null;
-  onUserUpdated: (user: User) => void;
-  onLogout: () => void;
+  participant: Participant | null;
+  onParticipantUpdated: (participant: Participant) => void;
+  onParticipantSwitch: () => void;
 }
 
 // SVG Icon Components
@@ -58,7 +58,7 @@ function ChartIcon({ className }: { className?: string }) {
   );
 }
 
-function UserIcon({ className }: { className?: string }) {
+function ParticipantIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path 
@@ -84,10 +84,10 @@ const TABS: TabConfig[] = [
   { id: 'games', path: '/', label: 'Spieleliste', icon: DiceIcon, action: 'navigate' },
   { id: 'print', path: '/print', label: 'Druckansicht', icon: PrinterIcon, action: 'navigate' },
   { id: 'stats', path: '/statistics', label: 'Statistiken', icon: ChartIcon, action: 'navigate' },
-  { id: 'profile', path: null, label: 'Profil', icon: UserIcon, action: 'dialog' },
+  { id: 'profile', path: null, label: 'Profil', icon: ParticipantIcon, action: 'dialog' },
 ];
 
-export function MobileBottomTabs({ user, onUserUpdated, onLogout }: MobileBottomTabsProps) {
+export function MobileBottomTabs({ participant, onParticipantUpdated, onParticipantSwitch }: MobileBottomTabsProps) {
   const location = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -99,14 +99,14 @@ export function MobileBottomTabs({ user, onUserUpdated, onLogout }: MobileBottom
     setIsDialogOpen(false);
   };
 
-  const handleUserUpdated = (updatedUser: User) => {
-    onUserUpdated(updatedUser);
+  const handleParticipantUpdated = (updatedParticipant: Participant) => {
+    onParticipantUpdated(updatedParticipant);
     setIsDialogOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleParticipantSwitch = () => {
     setIsDialogOpen(false);
-    onLogout();
+    onParticipantSwitch();
   };
 
   return (
@@ -161,13 +161,13 @@ export function MobileBottomTabs({ user, onUserUpdated, onLogout }: MobileBottom
         </div>
       </nav>
 
-      {/* User Options Dialog */}
-      <UserOptionsDialog
+      {/* Participant Options Dialog */}
+      <ParticipantOptionsDialog
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
-        user={user}
-        onUserUpdated={handleUserUpdated}
-        onLogout={handleLogout}
+        participant={participant}
+        onParticipantUpdated={handleParticipantUpdated}
+        onParticipantSwitch={handleParticipantSwitch}
       />
     </>
   );

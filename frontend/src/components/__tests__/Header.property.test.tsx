@@ -10,7 +10,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { Header } from '../Header';
-import type { User } from '../../types';
+import type { Participant } from '../../types';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -20,13 +20,12 @@ vi.mock('../../contexts/AuthContext', () => ({
   }),
 }));
 
-const mockUser: User = {
+const mockParticipant: Participant = {
   id: 'user-1',
   name: 'Test User',
 };
 
-const mockOnUserUpdated = vi.fn();
-const mockOnLogout = vi.fn();
+const mockOnParticipantUpdated = vi.fn();
 
 // Desktop navigation tabs configuration (matching Header component)
 const DESKTOP_TABS = [
@@ -61,9 +60,8 @@ describe('Header Property Tests', () => {
           const { unmount } = render(
             <MemoryRouter initialEntries={['/']}>
               <Header
-                user={mockUser}
-                onUserUpdated={mockOnUserUpdated}
-                onLogout={mockOnLogout}
+                participant={mockParticipant}
+                onParticipantUpdated={mockOnParticipantUpdated}
               />
               <Routes>
                 <Route path="*" element={<LocationDisplay />} />
@@ -94,9 +92,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );
@@ -111,9 +108,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );
@@ -132,9 +128,8 @@ describe('Header Property Tests', () => {
           const { unmount } = render(
             <MemoryRouter initialEntries={[route]}>
               <Header
-                user={mockUser}
-                onUserUpdated={mockOnUserUpdated}
-                onLogout={mockOnLogout}
+                participant={mockParticipant}
+                onParticipantUpdated={mockOnParticipantUpdated}
               />
             </MemoryRouter>
           );
@@ -170,9 +165,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );
@@ -186,9 +180,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );
@@ -207,9 +200,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );
@@ -222,9 +214,8 @@ describe('Header Property Tests', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
           <Header
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
+            participant={mockParticipant}
+            onParticipantUpdated={mockOnParticipantUpdated}
           />
         </MemoryRouter>
       );

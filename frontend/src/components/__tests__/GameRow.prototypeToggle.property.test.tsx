@@ -11,10 +11,14 @@
  */
 
 import * as fc from 'fast-check';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { GameRow } from '../GameRow';
 import type { Game } from '../../types';
+
+vi.mock('../ToastProvider', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}));
 
 // Arbitrary for generating user IDs
 const userIdArbitrary = fc.uuid();
@@ -29,13 +33,13 @@ const gameNameArbitrary = fc
 const bggIdArbitrary = fc.option(fc.integer({ min: 1, max: 999999 }), { nil: null });
 
 // Arbitrary for generating a game with configurable ownership and BGG ID
-const gameArbitrary = (currentUserId: string) =>
+const gameArbitrary = (currentParticipantId: string) =>
   fc.record({
     id: fc.uuid(),
     name: gameNameArbitrary,
     owner: fc.option(
       fc.record({
-        id: fc.oneof(fc.constant(currentUserId), userIdArbitrary),
+        id: fc.oneof(fc.constant(currentParticipantId), userIdArbitrary),
         name: fc.string({ minLength: 1, maxLength: 30 }),
       }),
       { nil: null }
@@ -54,13 +58,13 @@ const gameArbitrary = (currentUserId: string) =>
   }) as fc.Arbitrary<Game>;
 
 // Helper to render GameRow in a table context
-function renderGameRow(game: Game, currentUserId: string, onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>) {
+function renderGameRow(game: Game, currentParticipantId: string, onTogglePrototype?: (gameId: string, isPrototype: boolean) => Promise<void>) {
   return render(
     <table>
       <tbody>
         <GameRow
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       </tbody>
@@ -83,12 +87,12 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           bggIdArbitrary,
           fc.boolean(),
           fc.boolean(),
-          (currentUserId, potentialOwnerId, gameName, bggId, isOwnerScenario, isPrototype) => {
+          (currentParticipantId, potentialOwnerId, gameName, bggId, isOwnerScenario, isPrototype) => {
             // Cleanup before each iteration
             cleanup();
             
             // Determine if the game owner should be the current user
-            const ownerId = isOwnerScenario ? currentUserId : potentialOwnerId;
+            const ownerId = isOwnerScenario ? currentParticipantId : potentialOwnerId;
             
             const game: Game = {
               id: 'test-id',
@@ -109,9 +113,9 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
             
             const onTogglePrototype = async () => {};
             
-            renderGameRow(game, currentUserId, onTogglePrototype);
+            renderGameRow(game, currentParticipantId, onTogglePrototype);
 
-            const isOwner = game.owner?.id === currentUserId;
+            const isOwner = game.owner?.id === currentParticipantId;
             const hasNoBggId = game.bggId === null;
             const shouldShowToggle = isOwner && hasNoBggId;
 
@@ -138,14 +142,14 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           userIdArbitrary,
           fc.integer({ min: 1, max: 999999 }),
           gameNameArbitrary,
-          (currentUserId, bggId, gameName) => {
+          (currentParticipantId, bggId, gameName) => {
             // Cleanup before each iteration
             cleanup();
             
             const game: Game = {
               id: 'test-id',
               name: gameName,
-              owner: { id: currentUserId, name: 'Owner' }, // User IS owner
+              owner: { id: currentParticipantId, name: 'Owner' }, // User IS owner
               bggId: bggId, // But game HAS BGG ID
               yearPublished: null,
               bggRating: null,
@@ -161,7 +165,7 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
 
             const onTogglePrototype = async () => {};
             
-            renderGameRow(game, currentUserId, onTogglePrototype);
+            renderGameRow(game, currentParticipantId, onTogglePrototype);
 
             // The toggle is now inside DesktopActionsMenu, which shows a "Weitere Aktionen" button
             const menuButton = screen.queryByRole('button', { name: /Weitere Aktionen/i });
@@ -180,12 +184,12 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
           userIdArbitrary,
           userIdArbitrary.filter((id) => id !== 'current-user'),
           gameNameArbitrary,
-          (currentUserId, ownerId, gameName) => {
+          (currentParticipantId, ownerId, gameName) => {
             // Cleanup before each iteration
             cleanup();
             
             // Ensure owner is different from current user
-            if (currentUserId === ownerId) return true;
+            if (currentParticipantId === ownerId) return true;
 
             const game: Game = {
               id: 'test-id',
@@ -206,7 +210,7 @@ describe('GameRow Property Tests - Prototype Toggle', () => {
 
             const onTogglePrototype = async () => {};
             
-            renderGameRow(game, currentUserId, onTogglePrototype);
+            renderGameRow(game, currentParticipantId, onTogglePrototype);
 
             // The toggle is now inside DesktopActionsMenu, which shows a "Weitere Aktionen" button
             const menuButton = screen.queryByRole('button', { name: /Weitere Aktionen/i });

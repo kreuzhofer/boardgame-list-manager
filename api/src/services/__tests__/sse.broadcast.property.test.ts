@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import * as fc from 'fast-check';
 import { GameService } from '../game.service';
-import { UserService } from '../user.service';
+import { ParticipantService } from '../participant.service';
 import { sseManager } from '../sse.service';
 import { prisma } from '../../db/prisma';
 
@@ -19,7 +19,7 @@ const gameNameArbitrary = fc
   .filter((s) => s.trim().length > 0)
   .map((s) => s.trim());
 
-const userNameArbitrary = fc
+const participantNameArbitrary = fc
   .string({ minLength: 1, maxLength: 15 })
   .filter((s) => s.trim().length > 0)
   .map((s) => s.trim());
@@ -38,13 +38,37 @@ const createMockResponse = () => {
 
 describe('SSE Broadcast Property Tests', () => {
   let gameService: GameService;
-  let userService: UserService;
+  let participantService: ParticipantService;
+  let eventId: string;
   const createdGameIds: string[] = [];
-  const createdUserIds: string[] = [];
+  const createdParticipantIds: string[] = [];
+  const createdAccountIds: string[] = [];
+
+  beforeAll(async () => {
+    const email = `sse-broadcast-${Date.now()}@example.com`;
+    const account = await prisma.account.create({
+      data: {
+        email,
+        passwordHash: 'test-hash',
+        role: 'account_owner',
+        status: 'active',
+      },
+    });
+    createdAccountIds.push(account.id);
+
+    const event = await prisma.event.create({
+      data: {
+        name: `SSE Broadcast Test ${Date.now()}`,
+        passwordHash: 'test-hash',
+        ownerAccountId: account.id,
+      },
+    });
+    eventId = event.id;
+  });
 
   beforeEach(() => {
     gameService = new GameService();
-    userService = new UserService();
+    participantService = new ParticipantService();
     sseManager.clearClients();
   });
 
@@ -56,25 +80,30 @@ describe('SSE Broadcast Property Tests', () => {
       });
       createdGameIds.length = 0;
     }
-    if (createdUserIds.length > 0) {
+    if (createdParticipantIds.length > 0) {
       await prisma.user.deleteMany({
-        where: { id: { in: createdUserIds } },
+        where: { id: { in: createdParticipantIds } },
       });
-      createdUserIds.length = 0;
+      createdParticipantIds.length = 0;
     }
   });
 
   afterAll(async () => {
+    if (createdAccountIds.length > 0) {
+      await prisma.account.deleteMany({
+        where: { id: { in: createdAccountIds } },
+      });
+    }
     await prisma.$disconnect();
   });
 
-  const createTestUser = async (baseName: string) => {
+  const createTestParticipant = async (baseName: string) => {
     const shortBase = baseName.slice(0, 15);
     const random = Math.random().toString(36).slice(2, 8);
     const uniqueName = `${shortBase}_${random}`.slice(0, 30);
-    const user = await userService.createUser(uniqueName);
-    createdUserIds.push(user.id);
-    return user;
+    const participant = await participantService.createParticipant(uniqueName, eventId);
+    createdParticipantIds.push(participant.id);
+    return participant;
   };
 
   describe('Property 1: Event Broadcast Correctness', () => {
@@ -82,17 +111,17 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
+          participantNameArbitrary,
           fc.boolean(),
           fc.boolean(),
-          async (gameName, userName, isBringing, isPlaying) => {
+          async (gameName, participantName, isBringing, isPlaying) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const user = await createTestUser(userName);
+            const participant = await createTestParticipant(participantName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, user.id, isBringing, isPlaying);
+            const game = await gameService.createGame(eventId, uniqueGameName, participant.id, isBringing, isPlaying);
             createdGameIds.push(game.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
@@ -101,7 +130,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:created');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(user.id);
+            expect(eventData.participantId).toBe(participant.id);
             expect(eventData.isBringing).toBe(isBringing);
 
             return true;
@@ -115,22 +144,22 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
-          userNameArbitrary,
+          participantNameArbitrary,
+          participantNameArbitrary,
           async (gameName, creatorName, bringerName) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const creator = await createTestUser(creatorName);
-            const bringer = await createTestUser(bringerName);
+            const creator = await createTestParticipant(creatorName);
+            const bringer = await createTestParticipant(bringerName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, creator.id, false, false);
+            const game = await gameService.createGame(eventId, uniqueGameName, creator.id, false, false);
             createdGameIds.push(game.id);
 
             mockResponse.events.length = 0;
 
-            await gameService.addBringer(game.id, bringer.id);
+            await gameService.addBringer(eventId, game.id, bringer.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
 
@@ -138,7 +167,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:bringer-added');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(bringer.id);
+            expect(eventData.participantId).toBe(bringer.id);
 
             return true;
           }
@@ -151,20 +180,20 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
-          async (gameName, userName) => {
+          participantNameArbitrary,
+          async (gameName, participantName) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const user = await createTestUser(userName);
+            const participant = await createTestParticipant(participantName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, user.id, true, false);
+            const game = await gameService.createGame(eventId, uniqueGameName, participant.id, true, false);
             createdGameIds.push(game.id);
 
             mockResponse.events.length = 0;
 
-            await gameService.removeBringer(game.id, user.id);
+            await gameService.removeBringer(eventId, game.id, participant.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
 
@@ -172,7 +201,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:bringer-removed');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(user.id);
+            expect(eventData.participantId).toBe(participant.id);
 
             return true;
           }
@@ -185,22 +214,22 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
-          userNameArbitrary,
+          participantNameArbitrary,
+          participantNameArbitrary,
           async (gameName, creatorName, playerName) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const creator = await createTestUser(creatorName);
-            const player = await createTestUser(playerName);
+            const creator = await createTestParticipant(creatorName);
+            const player = await createTestParticipant(playerName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, creator.id, false, false);
+            const game = await gameService.createGame(eventId, uniqueGameName, creator.id, false, false);
             createdGameIds.push(game.id);
 
             mockResponse.events.length = 0;
 
-            await gameService.addPlayer(game.id, player.id);
+            await gameService.addPlayer(eventId, game.id, player.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
 
@@ -208,7 +237,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:player-added');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(player.id);
+            expect(eventData.participantId).toBe(player.id);
 
             return true;
           }
@@ -221,20 +250,20 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
-          async (gameName, userName) => {
+          participantNameArbitrary,
+          async (gameName, participantName) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const user = await createTestUser(userName);
+            const participant = await createTestParticipant(participantName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, user.id, false, true);
+            const game = await gameService.createGame(eventId, uniqueGameName, participant.id, false, true);
             createdGameIds.push(game.id);
 
             mockResponse.events.length = 0;
 
-            await gameService.removePlayer(game.id, user.id);
+            await gameService.removePlayer(eventId, game.id, participant.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
 
@@ -242,7 +271,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:player-removed');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(user.id);
+            expect(eventData.participantId).toBe(participant.id);
 
             return true;
           }
@@ -255,20 +284,20 @@ describe('SSE Broadcast Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           gameNameArbitrary,
-          userNameArbitrary,
-          async (gameName, userName) => {
+          participantNameArbitrary,
+          async (gameName, participantName) => {
             const mockResponse = createMockResponse();
             sseManager.addClient('test-client', mockResponse as any);
 
-            const user = await createTestUser(userName);
+            const participant = await createTestParticipant(participantName);
             const uniqueGameName = `${gameName}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             
-            const game = await gameService.createGame(uniqueGameName, user.id, false, false);
+            const game = await gameService.createGame(eventId, uniqueGameName, participant.id, false, false);
             // Don't add to createdGameIds since we're deleting it
 
             mockResponse.events.length = 0;
 
-            await gameService.deleteGame(game.id, user.id);
+            await gameService.deleteGame(eventId, game.id, participant.id);
 
             expect(mockResponse.events.length).toBeGreaterThan(0);
 
@@ -276,7 +305,7 @@ describe('SSE Broadcast Property Tests', () => {
             const eventData = JSON.parse(lastEvent.replace('data: ', '').trim());
             expect(eventData.type).toBe('game:deleted');
             expect(eventData.gameId).toBe(game.id);
-            expect(eventData.userId).toBe(user.id);
+            expect(eventData.participantId).toBe(participant.id);
 
             return true;
           }

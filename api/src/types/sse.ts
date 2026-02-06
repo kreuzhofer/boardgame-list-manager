@@ -14,13 +14,13 @@ export type SSEEventType =
 export interface BaseGameEvent {
   type: SSEEventType;
   gameId: string;
-  userId: string;
+  participantId: string;
 }
 
 // Event for game creation
 export interface GameCreatedEvent extends BaseGameEvent {
   type: 'game:created';
-  userName: string;
+  participantName: string;
   gameName: string;
   isBringing: boolean;
 }
@@ -28,7 +28,7 @@ export interface GameCreatedEvent extends BaseGameEvent {
 // Event for bringer added
 export interface BringerAddedEvent extends BaseGameEvent {
   type: 'game:bringer-added';
-  userName: string;
+  participantName: string;
   gameName: string;
 }
 
@@ -40,7 +40,7 @@ export interface BringerRemovedEvent extends BaseGameEvent {
 // Event for player added
 export interface PlayerAddedEvent extends BaseGameEvent {
   type: 'game:player-added';
-  userName: string;
+  participantName: string;
   gameName: string;
 }
 

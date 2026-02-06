@@ -21,22 +21,24 @@ import { AdvancedFilters } from '../components/AdvancedFilters';
 import { DeleteGameModal } from '../components/DeleteGameModal';
 import { useToast } from '../components/ToastProvider';
 import { useGameFilters, useSSE } from '../hooks';
-import { getHighlightedGameIds } from '../utils';
-import type { Game, User, SSEEvent, GameCreatedEvent, ThumbnailUploadedEvent } from '../types';
-import type { SortOrder } from '../utils';
+import { useAuth } from '../contexts/AuthContext';
+import { getHighlightedGameIds, DEFAULT_SORT_ORDER, DEFAULT_SORT_KEY } from '../utils';
+import type { Game, Participant, SSEEvent, GameCreatedEvent, ThumbnailUploadedEvent } from '../types';
+import type { SortOrder, SortKey } from '../utils';
 
 interface HomePageProps {
-  user: User | null;
+  participant: Participant | null;
 }
 
-export function HomePage({ user }: HomePageProps) {
+export function HomePage({ participant }: HomePageProps) {
   // Game state
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Sort state
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_SORT_KEY);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(DEFAULT_SORT_ORDER);
   
   // Track game to scroll to (newly added or clicked from dropdown)
   const [scrollToGameId, setScrollToGameId] = useState<string | null>(null);
@@ -57,6 +59,10 @@ export function HomePage({ user }: HomePageProps) {
   
   // Toast notifications
   const { showToast } = useToast();
+
+  // Account auth (organizer/admin)
+  const { account } = useAuth();
+  const canManageGames = account?.role === 'admin' || account?.role === 'account_owner';
   
   // Filter state from hook
   const {
@@ -74,16 +80,16 @@ export function HomePage({ user }: HomePageProps) {
     resetFilters,
   } = useGameFilters();
 
-  // Current user info
-  const currentUserId = user?.id || '';
-  const currentUserName = user?.name || 'Unbekannt';
+  // Current participant info
+  const currentParticipantId = participant?.id || '';
+  const currentParticipantName = participant?.name || 'Unbekannt';
 
   // Fetch games from API
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await gamesApi.getAll(currentUserId || undefined);
+      const response = await gamesApi.getAll(currentParticipantId || undefined);
       setGames(response.games);
     } catch (err) {
       console.error('Failed to fetch games:', err);
@@ -95,7 +101,7 @@ export function HomePage({ user }: HomePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Fetch games on mount
   useEffect(() => {
@@ -105,7 +111,7 @@ export function HomePage({ user }: HomePageProps) {
   // SSE event handlers for real-time updates
   const handleSSEGameCreated = useCallback(async (event: GameCreatedEvent) => {
     try {
-      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
+      const response = await gamesApi.getById(event.gameId, currentParticipantId || undefined);
       setGames((prev) => {
         // Check if game already exists (in case of race condition)
         if (prev.some(g => g.id === event.gameId)) {
@@ -116,7 +122,7 @@ export function HomePage({ user }: HomePageProps) {
     } catch (err) {
       console.error('Failed to fetch new game from SSE event:', err);
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   const handleSSEGameUpdated = useCallback(async (event: SSEEvent) => {
     try {
@@ -129,23 +135,23 @@ export function HomePage({ user }: HomePageProps) {
         }));
       }
       
-      const response = await gamesApi.getById(event.gameId, currentUserId || undefined);
+      const response = await gamesApi.getById(event.gameId, currentParticipantId || undefined);
       setGames((prev) =>
         prev.map((g) => (g.id === event.gameId ? response.game : g))
       );
     } catch (err) {
       console.error('Failed to fetch updated game from SSE event:', err);
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   const handleSSEGameDeleted = useCallback((event: SSEEvent) => {
     setGames((prev) => prev.filter((g) => g.id !== event.gameId));
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // SSE connection for real-time updates
   useSSE({
-    currentUserId,
-    enabled: !!currentUserId,
+    currentParticipantId,
+    enabled: !!currentParticipantId,
     handlers: {
       onGameCreated: handleSSEGameCreated,
       onGameUpdated: handleSSEGameUpdated,
@@ -161,7 +167,7 @@ export function HomePage({ user }: HomePageProps) {
     setTimeout(() => {
       setScrollToGameId(game.id);
     }, 100);
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle scroll to game from dropdown click
   // Uses requestAnimationFrame to ensure the list is unfiltered before scrolling
@@ -174,12 +180,12 @@ export function HomePage({ user }: HomePageProps) {
         setScrollToGameId(gameId);
       });
     });
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Clear scroll target after scroll
   const handleScrolledToGame = useCallback(() => {
     setScrollToGameId(null);
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle search query change for highlighting and filtering
   const handleSearchQueryChange = useCallback((query: string) => {
@@ -192,11 +198,16 @@ export function HomePage({ user }: HomePageProps) {
     setSearchClearTrigger(prev => prev + 1);
   }, [resetFilters]);
 
+  const handleSortChange = useCallback((key: SortKey, order: SortOrder) => {
+    setSortKey(key);
+    setSortOrder(order);
+  }, []);
+
   // Handle add player action
   const handleAddPlayer = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.addPlayer(gameId, currentUserId);
+      const response = await gamesApi.addPlayer(gameId, currentParticipantId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -208,13 +219,13 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Hinzufügen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle add bringer action
   const handleAddBringer = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.addBringer(gameId, currentUserId);
+      const response = await gamesApi.addBringer(gameId, currentParticipantId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -226,13 +237,13 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Hinzufügen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle remove player action
   const handleRemovePlayer = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.removePlayer(gameId, currentUserId);
+      const response = await gamesApi.removePlayer(gameId, currentParticipantId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -244,13 +255,13 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Entfernen als Mitspieler. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle remove bringer action
   const handleRemoveBringer = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.removeBringer(gameId, currentUserId);
+      const response = await gamesApi.removeBringer(gameId, currentParticipantId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -262,13 +273,13 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Entfernen als Bringer. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle hide game action
   const handleHideGame = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.hideGame(gameId, currentUserId);
+      const response = await gamesApi.hideGame(gameId, currentParticipantId);
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
       );
@@ -280,13 +291,13 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Ausblenden des Spiels. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle unhide game action
   const handleUnhideGame = useCallback(async (gameId: string) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     try {
-      const response = await gamesApi.unhideGame(gameId, currentUserId);
+      const response = await gamesApi.unhideGame(gameId, currentParticipantId);
       let shouldDisableHiddenFilter = false;
       setGames((prev) => {
         const hiddenCountBefore = prev.filter((g) => g.isHidden).length;
@@ -308,12 +319,12 @@ export function HomePage({ user }: HomePageProps) {
         alert('Fehler beim Einblenden des Spiels. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, filters.hiddenOnly, setHiddenOnly, showToast]);
+  }, [currentParticipantId, filters.hiddenOnly, setHiddenOnly, showToast]);
 
   // Handle toggle prototype status
   // Requirements: 022-prototype-toggle 2.3, 3.2
   const handleTogglePrototype = useCallback(async (gameId: string, isPrototype: boolean) => {
-    if (!currentUserId) return;
+    if (!currentParticipantId) return;
     
     // Store previous state for rollback using functional update
     let previousGames: Game[] = [];
@@ -324,7 +335,7 @@ export function HomePage({ user }: HomePageProps) {
     });
     
     try {
-      const response = await gamesApi.togglePrototype(gameId, isPrototype, currentUserId);
+      const response = await gamesApi.togglePrototype(gameId, isPrototype, currentParticipantId);
       // Update with server response to ensure consistency
       setGames((prev) =>
         prev.map((g) => (g.id === gameId ? response.game : g))
@@ -339,7 +350,7 @@ export function HomePage({ user }: HomePageProps) {
         showToast('Fehler beim Ändern des Prototyp-Status. Bitte erneut versuchen.');
       }
     }
-  }, [currentUserId, showToast]);
+  }, [currentParticipantId, showToast]);
 
   // Handle delete game - opens confirmation modal
   const handleDeleteGameClick = useCallback((gameId: string) => {
@@ -352,11 +363,11 @@ export function HomePage({ user }: HomePageProps) {
 
   // Handle delete game confirmation
   const handleDeleteGameConfirm = useCallback(async () => {
-    if (!gameToDelete || !currentUserId) return;
+    if (!gameToDelete || !currentParticipantId) return;
     
     setIsDeleting(true);
     try {
-      await gamesApi.delete(gameToDelete.id, currentUserId);
+      await gamesApi.delete(gameToDelete.id, currentParticipantId, canManageGames);
       setGames((prev) => prev.filter((g) => g.id !== gameToDelete.id));
       setDeleteModalOpen(false);
       setGameToDelete(null);
@@ -370,13 +381,13 @@ export function HomePage({ user }: HomePageProps) {
     } finally {
       setIsDeleting(false);
     }
-  }, [gameToDelete, currentUserId]);
+  }, [gameToDelete, currentParticipantId, canManageGames]);
 
   // Handle delete modal cancel
   const handleDeleteModalCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setGameToDelete(null);
-  }, [currentUserId]);
+  }, [currentParticipantId]);
 
   // Handle thumbnail uploaded - update timestamp for cache-busting
   const handleThumbnailUploaded = useCallback((gameId: string) => {
@@ -387,7 +398,7 @@ export function HomePage({ user }: HomePageProps) {
   }, []);
 
   // Apply filters to games
-  const filteredGames = filterGames(games, currentUserName);
+  const filteredGames = filterGames(games, currentParticipantName);
   const hiddenCount = games.filter((game) => game.isHidden).length;
 
   // Get highlighted game IDs based on search query
@@ -474,10 +485,10 @@ export function HomePage({ user }: HomePageProps) {
       </div>
 
       {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
-      {user && (
+      {participant && (
         <UnifiedSearchBar
           games={games}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onGameAdded={handleGameAdded}
           onSearchQueryChange={handleSearchQueryChange}
           onScrollToGame={handleScrollToGame}
@@ -633,13 +644,14 @@ export function HomePage({ user }: HomePageProps) {
         }}
       />
 
-      <GameTable
-        games={filteredGames}
-        currentUserId={currentUserId}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
-        onAddPlayer={handleAddPlayer}
-        onAddBringer={handleAddBringer}
+        <GameTable
+          games={filteredGames}
+          currentParticipantId={currentParticipantId}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+          onAddPlayer={handleAddPlayer}
+          onAddBringer={handleAddBringer}
         onRemovePlayer={handleRemovePlayer}
         onRemoveBringer={handleRemoveBringer}
         onHideGame={handleHideGame}
@@ -654,6 +666,7 @@ export function HomePage({ user }: HomePageProps) {
         hiddenCount={hiddenCount}
         hiddenOnly={filters.hiddenOnly}
         thumbnailTimestamps={thumbnailTimestamps}
+        canManageGames={canManageGames}
       />
 
       {/* Delete confirmation modal */}
@@ -663,6 +676,8 @@ export function HomePage({ user }: HomePageProps) {
         onConfirm={handleDeleteGameConfirm}
         onCancel={handleDeleteModalCancel}
         isDeleting={isDeleting}
+        playersCount={gameToDelete?.players.length ?? 0}
+        bringersCount={gameToDelete?.bringers.length ?? 0}
       />
 
       {(hasActiveFilters || searchQuery) && (

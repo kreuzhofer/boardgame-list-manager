@@ -41,7 +41,7 @@ export interface UseGameFiltersReturn {
   /** Check if any filters are active */
   hasActiveFilters: boolean;
   /** Apply all filters to a game list */
-  filterGames: (games: Game[], currentUser: string) => Game[];
+  filterGames: (games: Game[], currentParticipant: string) => Game[];
 }
 
 /**
@@ -65,7 +65,7 @@ export interface UseGameFiltersReturn {
  *   filterGames,
  * } = useGameFilters();
  * 
- * const filteredGames = filterGames(games, currentUser);
+ * const filteredGames = filterGames(games, currentParticipant);
  * 
  * return (
  *   <SearchFilters
@@ -120,8 +120,8 @@ export function useGameFilters(): UseGameFiltersReturn {
   const activeFilters = useMemo(() => hasActiveFilters(filters), [filters]);
 
   const filterGames = useCallback(
-    (games: Game[], currentUser: string) => {
-      return applyAllFilters(games, filters, currentUser);
+    (games: Game[], currentParticipant: string) => {
+      return applyAllFilters(games, filters, currentParticipant);
     },
     [filters]
   );

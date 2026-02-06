@@ -106,20 +106,26 @@ describe('BggImageService Property Tests', () => {
         fc.property(
           bggIdArbitrary,
           (bggId) => {
-            const service = createTestService(tempDir);
-            
-            // Initially not cached
-            const beforeCache = !service.isCached(bggId);
-            
-            // Create only micro - should still not be "cached" (need both)
-            createFakeImage(tempDir, bggId, 'micro');
-            const afterMicro = !service.isCached(bggId);
-            
-            // Create square200 - now should be cached
-            createFakeImage(tempDir, bggId, 'square200');
-            const afterBoth = service.isCached(bggId);
-            
-            return beforeCache && afterMicro && afterBoth;
+            // Use a fresh temp directory per iteration to avoid cross-run interference
+            const iterDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bgg-iscached-'));
+            try {
+              const service = createTestService(iterDir);
+              
+              // Initially not cached
+              const beforeCache = !service.isCached(bggId);
+              
+              // Create only micro - should still not be "cached" (need both)
+              createFakeImage(iterDir, bggId, 'micro');
+              const afterMicro = !service.isCached(bggId);
+              
+              // Create square200 - now should be cached
+              createFakeImage(iterDir, bggId, 'square200');
+              const afterBoth = service.isCached(bggId);
+              
+              return beforeCache && afterMicro && afterBoth;
+            } finally {
+              fs.rmSync(iterDir, { recursive: true, force: true });
+            }
           }
         ),
         { numRuns: 5 }

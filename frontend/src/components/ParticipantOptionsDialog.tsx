@@ -1,6 +1,6 @@
 /**
- * UserOptionsDialog - Modal dialog for user profile management
- * Displays user name editor and logout option
+ * ParticipantOptionsDialog - Modal dialog for participant profile management
+ * Displays participant name editor and logout option
  * Uses createPortal for proper modal rendering
  * All UI text in German (Requirement 8.4)
  * 
@@ -8,30 +8,30 @@
  */
 
 import { createPortal } from 'react-dom';
-import { UserNameEditor } from './UserNameEditor';
-import type { User } from '../types';
+import { ParticipantNameEditor } from './ParticipantNameEditor';
+import type { Participant } from '../types';
 
-interface UserOptionsDialogProps {
+interface ParticipantOptionsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
-  onUserUpdated: (user: User) => void;
-  onLogout: () => void;
+  participant: Participant | null;
+  onParticipantUpdated: (participant: Participant) => void;
+  onParticipantSwitch: () => void;
 }
 
-export function UserOptionsDialog({
+export function ParticipantOptionsDialog({
   isOpen,
   onClose,
-  user,
-  onUserUpdated,
-  onLogout,
-}: UserOptionsDialogProps) {
+  participant,
+  onParticipantUpdated,
+  onParticipantSwitch,
+}: ParticipantOptionsDialogProps) {
   if (!isOpen) {
     return null;
   }
 
   const handleLogout = () => {
-    onLogout();
+    onParticipantSwitch();
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -46,12 +46,12 @@ export function UserOptionsDialog({
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="user-options-title"
+      aria-labelledby="participant-options-title"
     >
       <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 id="user-options-title" className="text-xl font-semibold text-gray-900">
+          <h2 id="participant-options-title" className="text-xl font-semibold text-gray-900">
             Profil
           </h2>
           <button
@@ -78,16 +78,19 @@ export function UserOptionsDialog({
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
-          {user ? (
+          {participant ? (
             <div className="space-y-6">
-              {/* User Name Section */}
+              {/* Participant Name Section */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Benutzername
+                  Teilnehmername
                 </label>
-                {/* Blue background to match UserNameEditor's white text styling */}
+                {/* Blue background to match ParticipantNameEditor's white text styling */}
                 <div className="bg-blue-600 rounded-lg p-3">
-                  <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
+                  <ParticipantNameEditor
+                    participant={participant}
+                    onParticipantUpdated={onParticipantUpdated}
+                  />
                 </div>
               </div>
 
@@ -118,8 +121,8 @@ export function UserOptionsDialog({
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <p className="text-gray-500" data-testid="no-user-message">
-                Kein Benutzer angemeldet
+              <p className="text-gray-500" data-testid="no-participant-message">
+                Kein Teilnehmer angemeldet
               </p>
             </div>
           )}
@@ -131,4 +134,4 @@ export function UserOptionsDialog({
   return createPortal(dialogContent, document.body);
 }
 
-export default UserOptionsDialog;
+export default ParticipantOptionsDialog;

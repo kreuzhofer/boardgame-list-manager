@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { GameService } from '../game.service';
 import { GameRepository } from '../../repositories/game.repository';
-import { UserRepository } from '../../repositories/user.repository';
-import type { GameEntity, PlayerEntity, BringerEntity, UserEntity } from '../../types';
+import { ParticipantRepository } from '../../repositories/participant.repository';
+import type { GameEntity, PlayerEntity, BringerEntity, ParticipantEntity } from '../../types';
 
 // Mock the thumbnailService
 jest.mock('../thumbnailService', () => ({
@@ -25,32 +25,34 @@ const mockDeleteThumbnails = thumbnailService.deleteThumbnails as jest.MockedFun
 describe('GameService', () => {
   let gameService: GameService;
   let mockRepository: jest.Mocked<GameRepository>;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockParticipantRepository: jest.Mocked<ParticipantRepository>;
+  const eventId = 'event-123';
 
-  // Helper to create a mock UserEntity
-  const createMockUserEntity = (id: string, name: string): UserEntity => ({
+  // Helper to create a mock ParticipantEntity
+  const createMockParticipantEntity = (id: string, name: string): ParticipantEntity => ({
     id,
+    eventId,
     name,
     createdAt: new Date('2024-01-01T00:00:00Z'),
     updatedAt: new Date('2024-01-01T00:00:00Z'),
   });
 
   // Helper to create a mock PlayerEntity
-  const createMockPlayerEntity = (id: string, gameId: string, userId: string, userName: string): PlayerEntity => ({
+  const createMockPlayerEntity = (id: string, gameId: string, participantId: string, participantName: string): PlayerEntity => ({
     id,
     gameId,
-    userId,
+    participantId,
     addedAt: new Date('2024-01-01T00:00:00Z'),
-    user: createMockUserEntity(userId, userName),
+    participant: createMockParticipantEntity(participantId, participantName),
   });
 
   // Helper to create a mock BringerEntity
-  const createMockBringerEntity = (id: string, gameId: string, userId: string, userName: string): BringerEntity => ({
+  const createMockBringerEntity = (id: string, gameId: string, participantId: string, participantName: string): BringerEntity => ({
     id,
     gameId,
-    userId,
+    participantId,
     addedAt: new Date('2024-01-01T00:00:00Z'),
-    user: createMockUserEntity(userId, userName),
+    participant: createMockParticipantEntity(participantId, participantName),
   });
 
   // Helper to create a mock GameEntity
@@ -69,6 +71,7 @@ describe('GameService', () => {
     isPrototype: boolean = false
   ): GameEntity => ({
     id,
+    eventId,
     name,
     ownerId,
     bggId,
@@ -77,7 +80,7 @@ describe('GameService', () => {
     addedAsAlternateName,
     alternateNames,
     isPrototype,
-    owner: ownerId && ownerName ? createMockUserEntity(ownerId, ownerName) : null,
+    owner: ownerId && ownerName ? createMockParticipantEntity(ownerId, ownerName) : null,
     players,
     bringers,
     createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -90,33 +93,35 @@ describe('GameService', () => {
     
     // Create mock repository with all methods
     mockRepository = {
-      findAll: jest.fn<() => Promise<GameEntity[]>>(),
-      findById: jest.fn<(id: string) => Promise<GameEntity | null>>(),
-      findByName: jest.fn<(name: string) => Promise<GameEntity | null>>(),
-      create: jest.fn<(data: { name: string; userId: string; isBringing: boolean; isPlaying: boolean; isPrototype?: boolean }) => Promise<GameEntity>>(),
-      addPlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
-      removePlayer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
-      addBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
-      removeBringer: jest.fn<(gameId: string, userId: string) => Promise<GameEntity>>(),
-      delete: jest.fn<(id: string) => Promise<boolean>>(),
-      updatePrototype: jest.fn<(gameId: string, isPrototype: boolean) => Promise<GameEntity>>(),
-      findHiddenGameIdsByUser: jest.fn<(userId: string) => Promise<Set<string>>>(),
-      isGameHiddenForUser: jest.fn<(gameId: string, userId: string) => Promise<boolean>>(),
-      hideGame: jest.fn<(gameId: string, userId: string) => Promise<void>>(),
-      unhideGame: jest.fn<(gameId: string, userId: string) => Promise<boolean>>(),
-      unhideGameIfExists: jest.fn<(gameId: string, userId: string) => Promise<void>>(),
+      findAll: jest.fn<(eventId: string) => Promise<GameEntity[]>>(),
+      findById: jest.fn<(id: string, eventId: string) => Promise<GameEntity | null>>(),
+      findByName: jest.fn<(name: string, eventId: string) => Promise<GameEntity | null>>(),
+      create: jest.fn<(data: { eventId: string; name: string; participantId: string; isBringing: boolean; isPlaying: boolean; isPrototype?: boolean; bggId?: number; yearPublished?: number; bggRating?: number; addedAsAlternateName?: string; alternateNames?: string[] }) => Promise<GameEntity>>(),
+      addPlayer: jest.fn<(gameId: string, participantId: string, eventId: string) => Promise<GameEntity>>(),
+      removePlayer: jest.fn<(gameId: string, participantId: string, eventId: string) => Promise<GameEntity>>(),
+      addBringer: jest.fn<(gameId: string, participantId: string, eventId: string) => Promise<GameEntity>>(),
+      removeBringer: jest.fn<(gameId: string, participantId: string, eventId: string) => Promise<GameEntity>>(),
+      delete: jest.fn<(id: string, eventId: string) => Promise<boolean>>(),
+      updatePrototype: jest.fn<(gameId: string, isPrototype: boolean, eventId: string) => Promise<GameEntity>>(),
+      findHiddenGameIdsByParticipant: jest.fn<(participantId: string) => Promise<Set<string>>>(),
+      isGameHiddenForParticipant: jest.fn<(gameId: string, participantId: string) => Promise<boolean>>(),
+      hideGame: jest.fn<(gameId: string, participantId: string) => Promise<void>>(),
+      unhideGame: jest.fn<(gameId: string, participantId: string) => Promise<boolean>>(),
+      unhideGameIfExists: jest.fn<(gameId: string, participantId: string) => Promise<void>>(),
     } as unknown as jest.Mocked<GameRepository>;
 
-    // Create mock user repository
-    mockUserRepository = {
-      findById: jest.fn<(id: string) => Promise<UserEntity | null>>(),
-      findByName: jest.fn<(name: string) => Promise<UserEntity | null>>(),
-      create: jest.fn<(name: string) => Promise<UserEntity>>(),
-      updateName: jest.fn<(id: string, name: string) => Promise<UserEntity>>(),
-    } as unknown as jest.Mocked<UserRepository>;
+    // Create mock participant repository
+    mockParticipantRepository = {
+      findAll: jest.fn<(eventId: string) => Promise<ParticipantEntity[]>>(),
+      findById: jest.fn<(id: string, eventId: string) => Promise<ParticipantEntity | null>>(),
+      findByName: jest.fn<(name: string, eventId: string) => Promise<ParticipantEntity | null>>(),
+      create: jest.fn<(name: string, eventId: string) => Promise<ParticipantEntity>>(),
+      update: jest.fn<(id: string, name: string) => Promise<ParticipantEntity>>(),
+      delete: jest.fn<(id: string) => Promise<void>>(),
+    } as unknown as jest.Mocked<ParticipantRepository>;
 
     // Create service with mocked repositories
-    gameService = new GameService(mockRepository, mockUserRepository);
+    gameService = new GameService(mockRepository, mockParticipantRepository);
   });
 
   describe('deleteGame', () => {
@@ -132,10 +137,10 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
       mockRepository.delete.mockResolvedValue(true);
 
-      await expect(gameService.deleteGame(gameId, ownerId)).resolves.toBeUndefined();
+      await expect(gameService.deleteGame(eventId, gameId, ownerId)).resolves.toBeUndefined();
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
-      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId, eventId);
     });
 
     /**
@@ -145,11 +150,11 @@ describe('GameService', () => {
     it('should throw "Spiel nicht gefunden." when game does not exist', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(gameService.deleteGame('non-existent', 'user-123')).rejects.toThrow(
+      await expect(gameService.deleteGame(eventId, 'non-existent', 'user-123')).rejects.toThrow(
         'Spiel nicht gefunden.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith('non-existent');
+      expect(mockRepository.findById).toHaveBeenCalledWith('non-existent', eventId);
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -157,7 +162,7 @@ describe('GameService', () => {
      * Test 403 when non-owner attempts deletion
      * Validates: Requirement 3.6
      */
-    it('should throw "Du bist nicht berechtigt, dieses Spiel zu löschen." when user is not owner', async () => {
+    it('should throw "Du bist nicht berechtigt, dieses Spiel zu löschen." when participant is not owner', async () => {
       const ownerId = 'owner-123';
       const nonOwnerId = 'other-user-456';
       const gameId = 'game-123';
@@ -165,12 +170,31 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.deleteGame(gameId, nonOwnerId)).rejects.toThrow(
+      await expect(gameService.deleteGame(eventId, gameId, nonOwnerId)).rejects.toThrow(
         'Du bist nicht berechtigt, dieses Spiel zu löschen.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('should allow forced deletion when non-owner and game has participants', async () => {
+      const ownerId = 'owner-123';
+      const nonOwnerId = 'other-user-456';
+      const gameId = 'game-123';
+      const players = [createMockPlayerEntity('player-1', gameId, 'user-1', 'Player 1')];
+      const bringers = [createMockBringerEntity('bringer-1', gameId, 'user-2', 'Bringer 1')];
+      const mockGame = createMockGameEntity(gameId, 'Test Game', ownerId, 'Owner Name', players, bringers);
+
+      mockRepository.findById.mockResolvedValue(mockGame);
+      mockRepository.delete.mockResolvedValue(true);
+
+      await expect(
+        gameService.deleteGame(eventId, gameId, nonOwnerId, { allowNonOwner: true, allowNonEmpty: true })
+      ).resolves.toBeUndefined();
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId, eventId);
     });
 
     /**
@@ -185,11 +209,11 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
+      await expect(gameService.deleteGame(eventId, gameId, ownerId)).rejects.toThrow(
         'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -205,11 +229,11 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
+      await expect(gameService.deleteGame(eventId, gameId, ownerId)).rejects.toThrow(
         'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -226,11 +250,11 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.deleteGame(gameId, ownerId)).rejects.toThrow(
+      await expect(gameService.deleteGame(eventId, gameId, ownerId)).rejects.toThrow(
         'Das Spiel kann nicht gelöscht werden, solange noch andere Mitspieler oder Mitbringer eingetragen sind.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -241,7 +265,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(null);
 
       try {
-        await gameService.deleteGame('non-existent', 'user-123');
+        await gameService.deleteGame(eventId, 'non-existent', 'user-123');
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('GAME_NOT_FOUND');
@@ -251,12 +275,12 @@ describe('GameService', () => {
     /**
      * Test that error has correct code for FORBIDDEN
      */
-    it('should set error code to FORBIDDEN when user is not owner', async () => {
+    it('should set error code to FORBIDDEN when participant is not owner', async () => {
       const mockGame = createMockGameEntity('game-123', 'Test Game', 'owner-123', 'Owner', [], []);
       mockRepository.findById.mockResolvedValue(mockGame);
 
       try {
-        await gameService.deleteGame('game-123', 'other-user');
+        await gameService.deleteGame(eventId, 'game-123', 'other-user');
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('FORBIDDEN');
@@ -272,7 +296,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
 
       try {
-        await gameService.deleteGame('game-123', 'owner-123');
+        await gameService.deleteGame(eventId, 'game-123', 'owner-123');
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('GAME_NOT_EMPTY');
@@ -293,10 +317,10 @@ describe('GameService', () => {
       mockRepository.delete.mockResolvedValue(true);
       mockDeleteThumbnails.mockResolvedValue(undefined);
 
-      await gameService.deleteGame(gameId, ownerId);
+      await gameService.deleteGame(eventId, gameId, ownerId);
 
       expect(mockDeleteThumbnails).toHaveBeenCalledWith(gameId);
-      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId, eventId);
     });
 
     /**
@@ -312,10 +336,10 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
       mockRepository.delete.mockResolvedValue(true);
 
-      await gameService.deleteGame(gameId, ownerId);
+      await gameService.deleteGame(eventId, gameId, ownerId);
 
       expect(mockDeleteThumbnails).not.toHaveBeenCalled();
-      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId, eventId);
     });
 
     /**
@@ -333,10 +357,10 @@ describe('GameService', () => {
       mockDeleteThumbnails.mockRejectedValue(new Error('File system error'));
 
       // Should not throw
-      await expect(gameService.deleteGame(gameId, ownerId)).resolves.toBeUndefined();
+      await expect(gameService.deleteGame(eventId, gameId, ownerId)).resolves.toBeUndefined();
 
       expect(mockDeleteThumbnails).toHaveBeenCalledWith(gameId);
-      expect(mockRepository.delete).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.delete).toHaveBeenCalledWith(gameId, eventId);
     });
   });
 
@@ -345,20 +369,21 @@ describe('GameService', () => {
      * Test that createGame sets owner correctly
      * Validates: Requirement 2.2
      */
-    it('should create game with owner set to creating user', async () => {
-      const userId = 'user-123';
+    it('should create game with owner set to creating participant', async () => {
+      const participantId = 'user-123';
       const gameName = 'New Game';
-      const mockGame = createMockGameEntity('game-123', gameName, userId, 'User Name', [], []);
+      const mockGame = createMockGameEntity('game-123', gameName, participantId, 'User Name', [], []);
       
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false, false);
+      const result = await gameService.createGame(eventId, gameName, participantId, false, false, false);
 
-      expect(result.owner).toEqual({ id: userId, name: 'User Name' });
+      expect(result.owner).toEqual({ id: participantId, name: 'User Name' });
       expect(mockRepository.create).toHaveBeenCalledWith({
+        eventId,
         name: gameName,
-        userId,
+        participantId,
         isBringing: false,
         isPlaying: false,
         isPrototype: false,
@@ -375,22 +400,23 @@ describe('GameService', () => {
      * Validates: Requirement 4.3
      */
     it('should create game with BGG data when provided', async () => {
-      const userId = 'user-123';
+      const participantId = 'user-123';
       const gameName = 'Catan';
       const bggId = 13;
       const yearPublished = 1995;
-      const mockGame = createMockGameEntity('game-123', gameName, userId, 'User Name', [], [], bggId, yearPublished);
+      const mockGame = createMockGameEntity('game-123', gameName, participantId, 'User Name', [], [], bggId, yearPublished);
       
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false, false, bggId, yearPublished);
+      const result = await gameService.createGame(eventId, gameName, participantId, false, false, false, bggId, yearPublished);
 
       expect(result.bggId).toBe(bggId);
       expect(result.yearPublished).toBe(yearPublished);
       expect(mockRepository.create).toHaveBeenCalledWith({
+        eventId,
         name: gameName,
-        userId,
+        participantId,
         isBringing: false,
         isPlaying: false,
         isPrototype: false,
@@ -407,14 +433,14 @@ describe('GameService', () => {
      * Validates: Requirement 4.4
      */
     it('should create game with null BGG data when not provided', async () => {
-      const userId = 'user-123';
+      const participantId = 'user-123';
       const gameName = 'Custom Game';
-      const mockGame = createMockGameEntity('game-123', gameName, userId, 'User Name', [], [], null, null);
+      const mockGame = createMockGameEntity('game-123', gameName, participantId, 'User Name', [], [], null, null);
       
       mockRepository.findByName.mockResolvedValue(null);
       mockRepository.create.mockResolvedValue(mockGame);
 
-      const result = await gameService.createGame(gameName, userId, false, false, false);
+      const result = await gameService.createGame(eventId, gameName, participantId, false, false, false);
 
       expect(result.bggId).toBeNull();
       expect(result.yearPublished).toBeNull();
@@ -433,7 +459,7 @@ describe('GameService', () => {
       ];
       mockRepository.findAll.mockResolvedValue(mockGames);
 
-      const result = await gameService.getAllGames();
+      const result = await gameService.getAllGames(eventId);
 
       expect(result[0].owner).toEqual({ id: 'owner-1', name: 'Owner 1' });
       expect(result[1].owner).toBeNull();
@@ -450,7 +476,7 @@ describe('GameService', () => {
       ];
       mockRepository.findAll.mockResolvedValue(mockGames);
 
-      const result = await gameService.getAllGames();
+      const result = await gameService.getAllGames(eventId);
 
       expect(result[0].bggId).toBe(13);
       expect(result[0].yearPublished).toBe(1995);
@@ -477,11 +503,11 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
       mockRepository.updatePrototype.mockResolvedValue(updatedGame);
 
-      const result = await gameService.togglePrototype(gameId, ownerId, true);
+      const result = await gameService.togglePrototype(eventId, gameId, ownerId, true);
 
       expect(result.isPrototype).toBe(true);
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
-      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, true);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
+      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, true, eventId);
     });
 
     /**
@@ -491,11 +517,11 @@ describe('GameService', () => {
     it('should throw "Spiel nicht gefunden." when game does not exist', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(gameService.togglePrototype('non-existent', 'user-123', true)).rejects.toThrow(
+      await expect(gameService.togglePrototype(eventId, 'non-existent', 'user-123', true)).rejects.toThrow(
         'Spiel nicht gefunden.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith('non-existent');
+      expect(mockRepository.findById).toHaveBeenCalledWith('non-existent', eventId);
       expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
     });
 
@@ -503,7 +529,7 @@ describe('GameService', () => {
      * Test 403 when non-owner attempts toggle
      * Validates: Requirement 1.2
      */
-    it('should throw "Du bist nicht berechtigt, dieses Spiel zu bearbeiten." when user is not owner', async () => {
+    it('should throw "Du bist nicht berechtigt, dieses Spiel zu bearbeiten." when participant is not owner', async () => {
       const ownerId = 'owner-123';
       const nonOwnerId = 'other-user-456';
       const gameId = 'game-123';
@@ -511,11 +537,11 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.togglePrototype(gameId, nonOwnerId, true)).rejects.toThrow(
+      await expect(gameService.togglePrototype(eventId, gameId, nonOwnerId, true)).rejects.toThrow(
         'Du bist nicht berechtigt, dieses Spiel zu bearbeiten.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
     });
 
@@ -530,11 +556,11 @@ describe('GameService', () => {
       
       mockRepository.findById.mockResolvedValue(mockGame);
 
-      await expect(gameService.togglePrototype(gameId, ownerId, true)).rejects.toThrow(
+      await expect(gameService.togglePrototype(eventId, gameId, ownerId, true)).rejects.toThrow(
         'Nur Spiele ohne BGG-Eintrag können als Prototyp markiert werden.'
       );
       
-      expect(mockRepository.findById).toHaveBeenCalledWith(gameId);
+      expect(mockRepository.findById).toHaveBeenCalledWith(gameId, eventId);
       expect(mockRepository.updatePrototype).not.toHaveBeenCalled();
     });
 
@@ -545,7 +571,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(null);
 
       try {
-        await gameService.togglePrototype('non-existent', 'user-123', true);
+        await gameService.togglePrototype(eventId, 'non-existent', 'user-123', true);
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('GAME_NOT_FOUND');
@@ -555,12 +581,12 @@ describe('GameService', () => {
     /**
      * Test that error has correct code for FORBIDDEN
      */
-    it('should set error code to FORBIDDEN when user is not owner', async () => {
+    it('should set error code to FORBIDDEN when participant is not owner', async () => {
       const mockGame = createMockGameEntity('game-123', 'Test Game', 'owner-123', 'Owner', [], [], null, null, null, null, [], false);
       mockRepository.findById.mockResolvedValue(mockGame);
 
       try {
-        await gameService.togglePrototype('game-123', 'other-user', true);
+        await gameService.togglePrototype(eventId, 'game-123', 'other-user', true);
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('FORBIDDEN');
@@ -575,7 +601,7 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
 
       try {
-        await gameService.togglePrototype('game-123', 'owner-123', true);
+        await gameService.togglePrototype(eventId, 'game-123', 'owner-123', true);
         fail('Expected error to be thrown');
       } catch (error) {
         expect((error as Error & { code: string }).code).toBe('VALIDATION_ERROR');
@@ -594,10 +620,10 @@ describe('GameService', () => {
       mockRepository.findById.mockResolvedValue(mockGame);
       mockRepository.updatePrototype.mockResolvedValue(updatedGame);
 
-      const result = await gameService.togglePrototype(gameId, ownerId, false);
+      const result = await gameService.togglePrototype(eventId, gameId, ownerId, false);
 
       expect(result.isPrototype).toBe(false);
-      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, false);
+      expect(mockRepository.updatePrototype).toHaveBeenCalledWith(gameId, false, eventId);
     });
   });
 });

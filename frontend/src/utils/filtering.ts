@@ -28,9 +28,9 @@ export interface FilterState {
   bringerQuery: string;
   /** Filter to show only games without bringers (Requirement 5.8) */
   wunschOnly: boolean;
-  /** Filter to show only games the current user is bringing */
+  /** Filter to show only games the current participant is bringing */
   myGamesOnly: boolean;
-  /** Filter to show only games the current user is playing */
+  /** Filter to show only games the current participant is playing */
   playerOnly: boolean;
   /** Filter to show only hidden games */
   hiddenOnly: boolean;
@@ -113,7 +113,7 @@ export function filterByName(games: Game[], query: string): Game[] {
 export function filterByPlayer(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
   return games.filter((game) =>
-    game.players.some((player) => containsQuery(player.user.name, query))
+    game.players.some((player) => containsQuery(player.participant.name, query))
   );
 }
 
@@ -131,7 +131,7 @@ export function filterByPlayer(games: Game[], query: string): Game[] {
 export function filterByBringer(games: Game[], query: string): Game[] {
   if (!query.trim()) return games;
   return games.filter((game) =>
-    game.bringers.some((bringer) => containsQuery(bringer.user.name, query))
+    game.bringers.some((bringer) => containsQuery(bringer.participant.name, query))
   );
 }
 
@@ -151,39 +151,39 @@ export function filterWunschGames(games: Game[], enabled: boolean): Game[] {
 }
 
 /**
- * Filters games to show only games where the current user is a bringer.
+ * Filters games to show only games where the current participant is a bringer.
  * 
  * @param games - Array of games to filter
- * @param currentUserName - The current user's name
+ * @param currentParticipantName - The current participant's name
  * @param enabled - Whether the filter is enabled
- * @returns Filtered array of games (only games where user is a bringer if enabled)
+ * @returns Filtered array of games (only games where participant is a bringer if enabled)
  * 
  * Validates: Requirements 5.9
  * Property 14: My Games Filter Correctness
  */
-export function filterMyGames(games: Game[], currentUserName: string, enabled: boolean): Game[] {
+export function filterMyGames(games: Game[], currentParticipantName: string, enabled: boolean): Game[] {
   if (!enabled) return games;
   return games.filter((game) => {
     const isBringer = game.bringers.some(
-      (bringer) => bringer.user.name.toLowerCase() === currentUserName.toLowerCase()
+      (bringer) => bringer.participant.name.toLowerCase() === currentParticipantName.toLowerCase()
     );
     return isBringer;
   });
 }
 
 /**
- * Filters games to show only games where the current user is a player.
+ * Filters games to show only games where the current participant is a player.
  * 
  * @param games - Array of games to filter
- * @param currentUserName - The current user's name
+ * @param currentParticipantName - The current participant's name
  * @param enabled - Whether the filter is enabled
- * @returns Filtered array of games (only games where user is a player if enabled)
+ * @returns Filtered array of games (only games where participant is a player if enabled)
  */
-export function filterPlayerGames(games: Game[], currentUserName: string, enabled: boolean): Game[] {
+export function filterPlayerGames(games: Game[], currentParticipantName: string, enabled: boolean): Game[] {
   if (!enabled) return games;
   return games.filter((game) =>
     game.players.some(
-      (player) => player.user.name.toLowerCase() === currentUserName.toLowerCase()
+      (player) => player.participant.name.toLowerCase() === currentParticipantName.toLowerCase()
     )
   );
 }
@@ -223,7 +223,7 @@ export function filterHiddenGames(games: Game[], hiddenOnly: boolean): Game[] {
  * 
  * @param games - Array of games to filter
  * @param filters - Filter state object
- * @param currentUser - The current user's name (for "My Games" filter)
+ * @param currentParticipantName - The current participant's name (for "My Games" filter)
  * @returns Filtered array of games
  * 
  * Validates: Requirements 5.4, 5.5, 5.6, 5.7, 5.8, 5.9
@@ -231,7 +231,7 @@ export function filterHiddenGames(games: Game[], hiddenOnly: boolean): Game[] {
 export function applyAllFilters(
   games: Game[],
   filters: FilterState,
-  currentUser: string
+  currentParticipantName: string
 ): Game[] {
   let result = games;
   
@@ -242,8 +242,8 @@ export function applyAllFilters(
   
   // Apply toggle filters
   result = filterWunschGames(result, filters.wunschOnly);
-  result = filterMyGames(result, currentUser, filters.myGamesOnly);
-  result = filterPlayerGames(result, currentUser, filters.playerOnly);
+  result = filterMyGames(result, currentParticipantName, filters.myGamesOnly);
+  result = filterPlayerGames(result, currentParticipantName, filters.playerOnly);
   result = filterPrototypeGames(result, filters.prototypeFilter);
   result = filterHiddenGames(result, filters.hiddenOnly);
   

@@ -27,7 +27,7 @@ interface SSEEventHandlers {
 }
 
 interface UseSSEOptions {
-  currentUserId: string;
+  currentParticipantId: string;
   handlers: SSEEventHandlers;
   enabled?: boolean;
 }
@@ -43,14 +43,14 @@ interface UseSSEResult {
  * Features:
  * - Establishes EventSource connection to /api/events
  * - Parses incoming events and calls appropriate handlers
- * - Filters out events from current user for toasts
+ * - Filters out events from current participant for toasts
  * - Implements exponential backoff reconnection (1s, 2s, 4s... max 30s)
  * - Cleans up connection on unmount
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4, 4.8, 6.1, 6.2
  */
 export function useSSE(options: UseSSEOptions): UseSSEResult {
-  const { currentUserId, handlers, enabled = true } = options;
+  const { currentParticipantId, handlers, enabled = true } = options;
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<Error | null>(null);
   
@@ -95,8 +95,8 @@ export function useSSE(options: UseSSEOptions): UseSSEResult {
 
           const sseEvent = data as SSEEvent;
           
-          // Handle toast notifications (only for other users' actions)
-          if (shouldShowToast(sseEvent) && sseEvent.userId !== currentUserId) {
+          // Handle toast notifications (only for other participants' actions)
+          if (shouldShowToast(sseEvent) && sseEvent.participantId !== currentParticipantId) {
             const message = getToastMessage(sseEvent);
             if (message && handlersRef.current.onToast) {
               handlersRef.current.onToast(message);
@@ -144,11 +144,11 @@ export function useSSE(options: UseSSEOptions): UseSSEResult {
     } catch (error) {
       setConnectionError(error instanceof Error ? error : new Error('Failed to create EventSource'));
     }
-  }, [enabled, currentUserId]);
+  }, [enabled, currentParticipantId]);
 
   // Connect on mount, disconnect on unmount
   useEffect(() => {
-    if (enabled && currentUserId) {
+    if (enabled && currentParticipantId) {
       connect();
     }
 
@@ -162,7 +162,7 @@ export function useSSE(options: UseSSEOptions): UseSSEResult {
         eventSourceRef.current = null;
       }
     };
-  }, [connect, enabled, currentUserId]);
+  }, [connect, enabled, currentParticipantId]);
 
   return {
     isConnected,

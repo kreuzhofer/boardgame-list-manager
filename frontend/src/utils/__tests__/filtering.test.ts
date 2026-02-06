@@ -44,7 +44,7 @@ function createGame(
     isHidden: false,
     players: players.map((p, i) => ({
       id: `player-${id}-${i}`,
-      user: {
+      participant: {
         id: `user-player-${id}-${i}`,
         name: p,
       },
@@ -52,7 +52,7 @@ function createGame(
     })),
     bringers: bringers.map((b, i) => ({
       id: `bringer-${id}-${i}`,
-      user: {
+      participant: {
         id: `user-bringer-${id}-${i}`,
         name: b,
       },

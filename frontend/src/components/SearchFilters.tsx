@@ -181,7 +181,7 @@ export function SearchFilters({
             aria-pressed={myGamesOnly}
             aria-label="Nur meine Spiele anzeigen"
           >
-            <UserIcon className="w-4 h-4" />
+            <ParticipantIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Meine Spiele</span>
             <span className="sm:hidden">Meine</span>
             {myGamesOnly && <CheckIcon className="w-4 h-4" />}
@@ -301,7 +301,7 @@ function WunschIcon({ className }: { className?: string }) {
   );
 }
 
-function UserIcon({ className }: { className?: string }) {
+function ParticipantIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}

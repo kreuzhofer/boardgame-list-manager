@@ -9,18 +9,18 @@ import type {
   CreateGameRequest,
   AddPlayerRequest,
   AddBringerRequest,
-  CreateUserRequest,
-  UpdateUserRequest,
+  CreateParticipantRequest,
+  UpdateParticipantRequest,
   GamesResponse,
   GameResponse,
-  UsersResponse,
-  UserResponse,
+  ParticipantsResponse,
+  ParticipantResponse,
   StatisticsData,
   StatisticsTimelineData,
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
-import type { Account, Session, LoginResponse, RegisterResponse } from '../types/account';
+import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse } from '../types/account';
 
 // Get API URL from environment variable
 const getApiUrl = (): string => {
@@ -132,56 +132,67 @@ export const authApi = {
   },
 };
 
-// Users API
-export const usersApi = {
-  getAll: (): Promise<UsersResponse> => {
-    return fetchApi<UsersResponse>('/api/users');
+// Participants API
+export const participantsApi = {
+  getAll: async (): Promise<ParticipantsResponse> => {
+    const response = await fetchApi<ParticipantsResponse & { users?: ParticipantsResponse['participants'] }>(
+      '/api/participants'
+    );
+    return { participants: response.participants ?? response.users ?? [] };
   },
 
-  getById: (id: string): Promise<UserResponse> => {
-    return fetchApi<UserResponse>(`/api/users/${id}`);
+  getById: async (id: string): Promise<ParticipantResponse> => {
+    const response = await fetchApi<ParticipantResponse & { user?: ParticipantResponse['participant'] }>(
+      `/api/participants/${id}`
+    );
+    return { participant: response.participant ?? response.user! };
   },
 
-  create: (name: string): Promise<UserResponse> => {
-    const body: CreateUserRequest = { name };
-    return fetchApi<UserResponse>('/api/users', {
+  create: async (name: string): Promise<ParticipantResponse> => {
+    const body: CreateParticipantRequest = { name };
+    const response = await fetchApi<ParticipantResponse & { user?: ParticipantResponse['participant'] }>('/api/participants', {
       method: 'POST',
       body: JSON.stringify(body),
     });
+    return { participant: response.participant ?? response.user! };
   },
 
-  update: (id: string, name: string): Promise<UserResponse> => {
-    const body: UpdateUserRequest = { name };
-    return fetchApi<UserResponse>(`/api/users/${id}`, {
+  update: async (id: string, name: string): Promise<ParticipantResponse> => {
+    const body: UpdateParticipantRequest = { name };
+    const response = await fetchApi<ParticipantResponse & { user?: ParticipantResponse['participant'] }>(`/api/participants/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(body),
     });
+    return { participant: response.participant ?? response.user! };
   },
 
   delete: (id: string): Promise<{ success: boolean }> => {
-    return fetchApi<{ success: boolean }>(`/api/users/${id}`, {
+    return fetchApi<{ success: boolean }>(`/api/participants/${id}`, {
       method: 'DELETE',
     });
   },
 };
 
+// Backwards-compatible alias (event participants were previously called users)
+export const usersApi = participantsApi;
+
 // Games API
 export const gamesApi = {
-  getAll: (userId?: string): Promise<GamesResponse> => {
+  getAll: (participantId?: string): Promise<GamesResponse> => {
     return fetchApi<GamesResponse>('/api/games', {
-      headers: userId ? { 'x-user-id': userId } : undefined,
+      headers: participantId ? { 'x-participant-id': participantId } : undefined,
     });
   },
 
-  getById: (gameId: string, userId?: string): Promise<GameResponse> => {
+  getById: (gameId: string, participantId?: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(`/api/games/${gameId}`, {
-      headers: userId ? { 'x-user-id': userId } : undefined,
+      headers: participantId ? { 'x-participant-id': participantId } : undefined,
     });
   },
 
   create: (
     name: string,
-    userId: string,
+    participantId: string,
     isBringing: boolean,
     isPlaying: boolean,
     isPrototype: boolean,
@@ -193,7 +204,7 @@ export const gamesApi = {
   ): Promise<GameResponse> => {
     const body: CreateGameRequest = { 
       name, 
-      userId, 
+      participantId, 
       isBringing, 
       isPlaying, 
       isPrototype,
@@ -209,58 +220,58 @@ export const gamesApi = {
     });
   },
 
-  delete: (gameId: string, userId: string): Promise<{ success: boolean }> => {
+  delete: (gameId: string, participantId: string, includeAuth: boolean = false): Promise<{ success: boolean }> => {
     return fetchApi<{ success: boolean }>(`/api/games/${gameId}`, {
       method: 'DELETE',
       headers: {
-        'x-user-id': userId,
+        'x-participant-id': participantId,
       },
-    });
+    }, includeAuth);
   },
 
-  addPlayer: (gameId: string, userId: string): Promise<GameResponse> => {
-    const body: AddPlayerRequest = { userId };
+  addPlayer: (gameId: string, participantId: string): Promise<GameResponse> => {
+    const body: AddPlayerRequest = { participantId };
     return fetchApi<GameResponse>(`/api/games/${gameId}/players`, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  removePlayer: (gameId: string, userId: string): Promise<GameResponse> => {
+  removePlayer: (gameId: string, participantId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(
-      `/api/games/${gameId}/players/${userId}`,
+      `/api/games/${gameId}/players/${participantId}`,
       {
         method: 'DELETE',
       }
     );
   },
 
-  addBringer: (gameId: string, userId: string): Promise<GameResponse> => {
-    const body: AddBringerRequest = { userId };
+  addBringer: (gameId: string, participantId: string): Promise<GameResponse> => {
+    const body: AddBringerRequest = { participantId };
     return fetchApi<GameResponse>(`/api/games/${gameId}/bringers`, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   },
 
-  removeBringer: (gameId: string, userId: string): Promise<GameResponse> => {
+  removeBringer: (gameId: string, participantId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(
-      `/api/games/${gameId}/bringers/${userId}`,
+      `/api/games/${gameId}/bringers/${participantId}`,
       {
         method: 'DELETE',
       }
     );
   },
 
-  hideGame: (gameId: string, userId: string): Promise<GameResponse> => {
+  hideGame: (gameId: string, participantId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(`/api/games/${gameId}/hidden`, {
       method: 'POST',
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ participantId }),
     });
   },
 
-  unhideGame: (gameId: string, userId: string): Promise<GameResponse> => {
-    return fetchApi<GameResponse>(`/api/games/${gameId}/hidden/${userId}`, {
+  unhideGame: (gameId: string, participantId: string): Promise<GameResponse> => {
+    return fetchApi<GameResponse>(`/api/games/${gameId}/hidden/${participantId}`, {
       method: 'DELETE',
     });
   },
@@ -269,15 +280,15 @@ export const gamesApi = {
    * Toggle prototype status for a game
    * @param gameId - The game's unique identifier
    * @param isPrototype - The new prototype status
-   * @param userId - The user's ID (must be owner)
+   * @param participantId - The participant's ID (must be owner)
    * @returns The updated game
    * Requirements: 022-prototype-toggle 1.1
    */
-  togglePrototype: (gameId: string, isPrototype: boolean, userId: string): Promise<GameResponse> => {
+  togglePrototype: (gameId: string, isPrototype: boolean, participantId: string): Promise<GameResponse> => {
     return fetchApi<GameResponse>(`/api/games/${gameId}/prototype`, {
       method: 'PATCH',
       headers: {
-        'x-user-id': userId,
+        'x-participant-id': participantId,
       },
       body: JSON.stringify({ isPrototype }),
     });
@@ -340,6 +351,32 @@ export const accountsApi = {
       method: 'POST',
     }, true);
   },
+  getAll: (): Promise<AccountsResponse> => {
+    return fetchApi<AccountsResponse>('/api/accounts', {}, true);
+  },
+  setRole: (accountId: string, role: 'admin' | 'account_owner'): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>(`/api/accounts/${accountId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }, true);
+  },
+  setStatus: (accountId: string, status: 'active' | 'deactivated'): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>(`/api/accounts/${accountId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }, true);
+  },
+  resetPassword: (accountId: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>(`/api/accounts/${accountId}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ newPassword }),
+    }, true);
+  },
+  forceLogout: (accountId: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>(`/api/accounts/${accountId}/sessions`, {
+      method: 'DELETE',
+    }, true);
+  },
 };
 
 // Sessions API
@@ -367,11 +404,11 @@ export const thumbnailsApi = {
    * Upload a custom thumbnail for a game
    * @param gameId - The game's unique identifier
    * @param file - The image file to upload
-   * @param userId - The user's ID (must be owner)
+   * @param participantId - The participant's ID (must be owner)
    * @returns Success response
    * Requirements: 023-custom-thumbnail-upload 1.1
    */
-  upload: async (gameId: string, file: File, userId: string): Promise<{ success: boolean }> => {
+  upload: async (gameId: string, file: File, participantId: string): Promise<{ success: boolean }> => {
     const url = `${getApiUrl()}/api/thumbnails/${gameId}`;
     const formData = new FormData();
     formData.append('thumbnail', file);
@@ -379,7 +416,7 @@ export const thumbnailsApi = {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'x-user-id': userId,
+        'x-participant-id': participantId,
       },
       body: formData,
     });
@@ -429,7 +466,7 @@ export const thumbnailsApi = {
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
-  users: usersApi,
+  participants: participantsApi,
   games: gamesApi,
   statistics: statisticsApi,
   bgg: bggApi,

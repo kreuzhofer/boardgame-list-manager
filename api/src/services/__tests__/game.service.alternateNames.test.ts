@@ -9,15 +9,37 @@
 import { prisma } from '../../lib/prisma';
 
 describe('Game Service Alternate Names - Unit Tests', () => {
-  const testUserId = 'test-user-id';
+  const testParticipantId = 'test-participant-id';
+  const createdAccountIds: string[] = [];
+  let eventId: string;
   let createdGameIds: string[] = [];
 
   beforeAll(async () => {
-    // Create test user
+    const email = `alternate-names-unit-${Date.now()}@example.com`;
+    const account = await prisma.account.create({
+      data: {
+        email,
+        passwordHash: 'test-hash',
+        role: 'account_owner',
+        status: 'active',
+      },
+    });
+    createdAccountIds.push(account.id);
+
+    const event = await prisma.event.create({
+      data: {
+        name: `Alternate Names Unit Test ${Date.now()}`,
+        passwordHash: 'test-hash',
+        ownerAccountId: account.id,
+      },
+    });
+    eventId = event.id;
+
+    // Create test participant
     await prisma.user.upsert({
-      where: { id: testUserId },
-      update: {},
-      create: { id: testUserId, name: 'Test User' },
+      where: { id: testParticipantId },
+      update: { eventId },
+      create: { id: testParticipantId, name: 'Test Participant', eventId },
     });
   });
 
@@ -38,8 +60,11 @@ describe('Game Service Alternate Names - Unit Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up test user
-    await prisma.user.delete({ where: { id: testUserId } }).catch(() => {});
+    if (createdAccountIds.length > 0) {
+      await prisma.account.deleteMany({
+        where: { id: { in: createdAccountIds } },
+      });
+    }
   });
 
   describe('Creating games with alternate name data', () => {
@@ -48,8 +73,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const game = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
           addedAsAlternateName: 'German Name',
           alternateNames: ['German Name', 'French Name'],
         },
@@ -65,8 +91,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const game = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
           alternateNames: alternates,
         },
       });
@@ -80,8 +107,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const game = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
         },
       });
       createdGameIds.push(game.id);
@@ -94,8 +122,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const game = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
         },
       });
       createdGameIds.push(game.id);
@@ -110,8 +139,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const created = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
           addedAsAlternateName: 'Alternate Title',
           alternateNames: ['Alternate Title'],
         },
@@ -132,8 +162,9 @@ describe('Game Service Alternate Names - Unit Tests', () => {
       
       const created = await prisma.game.create({
         data: {
+          eventId,
           name: gameName,
-          ownerId: testUserId,
+          ownerId: testParticipantId,
           alternateNames: alternates,
         },
       });

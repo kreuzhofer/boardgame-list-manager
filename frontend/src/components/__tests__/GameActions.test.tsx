@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { GameActions } from '../GameActions';
 import { Game } from '../../types';
 
-// Helper to create a test game with new user structure
+// Helper to create a test game with participant structure
 function createTestGame(overrides: Partial<Game> = {}): Game {
   return {
     id: 'test-game-id',
@@ -24,32 +24,32 @@ function createTestGame(overrides: Partial<Game> = {}): Game {
   };
 }
 
-// Helper to create a player with user object
-function createPlayer(id: string, userId: string, userName: string) {
+// Helper to create a player with participant object
+function createPlayer(id: string, participantId: string, participantName: string) {
   return {
     id,
-    user: { id: userId, name: userName },
+    participant: { id: participantId, name: participantName },
     addedAt: new Date(),
   };
 }
 
-// Helper to create a bringer with user object
-function createBringer(id: string, userId: string, userName: string) {
+// Helper to create a bringer with participant object
+function createBringer(id: string, participantId: string, participantName: string) {
   return {
     id,
-    user: { id: userId, name: userName },
+    participant: { id: participantId, name: participantName },
     addedAt: new Date(),
   };
 }
 
 describe('GameActions', () => {
-  const currentUserId = 'test-user-id';
+  const currentParticipantId = 'test-user-id';
   const currentUserName = 'Test User';
 
-  describe('when user is not a player or bringer', () => {
+  describe('when participant is not a player or bringer', () => {
     it('shows Mitbringen button without checkmark', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       expect(bringButton).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('GameActions', () => {
 
     it('shows Mitspielen button without checkmark', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       expect(playButton).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('GameActions', () => {
 
     it('shows inactive styling (gray) for both buttons', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
@@ -79,7 +79,7 @@ describe('GameActions', () => {
     it('calls onAddBringer when Mitbringen button is clicked', () => {
       const game = createTestGame({ status: 'wunsch' });
       const onAddBringer = vi.fn();
-      render(<GameActions game={game} currentUserId={currentUserId} onAddBringer={onAddBringer} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} onAddBringer={onAddBringer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Mitbringen/i }));
       
@@ -89,7 +89,7 @@ describe('GameActions', () => {
     it('calls onAddPlayer when Mitspielen button is clicked', () => {
       const game = createTestGame({ status: 'wunsch' });
       const onAddPlayer = vi.fn();
-      render(<GameActions game={game} currentUserId={currentUserId} onAddPlayer={onAddPlayer} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} onAddPlayer={onAddPlayer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Mitspielen/i }));
       
@@ -97,12 +97,12 @@ describe('GameActions', () => {
     });
   });
 
-  describe('when user is already a player', () => {
+  describe('when participant is already a player', () => {
     it('shows Mitspielen button with checkmark and green styling', () => {
       const game = createTestGame({
-        players: [createPlayer('p1', currentUserId, currentUserName)],
+        players: [createPlayer('p1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       expect(playButton).toHaveTextContent('✓');
@@ -111,10 +111,10 @@ describe('GameActions', () => {
 
     it('calls onRemovePlayer when active Mitspielen button is clicked', () => {
       const game = createTestGame({
-        players: [createPlayer('p1', currentUserId, currentUserName)],
+        players: [createPlayer('p1', currentParticipantId, currentUserName)],
       });
       const onRemovePlayer = vi.fn();
-      render(<GameActions game={game} currentUserId={currentUserId} onRemovePlayer={onRemovePlayer} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} onRemovePlayer={onRemovePlayer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Mitspielen/i }));
       
@@ -122,13 +122,13 @@ describe('GameActions', () => {
     });
   });
 
-  describe('when user is already a bringer', () => {
+  describe('when participant is already a bringer', () => {
     it('shows Mitbringen button with checkmark and green styling', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        bringers: [createBringer('b1', currentUserId, currentUserName)],
+        bringers: [createBringer('b1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       expect(bringButton).toHaveTextContent('✓');
@@ -138,10 +138,10 @@ describe('GameActions', () => {
     it('calls onRemoveBringer when active Mitbringen button is clicked', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        bringers: [createBringer('b1', currentUserId, currentUserName)],
+        bringers: [createBringer('b1', currentParticipantId, currentUserName)],
       });
       const onRemoveBringer = vi.fn();
-      render(<GameActions game={game} currentUserId={currentUserId} onRemoveBringer={onRemoveBringer} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} onRemoveBringer={onRemoveBringer} />);
       
       fireEvent.click(screen.getByRole('button', { name: /Mitbringen/i }));
       
@@ -153,10 +153,10 @@ describe('GameActions', () => {
     it('shows both buttons with checkmarks and green styling', () => {
       const game = createTestGame({
         status: 'verfuegbar',
-        players: [createPlayer('p1', currentUserId, currentUserName)],
-        bringers: [createBringer('b1', currentUserId, currentUserName)],
+        players: [createPlayer('p1', currentParticipantId, currentUserName)],
+        bringers: [createBringer('b1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
@@ -171,7 +171,7 @@ describe('GameActions', () => {
   describe('mobile view', () => {
     it('shows icon-only buttons with fixed width', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} isMobile={true} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} isMobile={true} />);
       
       // In mobile view, action buttons should have the mobile-specific fixed width class
       // Note: HelpBubble also renders buttons, so we filter by the action button class
@@ -183,9 +183,9 @@ describe('GameActions', () => {
 
     it('shows checkmark in mobile view when user is active', () => {
       const game = createTestGame({
-        players: [createPlayer('p1', currentUserId, currentUserName)],
+        players: [createPlayer('p1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} isMobile={true} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} isMobile={true} />);
       
       // Find the action buttons (not the help buttons)
       const actionButtons = screen.getAllByRole('button').filter(
@@ -198,7 +198,7 @@ describe('GameActions', () => {
 
     it('renders HelpBubble components in mobile view', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} isMobile={true} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} isMobile={true} />);
       
       // HelpBubble renders a "?" button with aria-label "Hilfe"
       const helpButtons = screen.getAllByLabelText('Hilfe');
@@ -207,7 +207,7 @@ describe('GameActions', () => {
 
     it('does not render HelpBubble in desktop view', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} isMobile={false} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} isMobile={false} />);
       
       const helpButtons = screen.queryAllByLabelText('Hilfe');
       expect(helpButtons).toHaveLength(0);
@@ -217,7 +217,7 @@ describe('GameActions', () => {
   describe('button titles (tooltips)', () => {
     it('shows correct title for inactive Mitbringen button', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       expect(bringButton).toHaveAttribute('title', 'Dieses Spiel mitbringen');
@@ -225,9 +225,9 @@ describe('GameActions', () => {
 
     it('shows correct title for active Mitbringen button', () => {
       const game = createTestGame({
-        bringers: [createBringer('b1', currentUserId, currentUserName)],
+        bringers: [createBringer('b1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       expect(bringButton).toHaveAttribute('title', 'Mich als Bringer austragen');
@@ -235,7 +235,7 @@ describe('GameActions', () => {
 
     it('shows correct title for inactive Mitspielen button', () => {
       const game = createTestGame({ status: 'wunsch' });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       expect(playButton).toHaveAttribute('title', 'Als Mitspieler eintragen');
@@ -243,9 +243,9 @@ describe('GameActions', () => {
 
     it('shows correct title for active Mitspielen button', () => {
       const game = createTestGame({
-        players: [createPlayer('p1', currentUserId, currentUserName)],
+        players: [createPlayer('p1', currentParticipantId, currentUserName)],
       });
-      render(<GameActions game={game} currentUserId={currentUserId} />);
+      render(<GameActions game={game} currentParticipantId={currentParticipantId} />);
       
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       expect(playButton).toHaveAttribute('title', 'Mich als Mitspieler austragen');

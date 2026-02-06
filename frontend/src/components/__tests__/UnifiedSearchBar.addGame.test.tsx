@@ -45,11 +45,11 @@ describe('UnifiedSearchBar Add Game Flow', () => {
   const mockOnGameAdded = vi.fn();
   const mockOnSearchQueryChange = vi.fn();
   const mockOnScrollToGame = vi.fn();
-  const currentUserId = 'test-user-123';
+  const currentParticipantId = 'test-user-123';
 
   const defaultProps = {
     games: [] as Game[],
-    currentUserId,
+    currentParticipantId,
     onGameAdded: mockOnGameAdded,
     onSearchQueryChange: mockOnSearchQueryChange,
     onScrollToGame: mockOnScrollToGame,
@@ -62,7 +62,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
         id: 'new-game-id',
         name: 'Test Game',
         status: 'wunsch',
-        owner: { id: currentUserId, name: 'Test User' },
+        owner: { id: currentParticipantId, name: 'Test User' },
         players: [],
         bringers: [],
         isPrototype: false,
@@ -123,7 +123,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
       await waitFor(() => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'War of the Ring: Second Edition',
-          currentUserId,
+          currentParticipantId,
           false, // isBringing
           false, // isPlaying
           false, // isPrototype
@@ -172,7 +172,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
       await waitFor(() => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'Ark Nova',
-          currentUserId,
+          currentParticipantId,
           false,
           false,
           false,
@@ -222,7 +222,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
       await waitFor(() => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'Gloomhaven',
-          currentUserId,
+          currentParticipantId,
           false,
           false,
           false,
@@ -260,7 +260,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
       await waitFor(() => {
         expect(gamesApi.create).toHaveBeenCalledWith(
           'My Custom Game',
-          currentUserId,
+          currentParticipantId,
           false,
           false,
           false,

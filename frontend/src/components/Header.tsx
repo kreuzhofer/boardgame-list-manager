@@ -1,8 +1,8 @@
 /**
- * Header component with event name and user info
+ * Header component with event name and participant info
  * All UI text in German (Requirement 9.1)
  * Requirement 6.1, 6.4: Responsive design with mobile-friendly navigation
- * Requirement 6.3, 7.1: Display user name with edit option
+ * Requirement 6.3, 7.1: Display participant name with edit option
  * 
  * Updated for Spec 007:
  * - Added "Statistiken" as third tab in desktop navigation
@@ -14,14 +14,14 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { UserNameEditor } from './UserNameEditor';
+import { ParticipantNameEditor } from './ParticipantNameEditor';
 import { useAuth } from '../contexts/AuthContext';
-import type { User } from '../types';
+import type { Participant } from '../types';
 
 interface HeaderProps {
-  user?: User;
-  onUserUpdated?: (user: User) => void;
-  onLogout?: () => void;
+  participant?: Participant;
+  onParticipantUpdated?: (participant: Participant) => void;
+  onParticipantSwitch?: () => void;
 }
 
 // Get event name from environment variable
@@ -36,7 +36,7 @@ const DESKTOP_TABS = [
   { path: '/statistics', label: 'Statistiken' },
 ];
 
-export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
+export function Header({ participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
   const eventName = getEventName();
   const location = useLocation();
   const { isAuthenticated: isAccountAuthenticated, account, logout: accountLogout } = useAuth();
@@ -76,11 +76,19 @@ export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
             ))}
           </nav>
 
-          {/* Desktop User Info - hidden on mobile */}
+          {/* Desktop participant info - hidden on mobile */}
           <div className="hidden md:flex items-center gap-3">
             {/* Account management links */}
             {isAccountAuthenticated && account ? (
               <>
+                {account.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
@@ -97,21 +105,24 @@ export function Header({ user, onUserUpdated, onLogout }: HeaderProps) {
               </>
             ) : null}
 
-            {/* Event user info */}
-            {user && onUserUpdated && (
+            {/* Event participant info */}
+            {participant && onParticipantUpdated && (
               <>
                 <span className="text-white/50">|</span>
                 <span className="text-white/90 text-sm">
-                  Event-Nutzer:
+                  Teilnehmer:
                 </span>
                 <div className="bg-white/10 px-3 py-1 rounded">
-                  <UserNameEditor user={user} onUserUpdated={onUserUpdated} />
+                  <ParticipantNameEditor
+                    participant={participant}
+                    onParticipantUpdated={onParticipantUpdated}
+                  />
                 </div>
-                {onLogout && (
+                {onParticipantSwitch && (
                   <button
-                    onClick={onLogout}
+                    onClick={onParticipantSwitch}
                     className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                    aria-label="Event-Nutzer wechseln"
+                    aria-label="Teilnehmer wechseln"
                   >
                     Wechseln
                   </button>

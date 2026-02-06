@@ -267,13 +267,13 @@ function TimelineChart({ data }: TimelineChartProps) {
 
   const gamesSeries = points.map((point) => point.gamesAdded);
   const playersSeries = points.map((point) => point.playersAdded);
-  const newUsersSeries = points.map((point) => point.newUsers);
-  const activeUsersSeries = points.map((point) => point.activeUsers);
+  const newParticipantsSeries = points.map((point) => point.newParticipants);
+  const activeParticipantsSeries = points.map((point) => point.activeParticipants);
   const maxValue = Math.max(
     ...gamesSeries,
     ...playersSeries,
-    ...newUsersSeries,
-    ...activeUsersSeries,
+    ...newParticipantsSeries,
+    ...activeParticipantsSeries,
     1
   );
 
@@ -282,8 +282,8 @@ function TimelineChart({ data }: TimelineChartProps) {
   const padding = 28;
   const gamePath = buildLinePath(gamesSeries, width, height, padding, maxValue);
   const playerPath = buildLinePath(playersSeries, width, height, padding, maxValue);
-  const newUsersPath = buildLinePath(newUsersSeries, width, height, padding, maxValue);
-  const activeUsersPath = buildLinePath(activeUsersSeries, width, height, padding, maxValue);
+  const newParticipantsPath = buildLinePath(newParticipantsSeries, width, height, padding, maxValue);
+  const activeParticipantsPath = buildLinePath(activeParticipantsSeries, width, height, padding, maxValue);
   const tickIndices = buildTickIndices(points.length, 6);
 
   return (
@@ -303,11 +303,11 @@ function TimelineChart({ data }: TimelineChartProps) {
           </span>
           <span className="flex items-center gap-2">
             <span className="w-3 h-0.5 bg-emerald-500"></span>
-            Neue Nutzer
+            Neue Teilnehmer
           </span>
           <span className="flex items-center gap-2">
             <span className="w-3 h-0.5 bg-amber-500"></span>
-            Aktive Nutzer
+            Aktive Teilnehmer
           </span>
         </div>
       </div>
@@ -366,14 +366,14 @@ function TimelineChart({ data }: TimelineChartProps) {
             strokeLinejoin="round"
           />
           <path
-            d={newUsersPath}
+            d={newParticipantsPath}
             fill="none"
             stroke="#10b981"
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
           <path
-            d={activeUsersPath}
+            d={activeParticipantsPath}
             fill="none"
             stroke="#f59e0b"
             strokeWidth={2.5}
@@ -400,24 +400,24 @@ function TimelineChart({ data }: TimelineChartProps) {
   );
 }
 
-function TotalUsersChart({ data }: TimelineChartProps) {
+function TotalParticipantsChart({ data }: TimelineChartProps) {
   const points = data.points;
   if (points.length === 0) {
     return null;
   }
 
-  const totalUsersSeries = points.map((point) => point.totalUsers);
-  const maxValue = Math.max(...totalUsersSeries, 1);
+  const totalParticipantsSeries = points.map((point) => point.totalParticipants);
+  const maxValue = Math.max(...totalParticipantsSeries, 1);
   const width = 640;
   const height = 200;
   const padding = 28;
-  const totalUsersPath = buildLinePath(totalUsersSeries, width, height, padding, maxValue);
+  const totalParticipantsPath = buildLinePath(totalParticipantsSeries, width, height, padding, maxValue);
   const tickIndices = buildTickIndices(points.length, 6);
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-sm font-medium text-gray-500">Gesamte Nutzerzahl</h3>
+        <h3 className="text-sm font-medium text-gray-500">Gesamtzahl Teilnehmer</h3>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span className="w-3 h-0.5 bg-purple-500"></span>
           Gesamt
@@ -428,7 +428,7 @@ function TotalUsersChart({ data }: TimelineChartProps) {
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-48"
           role="img"
-          aria-label="Gesamte Nutzerzahl pro Tag"
+          aria-label="Gesamtzahl Teilnehmer pro Tag"
         >
           <rect
             x={padding}
@@ -464,7 +464,7 @@ function TotalUsersChart({ data }: TimelineChartProps) {
             );
           })}
           <path
-            d={totalUsersPath}
+            d={totalParticipantsPath}
             fill="none"
             stroke="#a855f7"
             strokeWidth={2.5}
@@ -678,7 +678,7 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
       </div>
 
       <TimelineChart data={timeline} />
-      <TotalUsersChart data={timeline} />
+      <TotalParticipantsChart data={timeline} />
       <ReleaseYearChart data={statistics.releaseYearCounts} />
       
       {/* Requirement 8.4: Popular games list */}

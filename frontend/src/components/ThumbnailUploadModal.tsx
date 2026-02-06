@@ -17,7 +17,7 @@ interface ThumbnailUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  userId: string;
+  participantId: string;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -29,7 +29,7 @@ export function ThumbnailUploadModal({
   isOpen,
   onClose,
   onSuccess,
-  userId,
+  participantId,
 }: ThumbnailUploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export function ThumbnailUploadModal({
     setError(null);
 
     try {
-      await thumbnailsApi.upload(gameId, selectedFile, userId);
+      await thumbnailsApi.upload(gameId, selectedFile, participantId);
       onSuccess();
       onClose();
     } catch (err) {
@@ -84,7 +84,7 @@ export function ThumbnailUploadModal({
     } finally {
       setIsUploading(false);
     }
-  }, [selectedFile, gameId, userId, onSuccess, onClose]);
+  }, [selectedFile, gameId, participantId, onSuccess, onClose]);
 
   const handleClose = useCallback(() => {
     if (isUploading) return;

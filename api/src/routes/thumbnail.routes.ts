@@ -12,6 +12,8 @@ import * as fs from 'fs';
 import multer from 'multer';
 import { thumbnailService } from '../services/thumbnailService';
 import { gameRepository } from '../repositories';
+import { resolveEventId } from '../middleware/event.middleware';
+import { resolveParticipantId } from '../middleware/participant.middleware';
 import { config } from '../config';
 import { sseManager } from '../services/sse.service';
 import type { ImageSize } from '../services/thumbnailService';
@@ -42,7 +44,7 @@ const upload = multer({
  *   - gameId: Game ID (UUID)
  * 
  * Headers:
- *   - x-user-id: User ID (required for ownership validation)
+ *   - x-participant-id: Participant ID (required for ownership validation)
  * 
  * Body: multipart/form-data with 'thumbnail' file field
  * 
@@ -50,7 +52,7 @@ const upload = multer({
  * 
  * Error responses:
  *   - 400 if file too large, invalid type, or game has BGG ID
- *   - 403 if user is not the game owner
+ *   - 403 if participant is not the game owner
  *   - 404 if game not found
  *   - 500 if image processing fails
  * 
@@ -60,14 +62,14 @@ router.post('/:gameId', (req: Request, res: Response) => {
   upload.single('thumbnail')(req, res, async (err) => {
     try {
       const { gameId } = req.params;
-      const userId = req.headers['x-user-id'] as string;
+      const participantId = resolveParticipantId(req);
 
-      // Validate user ID header
-      if (!userId || typeof userId !== 'string') {
+      // Validate participant ID header
+      if (!participantId) {
         return res.status(400).json({
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Benutzer-ID erforderlich.',
+            message: 'Teilnehmer-ID erforderlich.',
           },
         });
       }
@@ -104,7 +106,8 @@ router.post('/:gameId', (req: Request, res: Response) => {
       }
 
       // Find the game
-      const game = await gameRepository.findById(gameId);
+      const eventId = await resolveEventId(req);
+      const game = await gameRepository.findById(gameId, eventId);
       
       if (!game) {
         return res.status(404).json({
@@ -126,7 +129,7 @@ router.post('/:gameId', (req: Request, res: Response) => {
       }
 
       // Check ownership (Requirement 1.7)
-      if (game.ownerId !== userId) {
+      if (game.ownerId !== participantId) {
         return res.status(403).json({
           error: {
             code: 'FORBIDDEN',
@@ -142,7 +145,7 @@ router.post('/:gameId', (req: Request, res: Response) => {
       const event: ThumbnailUploadedEvent = {
         type: 'game:thumbnail-uploaded',
         gameId,
-        userId,
+        participantId,
         timestamp: Date.now(),
       };
       sseManager.broadcast(event);

@@ -9,12 +9,17 @@ import sessionRoutes from './routes/session.routes';
 import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import thumbnailRoutes from './routes/thumbnail.routes';
-import userRoutes from './routes/user.routes';
+import participantRoutes from './routes/participant.routes';
 import { bggCache } from './services';
 import { config } from './config';
+import { prisma } from './db/prisma';
+import { AccountService } from './services/account.service';
+import { EventService } from './services/event.service';
 
 const app = express();
 const PORT = config.server.port;
+const accountService = new AccountService(prisma);
+const eventService = new EventService(prisma);
 
 // Middleware
 // CORS configuration - uses CORS_ORIGIN from env, supports comma-separated origins
@@ -40,7 +45,8 @@ app.use('/api/games', gameRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/thumbnails', thumbnailRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/participants', participantRoutes);
+app.use('/api/users', participantRoutes);
 
 // Health check endpoint - includes BGG cache status for debugging
 app.get('/api/health', (_req, res) => {
@@ -62,18 +68,72 @@ const initializeBggCache = async () => {
   await bggCache.initialize(csvPath);
 };
 
+const ensureDefaultAdmin = async (): Promise<string> => {
+  const existingAdmin = await prisma.account.findFirst({
+    where: { role: 'admin' },
+    select: { id: true },
+  });
+
+  if (existingAdmin) {
+    return existingAdmin.id;
+  }
+
+  const email = config.admin.defaultEmail.toLowerCase();
+  const passwordHash = await accountService.hashPassword(
+    config.admin.defaultPassword
+  );
+
+  const existingByEmail = await prisma.account.findUnique({
+    where: { email },
+  });
+
+  const account = existingByEmail
+    ? await prisma.account.update({
+        where: { id: existingByEmail.id },
+        data: {
+          role: 'admin',
+          status: 'active',
+          passwordHash,
+        },
+      })
+    : await prisma.account.create({
+        data: {
+          email,
+          passwordHash,
+          role: 'admin',
+          status: 'active',
+        },
+      });
+
+  if (config.admin.defaultPassword === 'admin') {
+    console.warn(
+      '[Bootstrap] Default admin password is set to "admin". Please change it.'
+    );
+  }
+
+  return account.id;
+};
+
+const initializeSystem = async () => {
+  const adminId = await ensureDefaultAdmin();
+  const defaultEventId = await eventService.ensureDefaultEvent(adminId);
+  await eventService.backfillDefaultEvent(defaultEventId);
+};
+
 // Start server
-initializeBggCache().then(() => {
-  app.listen(PORT, () => {
-    console.log(`API server running on port ${PORT}`);
+Promise.all([initializeSystem(), initializeBggCache()])
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`API server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to initialize system:', error);
+    // Start server anyway - graceful degradation
+    app.listen(PORT, () => {
+      console.log(`API server running on port ${PORT} (bootstrap failed)`);
+    });
   });
-}).catch((error) => {
-  console.error('Failed to initialize BGG cache:', error);
-  // Start server anyway - graceful degradation
-  app.listen(PORT, () => {
-    console.log(`API server running on port ${PORT} (BGG cache failed to load)`);
-  });
-});
 
 
 export default app;

@@ -1,7 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { gameService } from '../services/game.service';
+import { EventService } from '../services/event.service';
+import { resolveOptionalAccount } from '../middleware/auth.middleware';
+import { resolveEventId } from '../middleware/event.middleware';
+import { resolveParticipantId, resolveParticipantIdFromBody, resolveParticipantIdFromParams } from '../middleware/participant.middleware';
+import { prisma } from '../db/prisma';
 
 const router = Router();
+const eventService = new EventService(prisma);
 
 /**
  * GET /api/games
@@ -13,9 +19,9 @@ const router = Router();
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const userIdHeader = req.headers['x-user-id'];
-    const userId = typeof userIdHeader === 'string' ? userIdHeader : undefined;
-    const games = await gameService.getAllGames(userId);
+    const eventId = await resolveEventId(req);
+    const participantId = resolveParticipantId(req);
+    const games = await gameService.getAllGames(eventId, participantId);
     return res.json({ games });
   } catch (error) {
     console.error('Error fetching games:', error);
@@ -42,9 +48,9 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userIdHeader = req.headers['x-user-id'];
-    const userId = typeof userIdHeader === 'string' ? userIdHeader : undefined;
-    const game = await gameService.getGameById(id, userId);
+    const eventId = await resolveEventId(req);
+    const participantId = resolveParticipantId(req);
+    const game = await gameService.getGameById(eventId, id, participantId);
     
     if (!game) {
       return res.status(404).json({
@@ -69,13 +75,13 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 /**
  * POST /api/games
- * Creates a new game with the user as owner (and optionally as player and/or bringer).
+ * Creates a new game with the participant as owner (and optionally as player and/or bringer).
  * 
- * Request body: { name: string, userId: string, isBringing: boolean, isPlaying: boolean, isPrototype?: boolean, bggId?: number, yearPublished?: number, addedAsAlternateName?: string, alternateNames?: string[] }
+ * Request body: { name: string, participantId: string, isBringing: boolean, isPlaying: boolean, isPrototype?: boolean, bggId?: number, yearPublished?: number, addedAsAlternateName?: string, alternateNames?: string[] }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if name is empty or userId is missing
+ *   - 400 if name is empty or participantId is missing
  *   - 409 if game name already exists
  * 
  * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
@@ -83,7 +89,9 @@ router.get('/:id', async (req: Request, res: Response) => {
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, userId, isBringing, isPlaying, isPrototype, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
+    const { name, isBringing, isPlaying, isPrototype, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
+    const eventId = await resolveEventId(req);
+    const participantId = resolveParticipantIdFromBody(req);
 
     // Validate required fields
     if (!name || typeof name !== 'string') {
@@ -95,11 +103,11 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
@@ -116,8 +124,9 @@ router.post('/', async (req: Request, res: Response) => {
     const validAlternateNames = Array.isArray(alternateNames) ? alternateNames.filter((n): n is string => typeof n === 'string') : undefined;
 
     const game = await gameService.createGame(
+      eventId,
       name,
-      userId,
+      participantId,
       Boolean(isBringing),
       Boolean(isPlaying),
       validIsPrototype,
@@ -162,34 +171,35 @@ router.post('/', async (req: Request, res: Response) => {
 
 /**
  * POST /api/games/:id/players
- * Adds a user as a player to a game.
+ * Adds a participant as a player to a game.
  * 
- * Request body: { userId: string }
+ * Request body: { participantId: string }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if userId is missing
+ *   - 400 if participantId is missing
  *   - 404 if game not found
- *   - 409 if user is already a player
+ *   - 409 if participant is already a player
  * 
  * Requirements: 3.5, 4.2
  */
 router.post('/:id/players', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
+    const participantId = resolveParticipantIdFromBody(req);
+    const eventId = await resolveEventId(req);
 
     // Validate required fields
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
 
-    const game = await gameService.addPlayer(id, userId);
+    const game = await gameService.addPlayer(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -223,21 +233,32 @@ router.post('/:id/players', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/games/:id/players/:userId
- * Removes a user from a game's players list.
+ * DELETE /api/games/:id/players/:participantId
+ * Removes a participant from a game's players list.
  * 
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 404 if game not found or user not a player
+ *   - 404 if game not found or participant not a player
  * 
  * Requirements: 3.5, 4.4
  */
-router.delete('/:id/players/:userId', async (req: Request, res: Response) => {
+router.delete('/:id/players/:participantId', async (req: Request, res: Response) => {
   try {
-    const { id, userId } = req.params;
+    const { id } = req.params;
+    const participantId = resolveParticipantIdFromParams(req);
+    const eventId = await resolveEventId(req);
 
-    const game = await gameService.removePlayer(id, userId);
+    if (!participantId) {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Teilnehmer-ID erforderlich.',
+        },
+      });
+    }
+
+    const game = await gameService.removePlayer(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -250,7 +271,7 @@ router.delete('/:id/players/:userId', async (req: Request, res: Response) => {
           },
         });
       }
-      // Handle user not a player
+      // Handle participant not a player
       if (error.message === 'Du bist nicht in dieser Liste eingetragen.') {
         return res.status(404).json({
           error: {
@@ -272,34 +293,35 @@ router.delete('/:id/players/:userId', async (req: Request, res: Response) => {
 
 /**
  * POST /api/games/:id/bringers
- * Adds a user as a bringer to a game.
+ * Adds a participant as a bringer to a game.
  * 
- * Request body: { userId: string }
+ * Request body: { participantId: string }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if userId is missing
+ *   - 400 if participantId is missing
  *   - 404 if game not found
- *   - 409 if user is already a bringer
+ *   - 409 if participant is already a bringer
  * 
  * Requirements: 3.6, 4.3
  */
 router.post('/:id/bringers', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
+    const participantId = resolveParticipantIdFromBody(req);
+    const eventId = await resolveEventId(req);
 
     // Validate required fields
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
 
-    const game = await gameService.addBringer(id, userId);
+    const game = await gameService.addBringer(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -333,21 +355,32 @@ router.post('/:id/bringers', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/games/:id/bringers/:userId
- * Removes a user from a game's bringers list.
+ * DELETE /api/games/:id/bringers/:participantId
+ * Removes a participant from a game's bringers list.
  * 
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 404 if game not found or user not a bringer
+ *   - 404 if game not found or participant not a bringer
  * 
  * Requirements: 3.6, 4.5
  */
-router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
+router.delete('/:id/bringers/:participantId', async (req: Request, res: Response) => {
   try {
-    const { id, userId } = req.params;
+    const { id } = req.params;
+    const participantId = resolveParticipantIdFromParams(req);
+    const eventId = await resolveEventId(req);
 
-    const game = await gameService.removeBringer(id, userId);
+    if (!participantId) {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Teilnehmer-ID erforderlich.',
+        },
+      });
+    }
+
+    const game = await gameService.removeBringer(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -360,7 +393,7 @@ router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
           },
         });
       }
-      // Handle user not a bringer
+      // Handle participant not a bringer
       if (error.message === 'Du bist nicht in dieser Liste eingetragen.') {
         return res.status(404).json({
           error: {
@@ -382,32 +415,33 @@ router.delete('/:id/bringers/:userId', async (req: Request, res: Response) => {
 
 /**
  * POST /api/games/:id/hidden
- * Hides a game for a user.
+ * Hides a game for a participant.
  * 
- * Request body: { userId: string }
+ * Request body: { participantId: string }
  * Response: { game: Game }
  * 
  * Error responses:
- *   - 400 if userId is missing or user is a bringer
+ *   - 400 if participantId is missing or participant is a bringer
  *   - 404 if game not found
  *   - 409 if already hidden
  */
 router.post('/:id/hidden', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
+    const participantId = resolveParticipantIdFromBody(req);
+    const eventId = await resolveEventId(req);
 
     // Validate required fields
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
 
-    const game = await gameService.hideGame(id, userId);
+    const game = await gameService.hideGame(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -447,19 +481,30 @@ router.post('/:id/hidden', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/games/:id/hidden/:userId
- * Unhides a game for a user.
+ * DELETE /api/games/:id/hidden/:participantId
+ * Unhides a game for a participant.
  * 
  * Response: { game: Game }
  * 
  * Error responses:
  *   - 404 if game not found or not hidden
  */
-router.delete('/:id/hidden/:userId', async (req: Request, res: Response) => {
+router.delete('/:id/hidden/:participantId', async (req: Request, res: Response) => {
   try {
-    const { id, userId } = req.params;
+    const { id } = req.params;
+    const participantId = resolveParticipantIdFromParams(req);
+    const eventId = await resolveEventId(req);
 
-    const game = await gameService.unhideGame(id, userId);
+    if (!participantId) {
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Teilnehmer-ID erforderlich.',
+        },
+      });
+    }
+
+    const game = await gameService.unhideGame(eventId, id, participantId);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {
@@ -492,14 +537,15 @@ router.delete('/:id/hidden/:userId', async (req: Request, res: Response) => {
 
 /**
  * DELETE /api/games/:id
- * Deletes a game. Only the owner can delete, and only if the game has no players or bringers.
+ * Deletes a game. Owners can delete only if the game has no other players or bringers.
+ * Event owners/admins can delete any game.
  * 
- * Request headers: x-user-id (required)
+ * Request headers: x-participant-id (required)
  * Response: { success: true }
  * 
  * Error responses:
- *   - 400 if userId header is missing or game has players/bringers
- *   - 403 if user is not the owner
+ *   - 400 if participantId header is missing or game has players/bringers
+ *   - 403 if participant is not the owner
  *   - 404 if game not found
  * 
  * Requirements: 3.2, 3.5, 3.6, 3.7
@@ -507,19 +553,39 @@ router.delete('/:id/hidden/:userId', async (req: Request, res: Response) => {
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'] as string;
+    const participantId = resolveParticipantId(req);
+    const eventId = await resolveEventId(req);
 
     // Validate required header
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
 
-    await gameService.deleteGame(id, userId);
+    const account = await resolveOptionalAccount(req);
+    let canForceDelete = false;
+
+    if (account) {
+      if (account.role === 'admin') {
+        canForceDelete = true;
+      } else {
+        const event = await eventService.getEventById(eventId);
+        if (event && event.ownerAccountId === account.id) {
+          canForceDelete = true;
+        }
+      }
+    }
+
+    await gameService.deleteGame(
+      eventId,
+      id,
+      participantId,
+      canForceDelete ? { allowNonOwner: true, allowNonEmpty: true } : undefined
+    );
     return res.json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
@@ -567,13 +633,13 @@ router.delete('/:id', async (req: Request, res: Response) => {
  * PATCH /api/games/:id/prototype
  * Toggles the prototype status of a game. Only the owner can toggle, and only for non-BGG games.
  * 
- * Request headers: x-user-id (required)
+ * Request headers: x-participant-id (required)
  * Request body: { isPrototype: boolean }
  * Response: { game: Game }
  * 
  * Error responses:
  *   - 400 if isPrototype is missing or game has BGG ID
- *   - 403 if user is not the owner
+ *   - 403 if participant is not the owner
  *   - 404 if game not found
  * 
  * Requirements: 022-prototype-toggle 1.1, 1.2, 1.3, 1.5
@@ -581,15 +647,16 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.patch('/:id/prototype', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'] as string;
+    const participantId = resolveParticipantId(req);
     const { isPrototype } = req.body;
+    const eventId = await resolveEventId(req);
 
     // Validate required header
-    if (!userId || typeof userId !== 'string') {
+    if (!participantId) {
       return res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Benutzer-ID erforderlich.',
+          message: 'Teilnehmer-ID erforderlich.',
         },
       });
     }
@@ -604,7 +671,7 @@ router.patch('/:id/prototype', async (req: Request, res: Response) => {
       });
     }
 
-    const game = await gameService.togglePrototype(id, userId, isPrototype);
+    const game = await gameService.togglePrototype(eventId, id, participantId, isPrototype);
     return res.json({ game });
   } catch (error) {
     if (error instanceof Error) {

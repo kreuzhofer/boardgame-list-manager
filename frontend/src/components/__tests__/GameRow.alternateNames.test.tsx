@@ -10,6 +10,10 @@ import { render, screen } from '@testing-library/react';
 import { GameRow } from '../GameRow';
 import type { Game } from '../../types';
 
+vi.mock('../ToastProvider', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}));
+
 // Mock LazyBggImage
 vi.mock('../LazyBggImage', () => ({
   LazyBggImage: ({ bggId }: { bggId: number }) => (
@@ -72,18 +76,18 @@ const createMockGame = (overrides: Partial<Game> = {}): Game => ({
 });
 
 // Helper to render GameRow in a table context
-const renderGameRow = (game: Game, currentUserId: string) => {
+const renderGameRow = (game: Game, currentParticipantId: string) => {
   return render(
     <table>
       <tbody>
-        <GameRow game={game} currentUserId={currentUserId} />
+        <GameRow game={game} currentParticipantId={currentParticipantId} />
       </tbody>
     </table>
   );
 };
 
 describe('GameRow Alternate Names Display', () => {
-  const currentUserId = 'user-1';
+  const currentParticipantId = 'user-1';
 
   describe('Requirement 11.1, 11.2: Two-line alternate name display', () => {
     it('should show alternate name on second line when addedAsAlternateName is set', () => {
@@ -92,7 +96,7 @@ describe('GameRow Alternate Names Display', () => {
         addedAsAlternateName: 'Der Ringkrieg',
       });
 
-      renderGameRow(game, currentUserId);
+      renderGameRow(game, currentParticipantId);
 
       // Primary name should be visible
       expect(screen.getByText('War of the Ring: Second Edition')).toBeInTheDocument();
@@ -107,7 +111,7 @@ describe('GameRow Alternate Names Display', () => {
         addedAsAlternateName: 'Arche Nova',
       });
 
-      renderGameRow(game, currentUserId);
+      renderGameRow(game, currentParticipantId);
 
       // The alternate name should be in a span with smaller, muted styling
       const alternateNameElement = screen.getByText('Arche Nova');
@@ -123,7 +127,7 @@ describe('GameRow Alternate Names Display', () => {
         addedAsAlternateName: null,
       });
 
-      renderGameRow(game, currentUserId);
+      renderGameRow(game, currentParticipantId);
 
       expect(screen.getByText('Gloomhaven')).toBeInTheDocument();
       // The name cell should not contain an alternate name span with text-sm text-gray-500
@@ -139,7 +143,7 @@ describe('GameRow Alternate Names Display', () => {
       // Remove the property entirely
       delete (game as Partial<Game>).addedAsAlternateName;
 
-      renderGameRow(game, currentUserId);
+      renderGameRow(game, currentParticipantId);
 
       expect(screen.getByText('Terraforming Mars')).toBeInTheDocument();
     });
@@ -152,7 +156,7 @@ describe('GameRow Alternate Names Display', () => {
         addedAsAlternateName: 'Alternate Name',
       });
 
-      renderGameRow(game, currentUserId);
+      renderGameRow(game, currentParticipantId);
 
       // Primary name should be in a span with font-medium
       const primaryName = screen.getByText('Primary Name');

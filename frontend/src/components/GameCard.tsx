@@ -65,7 +65,8 @@ function useTextWrap(deps: unknown[]): [React.RefObject<HTMLHeadingElement>, boo
 
 interface GameCardProps {
   game: Game;
-  currentUserId: string;
+  currentParticipantId: string;
+  canManageGames?: boolean;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -88,12 +89,12 @@ interface GameCardProps {
 /** Compact list display for mobile - shows up to 2 names, or 1 name + "+X" if more than 2 */
 function CompactList({ 
   items, 
-  currentUserId, 
+  currentParticipantId, 
   emptyText,
   expanded,
 }: { 
   items: (Player | Bringer)[]; 
-  currentUserId: string; 
+  currentParticipantId: string; 
   emptyText: string;
   expanded: boolean;
 }) {
@@ -113,12 +114,12 @@ function CompactList({
         <div key={item.id} className="truncate">
           <span
             className={
-              item.user.id === currentUserId
+              item.participant.id === currentParticipantId
                 ? 'font-semibold text-blue-600'
                 : 'text-gray-700'
             }
           >
-            {item.user.name}
+            {item.participant.name}
           </span>
         </div>
       ))}
@@ -131,7 +132,8 @@ function CompactList({
 
 export function GameCard({
   game,
-  currentUserId,
+  currentParticipantId,
+  canManageGames = false,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
@@ -150,18 +152,21 @@ export function GameCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const isWunsch = game.status === 'wunsch';
   const isPrototype = game.isPrototype;
-  const isOwner = game.owner?.id === currentUserId;
+  const isOwner = game.owner?.id === currentParticipantId;
   const isHidden = game.isHidden;
-  const isPlayer = game.players.some((player) => player.user.id === currentUserId);
-  const isBringer = game.bringers.some((bringer) => bringer.user.id === currentUserId);
+  const isPlayer = game.players.some((player) => player.participant.id === currentParticipantId);
+  const isBringer = game.bringers.some((bringer) => bringer.participant.id === currentParticipantId);
   const canHide = !isBringer;
   
-  // Check if current user is the only player/bringer (or lists are empty)
-  const onlyCurrentUserIsPlayer = game.players.length === 0 || 
-    (game.players.length === 1 && game.players[0].user.id === currentUserId);
-  const onlyCurrentUserIsBringer = game.bringers.length === 0 || 
-    (game.bringers.length === 1 && game.bringers[0].user.id === currentUserId);
-  const canDelete = isOwner && onlyCurrentUserIsPlayer && onlyCurrentUserIsBringer;
+  // Check if current participant is the only player/bringer (or lists are empty)
+  const onlyCurrentParticipantIsPlayer = game.players.length === 0 || 
+    (game.players.length === 1 && game.players[0].participant.id === currentParticipantId);
+  const onlyCurrentParticipantIsBringer = game.bringers.length === 0 || 
+    (game.bringers.length === 1 && game.bringers[0].participant.id === currentParticipantId);
+  const canForceDelete = canManageGames;
+  const canDeleteAsOwner = isOwner && onlyCurrentParticipantIsPlayer && onlyCurrentParticipantIsBringer;
+  const canDelete = canDeleteAsOwner || canForceDelete;
+  const canShowDelete = isOwner || canForceDelete;
   
   const hasScrolledRef = useRef(false);
   const [listsExpanded, setListsExpanded] = useState(false);
@@ -629,7 +634,7 @@ export function GameCard({
                 <div className="flex gap-2 items-center mt-1 flex-wrap">
                   <GameActions
                     game={game}
-                    currentUserId={currentUserId}
+                    currentParticipantId={currentParticipantId}
                     onAddPlayer={handleAddPlayerInline}
                     onAddBringer={handleAddBringerInline}
                     onRemovePlayer={handleRemovePlayerInline}
@@ -661,7 +666,7 @@ export function GameCard({
                     isOpen={uploadModalOpen}
                     onClose={() => setUploadModalOpen(false)}
                     onSuccess={handleUploadSuccess}
-                    userId={currentUserId}
+                    participantId={currentParticipantId}
                   />
                 </div>
               </div>
@@ -698,11 +703,12 @@ export function GameCard({
                 <div className="flex-1" />
                 <MobileActionsMenu
                   game={game}
-                  currentUserId={currentUserId}
+                  currentParticipantId={currentParticipantId}
                   onTogglePrototype={onTogglePrototype}
                   onUploadThumbnail={handleUploadThumbnail}
                   onDeleteGame={onDeleteGame}
                   canDelete={canDelete}
+                  canShowDelete={canShowDelete}
                 />
               </div>
             </div>
@@ -720,7 +726,7 @@ export function GameCard({
               </span>
               <CompactList 
                 items={game.bringers} 
-                currentUserId={currentUserId} 
+                currentParticipantId={currentParticipantId} 
                 emptyText="Niemand"
                 expanded={listsExpanded}
               />
@@ -733,7 +739,7 @@ export function GameCard({
               </span>
               <CompactList 
                 items={game.players} 
-                currentUserId={currentUserId} 
+                currentParticipantId={currentParticipantId} 
                 emptyText="Keine"
                 expanded={listsExpanded}
               />

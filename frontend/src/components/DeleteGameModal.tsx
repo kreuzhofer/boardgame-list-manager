@@ -13,6 +13,8 @@ interface DeleteGameModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   isDeleting?: boolean;
+  playersCount?: number;
+  bringersCount?: number;
 }
 
 export function DeleteGameModal({
@@ -21,8 +23,16 @@ export function DeleteGameModal({
   onConfirm,
   onCancel,
   isDeleting = false,
+  playersCount = 0,
+  bringersCount = 0,
 }: DeleteGameModalProps) {
   if (!isOpen) return null;
+
+  const hasParticipants = playersCount > 0 || bringersCount > 0;
+  const participantDetails = [
+    playersCount > 0 ? `${playersCount} Mitspieler` : null,
+    bringersCount > 0 ? `${bringersCount} Mitbringer` : null,
+  ].filter(Boolean).join(' und ');
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -47,6 +57,14 @@ export function DeleteGameModal({
           <p className="text-gray-700">
             Möchtest du das Spiel <strong>"{gameName}"</strong> wirklich löschen?
           </p>
+          {hasParticipants && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <p className="font-semibold">Achtung: Es sind noch Einträge vorhanden.</p>
+              <p className="mt-1">
+                Für dieses Spiel sind noch {participantDetails} eingetragen. Beim Löschen werden diese Einträge entfernt.
+              </p>
+            </div>
+          )}
           <p className="text-gray-500 text-sm mt-2">
             Diese Aktion kann nicht rückgängig gemacht werden.
           </p>

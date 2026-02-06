@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import * as fc from 'fast-check';
 import { StatisticsService } from '../statistics.service';
 import { GameService } from '../game.service';
-import { UserService } from '../user.service';
+import { ParticipantService } from '../participant.service';
 import { prisma } from '../../db/prisma';
 
 /**
@@ -22,7 +22,7 @@ const gameNameArbitrary = fc
   .map((s) => s.trim());
 
 // Username arbitrary limited to 15 chars to allow room for unique suffix (max 30 total)
-const userNameArbitrary = fc
+const participantNameArbitrary = fc
   .string({ minLength: 1, maxLength: 15 })
   .filter((s) => s.trim().length > 0)
   .map((s) => s.trim());
@@ -30,7 +30,7 @@ const userNameArbitrary = fc
 // Generate a game configuration with random players and bringers
 const gameConfigArbitrary = fc.record({
   name: gameNameArbitrary,
-  creatorName: userNameArbitrary,
+  creatorName: participantNameArbitrary,
   isBringing: fc.boolean(),
   additionalPlayersCount: fc.integer({ min: 0, max: 3 }),
   additionalBringersCount: fc.integer({ min: 0, max: 2 }),
@@ -39,14 +39,38 @@ const gameConfigArbitrary = fc.record({
 describe('StatisticsService Property Tests', () => {
   let statisticsService: StatisticsService;
   let gameService: GameService;
-  let userService: UserService;
+  let participantService: ParticipantService;
+  let eventId: string;
   const createdGameIds: string[] = [];
-  const createdUserIds: string[] = [];
+  const createdParticipantIds: string[] = [];
+  const createdAccountIds: string[] = [];
+
+  beforeAll(async () => {
+    const email = `statistics-service-${Date.now()}@example.com`;
+    const account = await prisma.account.create({
+      data: {
+        email,
+        passwordHash: 'test-hash',
+        role: 'account_owner',
+        status: 'active',
+      },
+    });
+    createdAccountIds.push(account.id);
+
+    const event = await prisma.event.create({
+      data: {
+        name: `Statistics Service Test ${Date.now()}`,
+        passwordHash: 'test-hash',
+        ownerAccountId: account.id,
+      },
+    });
+    eventId = event.id;
+  });
 
   beforeEach(() => {
     statisticsService = new StatisticsService();
     gameService = new GameService();
-    userService = new UserService();
+    participantService = new ParticipantService();
   });
 
   afterEach(async () => {
@@ -57,30 +81,35 @@ describe('StatisticsService Property Tests', () => {
       });
       createdGameIds.length = 0;
     }
-    // Clean up created users after each test
-    if (createdUserIds.length > 0) {
+    // Clean up created participants after each test
+    if (createdParticipantIds.length > 0) {
       await prisma.user.deleteMany({
-        where: { id: { in: createdUserIds } },
+        where: { id: { in: createdParticipantIds } },
       });
-      createdUserIds.length = 0;
+      createdParticipantIds.length = 0;
     }
   });
 
   afterAll(async () => {
+    if (createdAccountIds.length > 0) {
+      await prisma.account.deleteMany({
+        where: { id: { in: createdAccountIds } },
+      });
+    }
     // Ensure cleanup and disconnect
     await prisma.$disconnect();
   });
 
   /**
-   * Helper to create a unique user for testing (max 30 chars for VARCHAR(30) constraint)
+   * Helper to create a unique participant for testing (max 30 chars for VARCHAR(30) constraint)
    */
-  const createTestUser = async (baseName: string) => {
+  const createTestParticipant = async (baseName: string) => {
     const shortBase = baseName.slice(0, 15);
     const random = Math.random().toString(36).slice(2, 8);
     const uniqueName = `${shortBase}_${random}`.slice(0, 30);
-    const user = await userService.createUser(uniqueName);
-    createdUserIds.push(user.id);
-    return user;
+    const participant = await participantService.createParticipant(uniqueName, eventId);
+    createdParticipantIds.push(participant.id);
+    return participant;
   };
 
   /**
@@ -95,20 +124,20 @@ describe('StatisticsService Property Tests', () => {
   }): Promise<{ gameId: string; participantIds: Set<string> }> {
     const uniqueName = `${config.name}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
-    // Create the creator user
-    const creator = await createTestUser(config.creatorName);
+    // Create the creator participant
+    const creator = await createTestParticipant(config.creatorName);
     const participantIds = new Set<string>([creator.id]);
     
     // Create game with isPlaying=true so creator is counted as participant
-    const game = await gameService.createGame(uniqueName, creator.id, config.isBringing, true);
+    const game = await gameService.createGame(eventId, uniqueName, creator.id, config.isBringing, true);
     createdGameIds.push(game.id);
 
     // Add additional players
     for (let i = 0; i < config.additionalPlayersCount; i++) {
-      const player = await createTestUser(`player_${i}`);
+      const player = await createTestParticipant(`player_${i}`);
       participantIds.add(player.id);
       try {
-        await gameService.addPlayer(game.id, player.id);
+        await gameService.addPlayer(eventId, game.id, player.id);
       } catch {
         // Ignore duplicate errors
       }
@@ -116,10 +145,10 @@ describe('StatisticsService Property Tests', () => {
 
     // Add additional bringers
     for (let i = 0; i < config.additionalBringersCount; i++) {
-      const bringer = await createTestUser(`bringer_${i}`);
+      const bringer = await createTestParticipant(`bringer_${i}`);
       participantIds.add(bringer.id);
       try {
-        await gameService.addBringer(game.id, bringer.id);
+        await gameService.addBringer(eventId, game.id, bringer.id);
       } catch {
         // Ignore duplicate errors
       }
@@ -147,7 +176,7 @@ describe('StatisticsService Property Tests', () => {
             }
 
             // Get statistics
-            const stats = await statisticsService.getStatistics();
+            const stats = await statisticsService.getStatistics(eventId);
 
             // Property: Total games count should equal the number of games we created
             // Note: We only check our created games since other tests may have left data
@@ -170,10 +199,10 @@ describe('StatisticsService Property Tests', () => {
    * **Validates: Requirements 8.2**
    * 
    * *For any* game list, the unique participants count SHALL equal the count
-   * of distinct user IDs across all players and bringers lists.
+   * of distinct participant IDs across all players and bringers lists.
    */
   describe('Property 17: Statistics - Unique Participants Count', () => {
-    it('should return unique participants count equal to distinct user IDs', async () => {
+    it('should return unique participants count equal to distinct participant IDs', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(gameConfigArbitrary, { minLength: 1, maxLength: 2 }),
@@ -188,7 +217,7 @@ describe('StatisticsService Property Tests', () => {
             }
 
             // Get statistics
-            const stats = await statisticsService.getStatistics();
+            const stats = await statisticsService.getStatistics(eventId);
 
             // Property: Unique participants should be at least the count we tracked
             // (could be more if other tests left data)
@@ -222,7 +251,7 @@ describe('StatisticsService Property Tests', () => {
             }
 
             // Get statistics
-            const stats = await statisticsService.getStatistics();
+            const stats = await statisticsService.getStatistics(eventId);
 
             // Property: availableGames + requestedGames === totalGames
             expect(stats.availableGames + stats.requestedGames).toBe(stats.totalGames);
@@ -258,7 +287,7 @@ describe('StatisticsService Property Tests', () => {
             }
 
             // Get statistics
-            const stats = await statisticsService.getStatistics();
+            const stats = await statisticsService.getStatistics(eventId);
 
             // Property: Popular games should be sorted by playerCount in descending order
             for (let i = 1; i < stats.popularGames.length; i++) {

@@ -19,14 +19,14 @@ import type { Game, BggSearchResult } from '../types';
  * @deprecated Use UnifiedSearchBar instead
  */
 interface AddGameFormProps {
-  /** Current user's ID */
-  currentUserId: string;
+  /** Current participant's ID */
+  currentParticipantId: string;
   /** Callback when a game is successfully added */
   onGameAdded: (game: Game) => void;
 }
 
 
-export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
+export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormProps) {
   const [gameName, setGameName] = useState('');
   const [isBringing, setIsBringing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -96,7 +96,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         // Call API to create game using the API client
         const response = await gamesApi.create(
           trimmedName,
-          currentUserId,
+          currentParticipantId,
           isBringing,
           isPlaying,
           false,
@@ -126,7 +126,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
         setIsSubmitting(false);
       }
     },
-    [gameName, isBringing, isPlaying, currentUserId, onGameAdded, selectedBggId, selectedYearPublished, selectedBggRating]
+    [gameName, isBringing, isPlaying, currentParticipantId, onGameAdded, selectedBggId, selectedYearPublished, selectedBggRating]
   );
 
   const handleInputChange = useCallback(
@@ -134,7 +134,7 @@ export function AddGameForm({ currentUserId, onGameAdded }: AddGameFormProps) {
       const newValue = e.target.value;
       setGameName(newValue);
       
-      // User is typing, so allow dropdown to open again
+      // Participant is typing, so allow dropdown to open again
       justSelectedRef.current = false;
       
       // Clear BGG selection when user types (they might be changing their mind)

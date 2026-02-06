@@ -32,6 +32,11 @@ jest.mock('../../repositories', () => ({
   },
 }));
 
+// Mock resolveEventId to avoid DB access
+jest.mock('../../middleware/event.middleware', () => ({
+  resolveEventId: jest.fn().mockResolvedValue('test-event-id'),
+}));
+
 import thumbnailRoutes from '../thumbnail.routes';
 
 describe('Thumbnail Routes', () => {
@@ -56,9 +61,9 @@ describe('Thumbnail Routes', () => {
 
   describe('POST /api/thumbnails/:gameId', () => {
     const gameId = '123e4567-e89b-12d3-a456-426614174000';
-    const userId = '123e4567-e89b-12d3-a456-426614174001';
+    const participantId = '123e4567-e89b-12d3-a456-426614174001';
 
-    it('should return 400 when no user ID header provided', async () => {
+    it('should return 400 when no participant ID header provided', async () => {
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
         .attach('thumbnail', Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]), 'test.jpg')
@@ -70,7 +75,7 @@ describe('Thumbnail Routes', () => {
     it('should return 400 when no file uploaded', async () => {
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .expect(400);
 
       expect(response.body.error.code).toBe('NO_FILE');
@@ -81,7 +86,7 @@ describe('Thumbnail Routes', () => {
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]), {
           filename: 'test.jpg',
           contentType: 'image/jpeg',
@@ -94,13 +99,13 @@ describe('Thumbnail Routes', () => {
     it('should return 400 when game has BGG ID (Requirement 1.6)', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: 12345, // Has BGG ID
       });
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]), {
           filename: 'test.jpg',
           contentType: 'image/jpeg',
@@ -119,7 +124,7 @@ describe('Thumbnail Routes', () => {
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]), {
           filename: 'test.jpg',
           contentType: 'image/jpeg',
@@ -132,13 +137,13 @@ describe('Thumbnail Routes', () => {
     it('should return 400 for invalid file type (Requirement 1.3)', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: null,
       });
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from('not an image'), {
           filename: 'test.txt',
           contentType: 'text/plain',
@@ -151,14 +156,14 @@ describe('Thumbnail Routes', () => {
     it('should successfully upload thumbnail for valid request', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: null,
       });
       mockStoreThumbnail.mockResolvedValueOnce(undefined);
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]), {
           filename: 'test.jpg',
           contentType: 'image/jpeg',
@@ -172,14 +177,14 @@ describe('Thumbnail Routes', () => {
     it('should accept PNG files', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: null,
       });
       mockStoreThumbnail.mockResolvedValueOnce(undefined);
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0x89, 0x50, 0x4E, 0x47]), {
           filename: 'test.png',
           contentType: 'image/png',
@@ -192,14 +197,14 @@ describe('Thumbnail Routes', () => {
     it('should accept WebP files', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: null,
       });
       mockStoreThumbnail.mockResolvedValueOnce(undefined);
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0x52, 0x49, 0x46, 0x46]), {
           filename: 'test.webp',
           contentType: 'image/webp',
@@ -212,14 +217,14 @@ describe('Thumbnail Routes', () => {
     it('should accept GIF files', async () => {
       mockFindById.mockResolvedValueOnce({
         id: gameId,
-        ownerId: userId,
+        ownerId: participantId,
         bggId: null,
       });
       mockStoreThumbnail.mockResolvedValueOnce(undefined);
 
       const response = await request(app)
         .post(`/api/thumbnails/${gameId}`)
-        .set('x-user-id', userId)
+        .set('x-participant-id', participantId)
         .attach('thumbnail', Buffer.from([0x47, 0x49, 0x46, 0x38]), {
           filename: 'test.gif',
           contentType: 'image/gif',

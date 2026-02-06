@@ -78,8 +78,8 @@ describe('SSEManager', () => {
       const event: GameEvent = {
         type: 'game:created',
         gameId: 'game-123',
-        userId: 'user-456',
-        userName: 'Test User',
+        participantId: 'user-456',
+        participantName: 'Test User',
         gameName: 'Test Game',
         isBringing: true,
       };
@@ -108,7 +108,7 @@ describe('SSEManager', () => {
       const event: GameEvent = {
         type: 'game:deleted',
         gameId: 'game-123',
-        userId: 'user-456',
+        participantId: 'user-456',
       };
 
       // Should not throw
@@ -128,23 +128,23 @@ describe('SSEManager', () => {
         {
           type: 'game:created',
           gameId: 'g1',
-          userId: 'u1',
-          userName: 'User',
+          participantId: 'u1',
+          participantName: 'User',
           gameName: 'Game',
           isBringing: false,
         },
         {
           type: 'game:bringer-added',
           gameId: 'g2',
-          userId: 'u2',
-          userName: 'User2',
+          participantId: 'u2',
+          participantName: 'User2',
           gameName: 'Game2',
         },
-        { type: 'game:bringer-removed', gameId: 'g3', userId: 'u3' },
-        { type: 'game:player-added', gameId: 'g4', userId: 'u4', userName: 'User4', gameName: 'Game4' },
-        { type: 'game:player-removed', gameId: 'g5', userId: 'u5' },
-        { type: 'game:deleted', gameId: 'g6', userId: 'u6' },
-        { type: 'game:prototype-toggled', gameId: 'g7', userId: 'u7', isPrototype: true },
+        { type: 'game:bringer-removed', gameId: 'g3', participantId: 'u3' },
+        { type: 'game:player-added', gameId: 'g4', participantId: 'u4', participantName: 'User4', gameName: 'Game4' },
+        { type: 'game:player-removed', gameId: 'g5', participantId: 'u5' },
+        { type: 'game:deleted', gameId: 'g6', participantId: 'u6' },
+        { type: 'game:prototype-toggled', gameId: 'g7', participantId: 'u7', isPrototype: true },
       ];
 
       events.forEach((event) => sseManager.broadcast(event));
@@ -163,7 +163,7 @@ describe('SSEManager', () => {
       const event: GameEvent = {
         type: 'game:prototype-toggled',
         gameId: 'game-123',
-        userId: 'user-456',
+        participantId: 'user-456',
         isPrototype: true,
       };
 

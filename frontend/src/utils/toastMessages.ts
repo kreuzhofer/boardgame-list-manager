@@ -18,17 +18,17 @@ export function getToastMessage(event: SSEEvent): string | null {
     case 'game:created': {
       const createdEvent = event as GameCreatedEvent;
       if (createdEvent.isBringing) {
-        return `${createdEvent.userName} bringt ${createdEvent.gameName} mit`;
+        return `${createdEvent.participantName} bringt ${createdEvent.gameName} mit`;
       }
-      return `${createdEvent.userName} wünscht sich ${createdEvent.gameName}`;
+      return `${createdEvent.participantName} wünscht sich ${createdEvent.gameName}`;
     }
     case 'game:bringer-added': {
       const bringerEvent = event as BringerAddedEvent;
-      return `${bringerEvent.userName} bringt ${bringerEvent.gameName} mit`;
+      return `${bringerEvent.participantName} bringt ${bringerEvent.gameName} mit`;
     }
     case 'game:player-added': {
       const playerEvent = event as PlayerAddedEvent;
-      return `${playerEvent.userName} spielt mit bei ${playerEvent.gameName}`;
+      return `${playerEvent.participantName} spielt mit bei ${playerEvent.gameName}`;
     }
     // No toast for these events
     case 'game:bringer-removed':

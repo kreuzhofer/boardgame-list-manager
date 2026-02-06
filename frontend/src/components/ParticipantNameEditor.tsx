@@ -1,33 +1,33 @@
 /**
- * UserNameEditor component
- * Allows the current user to edit their display name
+ * ParticipantNameEditor component
+ * Allows the current participant to edit their display name
  * 
  * Requirements: 7.1, 7.2, 7.3, 7.4
  */
 
 import { useState } from 'react';
-import { usersApi, ApiError } from '../api/client';
-import type { User } from '../types';
+import { participantsApi, ApiError } from '../api/client';
+import type { Participant } from '../types';
 
-interface UserNameEditorProps {
-  user: User;
-  onUserUpdated: (user: User) => void;
+interface ParticipantNameEditorProps {
+  participant: Participant;
+  onParticipantUpdated: (participant: Participant) => void;
 }
 
-export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
+export function ParticipantNameEditor({ participant, onParticipantUpdated }: ParticipantNameEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(user.name);
+  const [newName, setNewName] = useState(participant.name);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleStartEdit = () => {
-    setNewName(user.name);
+    setNewName(participant.name);
     setError(null);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setNewName(user.name);
+    setNewName(participant.name);
     setError(null);
     setIsEditing(false);
   };
@@ -42,7 +42,7 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
     }
 
     // No change needed
-    if (trimmedName === user.name) {
+    if (trimmedName === participant.name) {
       setIsEditing(false);
       return;
     }
@@ -51,8 +51,8 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
     setError(null);
 
     try {
-      const response = await usersApi.update(user.id, trimmedName);
-      onUserUpdated(response.user);
+      const response = await participantsApi.update(participant.id, trimmedName);
+      onParticipantUpdated(response.participant);
       setIsEditing(false);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -60,7 +60,7 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
       } else {
         setError('Fehler beim Aktualisieren des Namens.');
       }
-      console.error('Failed to update user name:', err);
+      console.error('Failed to update participant name:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +69,7 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
   if (!isEditing) {
     return (
       <div className="flex items-center gap-2">
-        <span className="font-medium text-white">{user.name}</span>
+        <span className="font-medium text-white">{participant.name}</span>
         <button
           onClick={handleStartEdit}
           className="text-white/80 hover:text-white text-sm"
@@ -117,4 +117,4 @@ export function UserNameEditor({ user, onUserUpdated }: UserNameEditorProps) {
   );
 }
 
-export default UserNameEditor;
+export default ParticipantNameEditor;

@@ -11,21 +11,21 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { MobileBottomTabs } from '../MobileBottomTabs';
-import type { User } from '../../types';
+import type { Participant } from '../../types';
 
-// Mock UserOptionsDialog to avoid portal issues in tests
-vi.mock('../UserOptionsDialog', () => ({
-  UserOptionsDialog: ({ isOpen }: { isOpen: boolean }) => 
-    isOpen ? <div data-testid="user-options-dialog">Dialog</div> : null,
+// Mock ParticipantOptionsDialog to avoid portal issues in tests
+vi.mock('../ParticipantOptionsDialog', () => ({
+  ParticipantOptionsDialog: ({ isOpen }: { isOpen: boolean }) => 
+    isOpen ? <div data-testid="participant-options-dialog">Dialog</div> : null,
 }));
 
-const mockUser: User = {
+const mockParticipant: Participant = {
   id: 'user-1',
   name: 'Test User',
 };
 
-const mockOnUserUpdated = vi.fn();
-const mockOnLogout = vi.fn();
+const mockOnParticipantUpdated = vi.fn();
+const mockOnParticipantSwitch = vi.fn();
 
 // Tab configuration matching the component
 const TAB_CONFIG = [
@@ -61,9 +61,9 @@ describe('MobileBottomTabs Property Tests', () => {
           const { unmount } = render(
             <MemoryRouter initialEntries={['/']}>
               <MobileBottomTabs
-                user={mockUser}
-                onUserUpdated={mockOnUserUpdated}
-                onLogout={mockOnLogout}
+                participant={mockParticipant}
+                onParticipantUpdated={mockOnParticipantUpdated}
+                onParticipantSwitch={mockOnParticipantSwitch}
               />
             </MemoryRouter>
           );
@@ -90,11 +90,11 @@ describe('MobileBottomTabs Property Tests', () => {
     it('all four tabs are rendered with icons and labels', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
-          <MobileBottomTabs
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
-          />
+            <MobileBottomTabs
+              participant={mockParticipant}
+              onParticipantUpdated={mockOnParticipantUpdated}
+              onParticipantSwitch={mockOnParticipantSwitch}
+            />
         </MemoryRouter>
       );
 
@@ -124,9 +124,9 @@ describe('MobileBottomTabs Property Tests', () => {
           const { unmount } = render(
             <MemoryRouter initialEntries={[route]}>
               <MobileBottomTabs
-                user={mockUser}
-                onUserUpdated={mockOnUserUpdated}
-                onLogout={mockOnLogout}
+                participant={mockParticipant}
+                onParticipantUpdated={mockOnParticipantUpdated}
+                onParticipantSwitch={mockOnParticipantSwitch}
               />
             </MemoryRouter>
           );
@@ -159,9 +159,9 @@ describe('MobileBottomTabs Property Tests', () => {
           const { unmount } = render(
             <MemoryRouter initialEntries={[route]}>
               <MobileBottomTabs
-                user={mockUser}
-                onUserUpdated={mockOnUserUpdated}
-                onLogout={mockOnLogout}
+                participant={mockParticipant}
+                onParticipantUpdated={mockOnParticipantUpdated}
+                onParticipantSwitch={mockOnParticipantSwitch}
               />
             </MemoryRouter>
           );
@@ -186,11 +186,11 @@ describe('MobileBottomTabs Property Tests', () => {
     it('navigation tabs have correct href attributes', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
-          <MobileBottomTabs
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
-          />
+            <MobileBottomTabs
+              participant={mockParticipant}
+              onParticipantUpdated={mockOnParticipantUpdated}
+              onParticipantSwitch={mockOnParticipantSwitch}
+            />
         </MemoryRouter>
       );
 
@@ -203,11 +203,11 @@ describe('MobileBottomTabs Property Tests', () => {
     it('profile tab is a button, not a link', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
-          <MobileBottomTabs
-            user={mockUser}
-            onUserUpdated={mockOnUserUpdated}
-            onLogout={mockOnLogout}
-          />
+            <MobileBottomTabs
+              participant={mockParticipant}
+              onParticipantUpdated={mockOnParticipantUpdated}
+              onParticipantSwitch={mockOnParticipantSwitch}
+            />
         </MemoryRouter>
       );
 

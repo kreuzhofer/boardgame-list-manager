@@ -1,78 +1,78 @@
 /**
- * UserSelectionModal component
- * Modal for selecting an existing user or creating a new one
+ * ParticipantSelectionModal component
+ * Modal for selecting an existing participant or creating a new one
  * 
  * Requirements: 5.1, 5.2, 5.3, 7.4
  */
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { usersApi, ApiError } from '../api/client';
-import type { User } from '../types';
+import { participantsApi, ApiError } from '../api/client';
+import type { Participant } from '../types';
 
 const MAX_USERNAME_LENGTH = 30;
 
-interface UserSelectionModalProps {
+interface ParticipantSelectionModalProps {
   isOpen: boolean;
-  onUserSelected: (user: User) => void;
+  onParticipantSelected: (participant: Participant) => void;
 }
 
-export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModalProps) {
-  const [users, setUsers] = useState<User[]>([]);
+export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: ParticipantSelectionModalProps) {
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [newUserName, setNewUserName] = useState('');
+  const [newParticipantName, setNewParticipantName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [pendingUser, setPendingUser] = useState<User | null>(null);
+  const [pendingParticipant, setPendingParticipant] = useState<Participant | null>(null);
 
-  // Fetch existing users and reset state when modal opens
+  // Fetch existing participants and reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       // Reset state when modal opens
       setShowCreateForm(false);
-      setNewUserName('');
+      setNewParticipantName('');
       setCreateError(null);
-      setPendingUser(null);
-      fetchUsers();
+      setPendingParticipant(null);
+      fetchParticipants();
     }
   }, [isOpen]);
 
-  const fetchUsers = async () => {
+  const fetchParticipants = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await usersApi.getAll();
-      setUsers(response.users);
+      const response = await participantsApi.getAll();
+      setParticipants(response.participants);
     } catch (err) {
       // Show detailed error for debugging
       const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(`Fehler beim Laden der Benutzer: ${errorMessage}`);
-      console.error('Failed to fetch users:', err);
+      setError(`Fehler beim Laden der Teilnehmer: ${errorMessage}`);
+      console.error('Failed to fetch participants:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectUser = (user: User) => {
-    setPendingUser(user);
+  const handleSelectParticipant = (participant: Participant) => {
+    setPendingParticipant(participant);
   };
 
-  const handleConfirmUser = () => {
-    if (pendingUser) {
-      onUserSelected(pendingUser);
+  const handleConfirmParticipant = () => {
+    if (pendingParticipant) {
+      onParticipantSelected(pendingParticipant);
     }
   };
 
   const handleCancelConfirm = () => {
-    setPendingUser(null);
+    setPendingParticipant(null);
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleCreateParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const trimmedName = newUserName.trim();
+    const trimmedName = newParticipantName.trim();
     if (!trimmedName) {
       setCreateError('Bitte einen Namen eingeben.');
       return;
@@ -82,15 +82,15 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
     setCreateError(null);
 
     try {
-      const response = await usersApi.create(trimmedName);
-      onUserSelected(response.user);
+      const response = await participantsApi.create(trimmedName);
+      onParticipantSelected(response.participant);
     } catch (err) {
       if (err instanceof ApiError) {
         setCreateError(err.message);
       } else {
-        setCreateError('Fehler beim Erstellen des Benutzers.');
+        setCreateError('Fehler beim Erstellen des Teilnehmers.');
       }
-      console.error('Failed to create user:', err);
+      console.error('Failed to create participant:', err);
     } finally {
       setIsCreating(false);
     }
@@ -107,17 +107,17 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
             Wer bist du?
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            Wähle deinen Namen aus der Liste oder erstelle einen neuen Benutzer.
+            Wähle deinen Namen aus der Liste oder erstelle einen neuen Teilnehmer.
           </p>
         </div>
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
           {/* Confirmation view */}
-          {pendingUser ? (
+          {pendingParticipant ? (
             <div className="text-center py-4">
               <p className="text-lg text-gray-900 mb-6">
-                Du meldest Dich als <span className="font-semibold">{pendingUser.name}</span> an
+                Du meldest Dich als <span className="font-semibold">{pendingParticipant.name}</span> an
               </p>
               <div className="flex gap-3 justify-center">
                 <button
@@ -127,7 +127,7 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                   Nein, nochmal zurück
                 </button>
                 <button
-                  onClick={handleConfirmUser}
+                  onClick={handleConfirmParticipant}
                   className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Ja
@@ -142,7 +142,7 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
             <div className="text-red-600 text-center py-4">
               {error}
               <button
-                onClick={fetchUsers}
+                onClick={fetchParticipants}
                 className="block mx-auto mt-2 text-blue-600 hover:underline"
               >
                 Erneut versuchen
@@ -151,28 +151,28 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
           ) : (
             <>
               {/* Existing users list */}
-              {users.length > 0 && !showCreateForm && (
+              {participants.length > 0 && !showCreateForm && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">
-                    Bestehende Benutzer ({users.length}):
+                    Bestehende Teilnehmer ({participants.length}):
                   </h3>
                   <div className="relative">
                     <div className="max-h-48 overflow-y-auto border rounded-lg divide-y scroll-smooth">
-                      {users.map((user) => (
+                      {participants.map((participant) => (
                         <button
-                          key={user.id}
-                          onClick={() => handleSelectUser(user)}
+                          key={participant.id}
+                          onClick={() => handleSelectParticipant(participant)}
                           className="w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
                         >
-                          <span className="text-gray-900">{user.name}</span>
+                          <span className="text-gray-900">{participant.name}</span>
                         </button>
                       ))}
                     </div>
-                    {users.length > 4 && (
+                    {participants.length > 4 && (
                       <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-lg" />
                     )}
                   </div>
-                  {users.length > 4 && (
+                  {participants.length > 4 && (
                     <p className="text-xs text-gray-500 text-center">
                       ↓ Scrolle für mehr
                     </p>
@@ -180,29 +180,29 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                 </div>
               )}
 
-              {/* Toggle to create form - only show when users exist */}
-              {!showCreateForm && users.length > 0 && (
+              {/* Toggle to create form - only show when participants exist */}
+              {!showCreateForm && participants.length > 0 && (
                 <button
                   onClick={() => setShowCreateForm(true)}
                   className="mt-4 w-full py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
                 >
-                  + Neuen Benutzer erstellen
+                  + Neuen Teilnehmer erstellen
                 </button>
               )}
 
-              {/* Create new user form */}
+              {/* Create new participant form */}
               {showCreateForm && (
-                <form onSubmit={handleCreateUser} className="mt-4">
+                <form onSubmit={handleCreateParticipant} className="mt-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">
-                    Neuen Benutzer erstellen:
+                    Neuen Teilnehmer erstellen:
                   </h3>
                   <div className="space-y-3">
                     <input
                       type="text"
-                      value={newUserName}
+                      value={newParticipantName}
                       onChange={(e) => {
                         const newValue = e.target.value;
-                        setNewUserName(newValue);
+                        setNewParticipantName(newValue);
                         if (newValue.trim().length >= MAX_USERNAME_LENGTH) {
                           setCreateError('Der Name darf maximal 30 Zeichen lang sein.');
                         } else {
@@ -223,7 +223,7 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                         type="button"
                         onClick={() => {
                           setShowCreateForm(false);
-                          setNewUserName('');
+                          setNewParticipantName('');
                           setCreateError(null);
                         }}
                         className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -234,7 +234,7 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                       <button
                         type="submit"
                         className="flex-1 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                        disabled={isCreating || !newUserName.trim()}
+                        disabled={isCreating || !newParticipantName.trim()}
                       >
                         {isCreating ? 'Erstelle...' : 'Erstellen'}
                       </button>
@@ -243,17 +243,17 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
                 </form>
               )}
 
-              {/* Show create form directly if no users exist */}
-              {users.length === 0 && !showCreateForm && (
+              {/* Show create form directly if no participants exist */}
+              {participants.length === 0 && !showCreateForm && (
                 <div className="text-center py-4">
                   <p className="text-gray-600 mb-4">
-                    Noch keine Benutzer vorhanden.
+                    Noch keine Teilnehmer vorhanden.
                   </p>
                   <button
                     onClick={() => setShowCreateForm(true)}
                     className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Ersten Benutzer erstellen
+                    Ersten Teilnehmer erstellen
                   </button>
                 </div>
               )}
@@ -267,4 +267,4 @@ export function UserSelectionModal({ isOpen, onUserSelected }: UserSelectionModa
   return createPortal(modalContent, document.body);
 }
 
-export default UserSelectionModal;
+export default ParticipantSelectionModal;

@@ -196,6 +196,16 @@ export class AccountService {
   }
 
   /**
+   * List all accounts (admin only)
+   */
+  async getAll(): Promise<AccountResponse[]> {
+    const accounts = await this.prisma.account.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return accounts.map((account) => this.toAccountResponse(account));
+  }
+
+  /**
    * Change password (validates current password first)
    */
   async changePassword(
@@ -301,5 +311,78 @@ export class AccountService {
     });
 
     return this.toAccountResponse(updated);
+  }
+
+  /**
+   * Set account role (admin only)
+   */
+  async setRole(accountId: string, role: 'account_owner' | 'admin'): Promise<AccountResponse> {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404
+      );
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: accountId },
+      data: { role },
+    });
+
+    return this.toAccountResponse(updated);
+  }
+
+  /**
+   * Set account status (admin only)
+   */
+  async setStatus(accountId: string, status: 'active' | 'deactivated'): Promise<AccountResponse> {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404
+      );
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: accountId },
+      data: { status },
+    });
+
+    return this.toAccountResponse(updated);
+  }
+
+  /**
+   * Reset account password (admin only)
+   */
+  async resetPassword(accountId: string, newPassword: string): Promise<void> {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404
+      );
+    }
+
+    this.validatePassword(newPassword);
+
+    const passwordHash = await this.hashPassword(newPassword);
+    await this.prisma.account.update({
+      where: { id: accountId },
+      data: { passwordHash },
+    });
   }
 }

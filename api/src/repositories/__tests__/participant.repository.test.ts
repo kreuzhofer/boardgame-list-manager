@@ -1,33 +1,54 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { prisma } from '../../db/prisma';
-import { UserRepository, userRepository } from '../user.repository';
+import { ParticipantRepository, participantRepository } from '../participant.repository';
 
 /**
- * Unit tests for User Repository
+ * Unit tests for Participant Repository
  * Tests CRUD operations, duplicate name constraint, and cascade delete behavior
  *
  * Validates: Requirements 2.3, 2.4, 2.5, 3.1, 3.2, 3.4, 3.7, 3.10
  */
-describe('UserRepository', () => {
-  let repository: UserRepository;
+describe('ParticipantRepository', () => {
+  let repository: ParticipantRepository;
+  let eventId: string;
+  const createdAccountIds: string[] = [];
 
   // Track created test data for cleanup
-  const createdUserIds: string[] = [];
+  const createdParticipantIds: string[] = [];
   const createdGameIds: string[] = [];
 
   // Test data prefix to identify test records (short to fit within 30 char limit)
-  const TEST_PREFIX = 'UR_';
+  const TEST_PREFIX = 'PR_';
 
-  beforeAll(() => {
-    repository = userRepository;
+  beforeAll(async () => {
+    repository = participantRepository;
+    const email = `participant-repo-${Date.now()}@example.com`;
+    const account = await prisma.account.create({
+      data: {
+        email,
+        passwordHash: 'test-hash',
+        role: 'account_owner',
+        status: 'active',
+      },
+    });
+    createdAccountIds.push(account.id);
+
+    const event = await prisma.event.create({
+      data: {
+        name: `Participant Repository Test ${Date.now()}`,
+        passwordHash: 'test-hash',
+        ownerAccountId: account.id,
+      },
+    });
+    eventId = event.id;
   });
 
   afterAll(async () => {
     // Clean up all test data created during tests
-    // Delete users first (cascade will handle players/bringers)
-    if (createdUserIds.length > 0) {
+    // Delete participants first (cascade will handle players/bringers)
+    if (createdParticipantIds.length > 0) {
       await prisma.user.deleteMany({
-        where: { id: { in: createdUserIds } },
+        where: { id: { in: createdParticipantIds } },
       });
     }
 
@@ -38,12 +59,18 @@ describe('UserRepository', () => {
       });
     }
 
+    if (createdAccountIds.length > 0) {
+      await prisma.account.deleteMany({
+        where: { id: { in: createdAccountIds } },
+      });
+    }
+
     await prisma.$disconnect();
   });
 
   /**
-   * Helper to create a unique test user name (max 30 chars for VARCHAR(30) constraint)
-   * Format: UR_{base}_{random} - keeps total under 30 chars
+   * Helper to create a unique test participant name (max 30 chars for VARCHAR(30) constraint)
+   * Format: PR_{base}_{random} - keeps total under 30 chars
    */
   const uniqueName = (base: string) => {
     const shortBase = base.slice(0, 10);
@@ -53,32 +80,32 @@ describe('UserRepository', () => {
 
   describe('findAll', () => {
     /**
-     * Test that findAll returns users sorted by name
+     * Test that findAll returns participants sorted by name
      * Validates: Requirement 3.1
      */
-    it('should return all users sorted by name ascending', async () => {
-      // Create test users with names that will sort in a specific order
+    it('should return all participants sorted by name ascending', async () => {
+      // Create test participants with names that will sort in a specific order
       // Use short random suffix to stay under 30 chars
       const suffix = Math.random().toString(36).slice(2, 8);
-      const nameA = `UR_AAA_${suffix}`;
-      const nameB = `UR_BBB_${suffix}`;
-      const nameC = `UR_CCC_${suffix}`;
+      const nameA = `PR_AAA_${suffix}`;
+      const nameB = `PR_BBB_${suffix}`;
+      const nameC = `PR_CCC_${suffix}`;
 
       // Create in non-alphabetical order
-      const userB = await repository.create(nameB);
-      createdUserIds.push(userB.id);
+      const userB = await repository.create(nameB, eventId);
+      createdParticipantIds.push(userB.id);
 
-      const userC = await repository.create(nameC);
-      createdUserIds.push(userC.id);
+      const userC = await repository.create(nameC, eventId);
+      createdParticipantIds.push(userC.id);
 
-      const userA = await repository.create(nameA);
-      createdUserIds.push(userA.id);
+      const userA = await repository.create(nameA, eventId);
+      createdParticipantIds.push(userA.id);
 
-      // Fetch all users
-      const users = await repository.findAll();
+      // Fetch all participants
+      const users = await repository.findAll(eventId);
 
-      // Filter to only our test users
-      const testUsers = users.filter((u) => u.name.startsWith('UR_') && u.name.includes(suffix));
+      // Filter to only our test participants
+      const testUsers = users.filter((u) => u.name.startsWith(TEST_PREFIX) && u.name.includes(suffix));
 
       // Verify they are sorted alphabetically
       expect(testUsers.length).toBe(3);
@@ -95,10 +122,10 @@ describe('UserRepository', () => {
      */
     it('should return user when found', async () => {
       const name = uniqueName('findById');
-      const created = await repository.create(name);
-      createdUserIds.push(created.id);
+      const created = await repository.create(name, eventId);
+      createdParticipantIds.push(created.id);
 
-      const found = await repository.findById(created.id);
+      const found = await repository.findById(created.id, eventId);
 
       expect(found).not.toBeNull();
       expect(found!.id).toBe(created.id);
@@ -114,7 +141,7 @@ describe('UserRepository', () => {
     it('should return null when user not found', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-      const found = await repository.findById(nonExistentId);
+      const found = await repository.findById(nonExistentId, eventId);
 
       expect(found).toBeNull();
     });
@@ -126,10 +153,10 @@ describe('UserRepository', () => {
      */
     it('should return user when found by name', async () => {
       const name = uniqueName('findByName');
-      const created = await repository.create(name);
-      createdUserIds.push(created.id);
+      const created = await repository.create(name, eventId);
+      createdParticipantIds.push(created.id);
 
-      const found = await repository.findByName(name);
+      const found = await repository.findByName(name, eventId);
 
       expect(found).not.toBeNull();
       expect(found!.id).toBe(created.id);
@@ -142,7 +169,7 @@ describe('UserRepository', () => {
     it('should return null when user not found by name', async () => {
       const nonExistentName = uniqueName('nonexistent');
 
-      const found = await repository.findByName(nonExistentName);
+      const found = await repository.findByName(nonExistentName, eventId);
 
       expect(found).toBeNull();
     });
@@ -156,8 +183,8 @@ describe('UserRepository', () => {
     it('should create user successfully', async () => {
       const name = uniqueName('create');
 
-      const user = await repository.create(name);
-      createdUserIds.push(user.id);
+      const user = await repository.create(name, eventId);
+      createdParticipantIds.push(user.id);
 
       expect(user).toBeDefined();
       expect(user.id).toBeDefined();
@@ -175,11 +202,11 @@ describe('UserRepository', () => {
       const name = uniqueName('duplicate');
 
       // Create first user
-      const user = await repository.create(name);
-      createdUserIds.push(user.id);
+      const user = await repository.create(name, eventId);
+      createdParticipantIds.push(user.id);
 
       // Attempt to create second user with same name
-      await expect(repository.create(name)).rejects.toThrow();
+      await expect(repository.create(name, eventId)).rejects.toThrow();
     });
   });
 
@@ -192,8 +219,8 @@ describe('UserRepository', () => {
       const originalName = uniqueName('updateOriginal');
       const newName = uniqueName('updateNew');
 
-      const user = await repository.create(originalName);
-      createdUserIds.push(user.id);
+      const user = await repository.create(originalName, eventId);
+      createdParticipantIds.push(user.id);
 
       const updated = await repository.update(user.id, newName);
 
@@ -219,11 +246,11 @@ describe('UserRepository', () => {
       const name1 = uniqueName('updateDup1');
       const name2 = uniqueName('updateDup2');
 
-      const user1 = await repository.create(name1);
-      createdUserIds.push(user1.id);
+      const user1 = await repository.create(name1, eventId);
+      createdParticipantIds.push(user1.id);
 
-      const user2 = await repository.create(name2);
-      createdUserIds.push(user2.id);
+      const user2 = await repository.create(name2, eventId);
+      createdParticipantIds.push(user2.id);
 
       // Try to update user2's name to user1's name
       await expect(repository.update(user2.id, name1)).rejects.toThrow();
@@ -238,12 +265,12 @@ describe('UserRepository', () => {
     it('should delete user successfully', async () => {
       const name = uniqueName('delete');
 
-      const user = await repository.create(name);
-      // Don't add to createdUserIds since we're deleting it
+      const user = await repository.create(name, eventId);
+      // Don't add to createdParticipantIds since we're deleting it
 
       await repository.delete(user.id);
 
-      const found = await repository.findById(user.id);
+      const found = await repository.findById(user.id, eventId);
       expect(found).toBeNull();
     });
 
@@ -265,11 +292,11 @@ describe('UserRepository', () => {
       const gameName = uniqueName('cascadeGame');
 
       // Create user
-      const user = await repository.create(userName);
+      const user = await repository.create(userName, eventId);
 
       // Create a game
       const game = await prisma.game.create({
-        data: { name: gameName },
+        data: { name: gameName, eventId },
       });
       createdGameIds.push(game.id);
 
@@ -312,11 +339,11 @@ describe('UserRepository', () => {
       const gameName = uniqueName('cascadeGameBringer');
 
       // Create user
-      const user = await repository.create(userName);
+      const user = await repository.create(userName, eventId);
 
       // Create a game
       const game = await prisma.game.create({
-        data: { name: gameName },
+        data: { name: gameName, eventId },
       });
       createdGameIds.push(game.id);
 
@@ -359,11 +386,11 @@ describe('UserRepository', () => {
       const gameName = uniqueName('cascadeGameBoth');
 
       // Create user
-      const user = await repository.create(userName);
+      const user = await repository.create(userName, eventId);
 
       // Create a game
       const game = await prisma.game.create({
-        data: { name: gameName },
+        data: { name: gameName, eventId },
       });
       createdGameIds.push(game.id);
 
@@ -403,12 +430,13 @@ describe('UserRepository', () => {
       const gameName = uniqueName('ownedGame');
 
       // Create user
-      const user = await repository.create(userName);
+      const user = await repository.create(userName, eventId);
 
       // Create a game owned by this user
       const game = await prisma.game.create({
         data: { 
           name: gameName,
+          eventId,
           ownerId: user.id,
         },
       });
@@ -442,12 +470,13 @@ describe('UserRepository', () => {
       const gameName = uniqueName('combinedGame');
 
       // Create user
-      const user = await repository.create(userName);
+      const user = await repository.create(userName, eventId);
 
       // Create a game owned by this user with the user as player and bringer
       const game = await prisma.game.create({
         data: { 
           name: gameName,
+          eventId,
           ownerId: user.id,
           players: {
             create: { userId: user.id },

@@ -104,6 +104,23 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/accounts
+ * Lists all accounts (admin only)
+ */
+router.get('/', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const accounts = await accountService.getAll();
+    res.json({ accounts });
+  } catch (error) {
+    console.error('List accounts error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
  * PATCH /api/accounts/me/password
  * Changes password (requires auth, invalidates other sessions)
  */
@@ -215,6 +232,144 @@ router.post('/:id/promote', requireAuth, requireAdmin, async (req: Request, res:
       return;
     }
     console.error('Promotion error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * PATCH /api/accounts/:id/role
+ * Updates account role (admin only)
+ */
+router.patch('/:id/role', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (role !== 'admin' && role !== 'account_owner') {
+      res.status(400).json({
+        error: 'VALIDATION_ERROR',
+        message: 'Ungültige Rolle.',
+      });
+      return;
+    }
+
+    const account = await accountService.setRole(id, role);
+    res.json({ account });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({
+        error: error.code,
+        message: error.message,
+      });
+      return;
+    }
+    console.error('Role update error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * PATCH /api/accounts/:id/status
+ * Updates account status (admin only)
+ */
+router.patch('/:id/status', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (status !== 'active' && status !== 'deactivated') {
+      res.status(400).json({
+        error: 'VALIDATION_ERROR',
+        message: 'Ungültiger Status.',
+      });
+      return;
+    }
+
+    const account = await accountService.setStatus(id, status);
+    res.json({ account });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({
+        error: error.code,
+        message: error.message,
+      });
+      return;
+    }
+    console.error('Status update error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * PATCH /api/accounts/:id/password
+ * Resets account password (admin only)
+ */
+router.patch('/:id/password', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || typeof newPassword !== 'string') {
+      res.status(400).json({
+        error: 'MISSING_FIELDS',
+        message: 'Neues Passwort ist erforderlich.',
+      });
+      return;
+    }
+
+    await accountService.resetPassword(id, newPassword);
+    await sessionService.deleteAllSessions(id);
+
+    res.json({
+      success: true,
+      message: 'Passwort zurückgesetzt. Alle Sitzungen wurden beendet.',
+    });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({
+        error: error.code,
+        message: error.message,
+      });
+      return;
+    }
+    console.error('Password reset error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * DELETE /api/accounts/:id/sessions
+ * Force logout all sessions for account (admin only)
+ */
+router.delete('/:id/sessions', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await sessionService.deleteAllSessions(id);
+    res.json({
+      success: true,
+      message: 'Alle Sitzungen wurden beendet.',
+    });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({
+        error: error.code,
+        message: error.message,
+      });
+      return;
+    }
+    console.error('Force logout error:', error);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',

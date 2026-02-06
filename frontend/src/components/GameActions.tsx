@@ -4,7 +4,7 @@
  * - "Möchte ich spielen" button to add as player (Requirement 3.5)
  * - "Bringe ich mit" button to add as bringer (Requirement 3.6)
  * - "Wunsch erfüllen" quick action for Wunsch games (Requirement 4.4)
- * - Remove buttons for current user's entries (Requirement 4.5)
+ * - Remove buttons for current participant's entries (Requirement 4.5)
  * - Touch-friendly interactions on mobile (Requirement 6.4)
  * All UI text in German (Requirement 9.1)
  */
@@ -14,7 +14,7 @@ import { HelpBubble } from './HelpBubble';
 
 interface GameActionsProps {
   game: Game;
-  currentUserId: string;
+  currentParticipantId: string;
   onAddPlayer?: (gameId: string) => void;
   onAddBringer?: (gameId: string) => void;
   onRemovePlayer?: (gameId: string) => void;
@@ -25,16 +25,16 @@ interface GameActionsProps {
 
 export function GameActions({
   game,
-  currentUserId,
+  currentParticipantId,
   onAddPlayer,
   onAddBringer,
   onRemovePlayer,
   onRemoveBringer,
   isMobile = false,
 }: GameActionsProps) {
-  // Check if current user is already a player or bringer
-  const isPlayer = game.players.some((p) => p.user.id === currentUserId);
-  const isBringer = game.bringers.some((b) => b.user.id === currentUserId);
+  // Check if current participant is already a player or bringer
+  const isPlayer = game.players.some((p) => p.participant.id === currentParticipantId);
+  const isBringer = game.bringers.some((b) => b.participant.id === currentParticipantId);
 
   const handleAddPlayer = () => {
     if (onAddPlayer) {

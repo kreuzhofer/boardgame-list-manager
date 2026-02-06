@@ -14,9 +14,9 @@ import type { SSEEvent, GameCreatedEvent, BringerAddedEvent, PlayerAddedEvent } 
  */
 
 // Arbitraries
-const userIdArb = fc.uuid();
+const participantIdArb = fc.uuid();
 const gameIdArb = fc.uuid();
-const userNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
+const participantNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
 const gameNameArb = fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0);
 
 // Generate toast-triggering events
@@ -24,23 +24,23 @@ const toastEventArb: fc.Arbitrary<GameCreatedEvent | BringerAddedEvent | PlayerA
   fc.record({
     type: fc.constant('game:created' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
-    userName: userNameArb,
+    participantId: participantIdArb,
+    participantName: participantNameArb,
     gameName: gameNameArb,
     isBringing: fc.boolean(),
   }),
   fc.record({
     type: fc.constant('game:bringer-added' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
-    userName: userNameArb,
+    participantId: participantIdArb,
+    participantName: participantNameArb,
     gameName: gameNameArb,
   }),
   fc.record({
     type: fc.constant('game:player-added' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
-    userName: userNameArb,
+    participantId: participantIdArb,
+    participantName: participantNameArb,
     gameName: gameNameArb,
   })
 );
@@ -50,17 +50,17 @@ const nonToastEventArb: fc.Arbitrary<SSEEvent> = fc.oneof(
   fc.record({
     type: fc.constant('game:bringer-removed' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   }),
   fc.record({
     type: fc.constant('game:player-removed' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   }),
   fc.record({
     type: fc.constant('game:deleted' as const),
     gameId: gameIdArb,
-    userId: userIdArb,
+    participantId: participantIdArb,
   })
 );
 
@@ -69,7 +69,7 @@ describe('SSE Hook Property Tests', () => {
    * Property 5: Toast Filtering
    * For any SSE event, a toast notification SHALL only be displayed if:
    * (1) the event type is game:created or game:bringer-added, AND
-   * (2) the event's userId does not match the current user's ID.
+   * (2) the event's participantId does not match the current participant's ID.
    */
   describe('Property 5: Toast Filtering', () => {
     it('should show toast only for game:created and game:bringer-added events', () => {

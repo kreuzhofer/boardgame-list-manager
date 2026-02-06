@@ -25,6 +25,10 @@ export interface RegisterResponse {
   message: string;
 }
 
+export interface AccountsResponse {
+  accounts: Account[];
+}
+
 export interface ApiError {
   error: string;
   message: string;

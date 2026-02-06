@@ -25,8 +25,8 @@ import type { Game, BggSearchResult } from '../types';
 export interface UnifiedSearchBarProps {
   /** All games in the list for filtering and duplicate detection */
   games: Game[];
-  /** Current user's ID for game creation */
-  currentUserId: string;
+  /** Current participant's ID for game creation */
+  currentParticipantId: string;
   /** Callback when a game is successfully added */
   onGameAdded: (game: Game) => void;
   /** Callback when search query changes (for list filtering/highlighting) */
@@ -78,7 +78,7 @@ export function getAddButtonState(
 
 export function UnifiedSearchBar({
   games,
-  currentUserId,
+  currentParticipantId,
   onGameAdded,
   onSearchQueryChange,
   onScrollToGame,
@@ -304,7 +304,7 @@ export function UnifiedSearchBar({
     try {
       const response = await gamesApi.create(
         trimmedQuery,
-        currentUserId,
+        currentParticipantId,
         isBringing,
         isPlaying,
         !selectedBggItem && isPrototype,
@@ -333,7 +333,7 @@ export function UnifiedSearchBar({
     } finally {
       setIsSubmitting(false);
     }
-  }, [query, addButtonState.state, currentUserId, isBringing, isPlaying, isPrototype, selectedBggItem, onGameAdded]);
+  }, [query, addButtonState.state, currentParticipantId, isBringing, isPlaying, isPrototype, selectedBggItem, onGameAdded]);
 
   const toggleButtonBase = 'px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[44px] min-w-[7.5rem]';
   const isPrototypeDisabled = Boolean(selectedBggItem);

@@ -9,12 +9,12 @@ import type { Game } from '../../types';
  * Validates: Requirements 5.2, 6.2
  */
 describe('DesktopActionsMenu', () => {
-  const currentUserId = 'user-123';
+  const currentParticipantId = 'user-123';
   
   const createMockGame = (overrides: Partial<Game> = {}): Game => ({
     id: 'game-123',
     name: 'Test Game',
-    owner: { id: currentUserId, name: 'Test User' },
+    owner: { id: currentParticipantId, name: 'Test User' },
     bggId: null,
     yearPublished: null,
     bggRating: null,
@@ -30,7 +30,7 @@ describe('DesktopActionsMenu', () => {
   });
 
   const defaultProps = {
-    currentUserId,
+    currentParticipantId,
     onTogglePrototype: vi.fn().mockResolvedValue(undefined),
     onUploadThumbnail: vi.fn(),
   };

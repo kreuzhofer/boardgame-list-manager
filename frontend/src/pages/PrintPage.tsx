@@ -1,6 +1,6 @@
 /**
  * PrintPage - Print view page for generating game lists
- * Displays a printable list of games the user is bringing or playing
+ * Displays a printable list of games the participant is bringing or playing
  * All UI text in German (Requirement 9.1)
  * 
  * Requirements: 7.1, 7.2, 7.3, 7.4
@@ -8,15 +8,15 @@
 
 import { useEffect, useState } from 'react';
 import { gamesApi } from '../api/client';
-import { PrintList, filterGamesForPrint, filterGamesUserIsBringing, filterGamesUserIsPlaying } from '../components';
+import { PrintList, filterGamesForPrint, filterGamesParticipantIsBringing, filterGamesParticipantIsPlaying } from '../components';
 import type { PrintFilterMode } from '../components';
-import type { Game, User } from '../types';
+import type { Game, Participant } from '../types';
 
 interface PrintPageProps {
-  user: User | null;
+  participant: Participant | null;
 }
 
-export function PrintPage({ user }: PrintPageProps) {
+export function PrintPage({ participant }: PrintPageProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,11 +45,11 @@ export function PrintPage({ user }: PrintPageProps) {
     window.print();
   };
 
-  // Count games user is bringing
-  const bringingCount = user ? filterGamesUserIsBringing(games, user.id).length : 0;
-  const playingCount = user ? filterGamesUserIsPlaying(games, user.id).length : 0;
-  const combinedCount = user ? filterGamesForPrint(games, user.id, 'all').length : 0;
-  const userGamesCount = printFilter === 'all'
+  // Count games participant is bringing
+  const bringingCount = participant ? filterGamesParticipantIsBringing(games, participant.id).length : 0;
+  const playingCount = participant ? filterGamesParticipantIsPlaying(games, participant.id).length : 0;
+  const combinedCount = participant ? filterGamesForPrint(games, participant.id, 'all').length : 0;
+  const participantGamesCount = printFilter === 'all'
     ? combinedCount
     : printFilter === 'bringing'
       ? bringingCount
@@ -61,7 +61,7 @@ export function PrintPage({ user }: PrintPageProps) {
       : 'Liste der Spiele, die Du mitbringst oder bei denen Du mitspielst';
   const countSummary = printFilter === 'all'
     ? `Mitbringen: ${bringingCount} · Mitspielen: ${playingCount}`
-    : `${userGamesCount} ${userGamesCount === 1 ? 'Spiel' : 'Spiele'}`;
+    : `${participantGamesCount} ${participantGamesCount === 1 ? 'Spiel' : 'Spiele'}`;
   const emptyHint = printFilter === 'bringing'
     ? 'Du bringst derzeit keine Spiele mit. Füge Dich als Mitbringer bei Spielen hinzu, um eine Druckliste zu erstellen.'
     : printFilter === 'playing'
@@ -104,7 +104,7 @@ export function PrintPage({ user }: PrintPageProps) {
     );
   }
 
-  if (!user) {
+  if (!participant) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -112,7 +112,7 @@ export function PrintPage({ user }: PrintPageProps) {
         </div>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
-            Bitte wählen Sie zuerst einen Benutzer aus, um die Druckansicht zu nutzen.
+            Bitte wählen Sie zuerst einen Teilnehmer aus, um die Druckansicht zu nutzen.
           </p>
         </div>
       </div>
@@ -177,9 +177,9 @@ export function PrintPage({ user }: PrintPageProps) {
         {/* Print button */}
         <button
           onClick={handlePrint}
-          disabled={userGamesCount === 0}
+          disabled={participantGamesCount === 0}
           className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-            userGamesCount > 0
+            participantGamesCount > 0
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-400 text-white cursor-not-allowed'
           }`}
@@ -205,7 +205,7 @@ export function PrintPage({ user }: PrintPageProps) {
       </div>
 
       {/* Instructions - hidden when printing */}
-      {userGamesCount === 0 && (
+      {participantGamesCount === 0 && (
         <div className="no-print bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-700 text-sm">
             {emptyHint}
@@ -217,16 +217,16 @@ export function PrintPage({ user }: PrintPageProps) {
       {printFilter === 'all' ? (
         <div>
           <div className="bg-white rounded-lg shadow p-6">
-            <PrintList userName={user.name} userId={user.id} games={games} mode="bringing" />
+            <PrintList participantName={participant.name} participantId={participant.id} games={games} mode="bringing" />
           </div>
           <div className="print-page-break" aria-hidden="true" />
           <div className="bg-white rounded-lg shadow p-6">
-            <PrintList userName={user.name} userId={user.id} games={games} mode="playing" />
+            <PrintList participantName={participant.name} participantId={participant.id} games={games} mode="playing" />
           </div>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow p-6">
-          <PrintList userName={user.name} userId={user.id} games={games} mode={printFilter} />
+          <PrintList participantName={participant.name} participantId={participant.id} games={games} mode={printFilter} />
         </div>
       )}
 

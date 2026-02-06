@@ -1,6 +1,6 @@
 /**
  * BringerList component
- * Displays a list of bringer names with current user highlighting
+ * Displays a list of bringer names with current participant highlighting
  * All UI text in German (Requirement 9.1)
  */
 
@@ -8,7 +8,7 @@ import { Bringer } from '../types';
 
 interface BringerListProps {
   bringers: Bringer[];
-  currentUserId: string;
+  currentParticipantId: string;
   /** Maximum number of bringers to show before using +X overflow */
   maxVisible?: number;
   /** Whether the list is expanded (shows all) */
@@ -21,7 +21,7 @@ interface BringerListProps {
 
 export function BringerList({ 
   bringers, 
-  currentUserId,
+  currentParticipantId,
   maxVisible,
   expanded = false,
   onToggleExpand,
@@ -49,13 +49,13 @@ export function BringerList({
           <div key={bringer.id} className="truncate">
             <span
               className={
-                bringer.user.id === currentUserId
+                bringer.participant.id === currentParticipantId
                   ? 'font-semibold text-blue-600'
                   : 'text-gray-700'
               }
-              title={bringer.user.id === currentUserId ? 'Das bist du!' : undefined}
+              title={bringer.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
             >
-              {bringer.user.name}
+              {bringer.participant.name}
             </span>
           </div>
         ))}
@@ -78,13 +78,13 @@ export function BringerList({
         <span key={bringer.id}>
           <span
             className={
-              bringer.user.id === currentUserId
+              bringer.participant.id === currentParticipantId
                 ? 'font-semibold text-blue-600'
                 : 'text-gray-700'
             }
-            title={bringer.user.id === currentUserId ? 'Das bist du!' : undefined}
+            title={bringer.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
           >
-            {bringer.user.name}
+            {bringer.participant.name}
           </span>
           {index < visibleBringers.length - 1 && (
             <span className="text-gray-400">, </span>

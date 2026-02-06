@@ -9,19 +9,19 @@ import { ReactNode, useCallback } from 'react';
 import { Header } from './Header';
 import { MobileBottomTabs } from './MobileBottomTabs';
 import { PullToRefresh } from './PullToRefresh';
-import type { User } from '../types';
+import type { Participant } from '../types';
 
 interface LayoutProps {
   children: ReactNode;
-  user?: User;
-  onUserUpdated?: (user: User) => void;
-  onLogout?: () => void;
+  participant?: Participant;
+  onParticipantUpdated?: (participant: Participant) => void;
+  onParticipantSwitch?: () => void;
 }
 
-export function Layout({ children, user, onUserUpdated, onLogout }: LayoutProps) {
+export function Layout({ children, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
   // Default handlers for when props are not provided
-  const handleUserUpdated = onUserUpdated || (() => {});
-  const handleLogout = onLogout || (() => {});
+  const handleParticipantUpdated = onParticipantUpdated || (() => {});
+  const handleParticipantSwitch = onParticipantSwitch || (() => {});
 
   // Handle pull-to-refresh - reload the page
   const handleRefresh = useCallback(async () => {
@@ -30,7 +30,11 @@ export function Layout({ children, user, onUserUpdated, onLogout }: LayoutProps)
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Header user={user} onUserUpdated={onUserUpdated} onLogout={onLogout} />
+      <Header
+        participant={participant}
+        onParticipantUpdated={onParticipantUpdated}
+        onParticipantSwitch={onParticipantSwitch}
+      />
       {/* Add top padding to account for fixed header, bottom padding for mobile tabs */}
       <PullToRefresh onRefresh={handleRefresh}>
         <main className="flex-1 container mx-auto px-4 py-6 pt-20 sm:pt-24 pb-20 md:pb-6">
@@ -52,9 +56,9 @@ export function Layout({ children, user, onUserUpdated, onLogout }: LayoutProps)
       </PullToRefresh>
       {/* Mobile Bottom Tabs - only visible on mobile */}
       <MobileBottomTabs
-        user={user ?? null}
-        onUserUpdated={handleUserUpdated}
-        onLogout={handleLogout}
+        participant={participant ?? null}
+        onParticipantUpdated={handleParticipantUpdated}
+        onParticipantSwitch={handleParticipantSwitch}
       />
     </div>
   );

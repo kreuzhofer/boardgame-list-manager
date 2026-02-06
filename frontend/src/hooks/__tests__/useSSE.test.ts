@@ -72,7 +72,7 @@ describe('useSSE', () => {
       };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
         enabled: true,
       }));
@@ -87,7 +87,7 @@ describe('useSSE', () => {
       };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
         enabled: false,
       }));
@@ -99,7 +99,7 @@ describe('useSSE', () => {
       const handlers = {};
 
       const { result } = renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -118,7 +118,7 @@ describe('useSSE', () => {
       const handlers = {};
 
       const { unmount } = renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -137,7 +137,7 @@ describe('useSSE', () => {
       const handlers = { onGameCreated };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -149,8 +149,8 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:created',
           gameId: 'game-1',
-          userId: 'user-456',
-          userName: 'Test User',
+          participantId: 'user-456',
+          participantName: 'Test User',
           gameName: 'Test Game',
           isBringing: true,
         });
@@ -167,7 +167,7 @@ describe('useSSE', () => {
       const handlers = { onGameUpdated };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -179,8 +179,8 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:bringer-added',
           gameId: 'game-1',
-          userId: 'user-456',
-          userName: 'Test User',
+          participantId: 'user-456',
+          participantName: 'Test User',
           gameName: 'Test Game',
         });
       });
@@ -195,7 +195,7 @@ describe('useSSE', () => {
       const handlers = { onGameDeleted };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -207,7 +207,7 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:deleted',
           gameId: 'game-1',
-          userId: 'user-456',
+          participantId: 'user-456',
         });
       });
 
@@ -226,7 +226,7 @@ describe('useSSE', () => {
       const handlers = { onGameUpdated };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -238,7 +238,7 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:prototype-toggled',
           gameId: 'game-1',
-          userId: 'user-456',
+          participantId: 'user-456',
           isPrototype: true,
         });
       });
@@ -257,7 +257,7 @@ describe('useSSE', () => {
       const handlers = { onToast };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -269,8 +269,8 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:created',
           gameId: 'game-1',
-          userId: 'user-456', // Different user
-          userName: 'Other User',
+          participantId: 'user-456', // Different participant
+          participantName: 'Other User',
           gameName: 'Test Game',
           isBringing: true,
         });
@@ -284,7 +284,7 @@ describe('useSSE', () => {
       const handlers = { onToast };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -296,8 +296,8 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:created',
           gameId: 'game-1',
-          userId: 'user-123', // Same user
-          userName: 'Current User',
+          participantId: 'user-123', // Same participant
+          participantName: 'Current User',
           gameName: 'Test Game',
           isBringing: true,
         });
@@ -311,7 +311,7 @@ describe('useSSE', () => {
       const handlers = { onToast };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -323,7 +323,7 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:player-removed',
           gameId: 'game-1',
-          userId: 'user-456',
+          participantId: 'user-456',
         });
       });
 
@@ -335,7 +335,7 @@ describe('useSSE', () => {
       const handlers = { onToast };
 
       renderHook(() => useSSE({
-        currentUserId: 'user-123',
+        currentParticipantId: 'user-123',
         handlers,
       }));
 
@@ -347,8 +347,8 @@ describe('useSSE', () => {
         MockEventSource.instances[0].simulateMessage({
           type: 'game:player-added',
           gameId: 'game-1',
-          userId: 'user-456',
-          userName: 'Other User',
+          participantId: 'user-456',
+          participantName: 'Other User',
           gameName: 'Test Game',
         });
       });

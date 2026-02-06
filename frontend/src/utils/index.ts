@@ -10,11 +10,13 @@ export {
 
 export {
   sortGamesByName,
+  sortGamesByAddedAt,
   toggleSortOrder,
   DEFAULT_SORT_ORDER,
+  DEFAULT_SORT_KEY,
 } from './sorting';
 
-export type { SortOrder } from './sorting';
+export type { SortOrder, SortKey } from './sorting';
 
 export {
   filterByName,

@@ -1,9 +1,10 @@
 // SSE Event Types
 export * from './sse';
 
-// User entity type
-export interface UserEntity {
+// Participant entity type
+export interface ParticipantEntity {
   id: string;
+  eventId: string | null;
   name: string;
   createdAt: Date;
   updatedAt: Date;
@@ -12,6 +13,7 @@ export interface UserEntity {
 // Game entity types
 export interface GameEntity {
   id: string;
+  eventId: string | null;
   name: string;
   ownerId: string | null;
   bggId: number | null;
@@ -22,7 +24,7 @@ export interface GameEntity {
   isPrototype: boolean;
   createdAt: Date;
   updatedAt: Date;
-  owner: UserEntity | null;
+  owner: ParticipantEntity | null;
   players: PlayerEntity[];
   bringers: BringerEntity[];
 }
@@ -30,23 +32,24 @@ export interface GameEntity {
 export interface PlayerEntity {
   id: string;
   gameId: string;
-  userId: string;
+  participantId: string;
   addedAt: Date;
-  user: UserEntity;
+  participant: ParticipantEntity;
 }
 
 export interface BringerEntity {
   id: string;
   gameId: string;
-  userId: string;
+  participantId: string;
   addedAt: Date;
-  user: UserEntity;
+  participant: ParticipantEntity;
 }
 
 // DTOs
 export interface CreateGameDto {
+  eventId: string;
   name: string;
-  userId: string;
+  participantId: string;
   isBringing: boolean;
   isPlaying: boolean;
   isPrototype?: boolean;
@@ -58,15 +61,15 @@ export interface CreateGameDto {
 }
 
 export interface CreatePlayerDto {
-  userId: string;
+  participantId: string;
 }
 
 export interface CreateBringerDto {
-  userId: string;
+  participantId: string;
 }
 
 // API Response types
-export interface User {
+export interface Participant {
   id: string;
   name: string;
 }
@@ -74,7 +77,7 @@ export interface User {
 export interface Game {
   id: string;
   name: string;
-  owner: User | null;
+  owner: Participant | null;
   bggId: number | null;
   yearPublished: number | null;
   bggRating: number | null;
@@ -90,13 +93,13 @@ export interface Game {
 
 export interface Player {
   id: string;
-  user: User;
+  participant: Participant;
   addedAt: Date;
 }
 
 export interface Bringer {
   id: string;
-  user: User;
+  participant: Participant;
   addedAt: Date;
 }
 
@@ -125,9 +128,9 @@ export interface StatisticsTimelinePoint {
   date: string;
   gamesAdded: number;
   playersAdded: number;
-  newUsers: number;
-  totalUsers: number;
-  activeUsers: number;
+  newParticipants: number;
+  totalParticipants: number;
+  activeParticipants: number;
 }
 
 export interface StatisticsTimelineData {

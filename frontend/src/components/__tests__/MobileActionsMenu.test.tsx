@@ -30,7 +30,7 @@ function createTestGame(overrides: Partial<Game> = {}): Game {
 }
 
 describe('MobileActionsMenu', () => {
-  const currentUserId = 'owner-id';
+  const currentParticipantId = 'owner-id';
 
   describe('visibility conditions', () => {
     it('renders when user is owner and game has no BGG ID', () => {
@@ -40,7 +40,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -55,7 +55,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId="other-user-id"
+          currentParticipantId="other-user-id"
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -70,7 +70,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -85,7 +85,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -102,7 +102,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -119,7 +119,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -136,7 +136,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -156,7 +156,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -180,7 +180,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -207,7 +207,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -224,7 +224,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -250,7 +250,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />
@@ -268,7 +268,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
         />
       );
@@ -286,7 +286,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />
@@ -303,7 +303,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId="different-user"
+          currentParticipantId="different-user"
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />
@@ -320,7 +320,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />
@@ -340,7 +340,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />
@@ -364,7 +364,7 @@ describe('MobileActionsMenu', () => {
       render(
         <MobileActionsMenu
           game={game}
-          currentUserId={currentUserId}
+          currentParticipantId={currentParticipantId}
           onTogglePrototype={onTogglePrototype}
           onUploadThumbnail={onUploadThumbnail}
         />

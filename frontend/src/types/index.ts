@@ -6,8 +6,8 @@
 // SSE Event Types
 export * from './sse';
 
-// User entity
-export interface User {
+// Participant entity
+export interface Participant {
   id: string;
   name: string;
 }
@@ -15,14 +15,14 @@ export interface User {
 // Player who wants to play a game
 export interface Player {
   id: string;
-  user: User;
+  participant: Participant;
   addedAt: Date;
 }
 
 // Bringer who will bring a game to the event
 export interface Bringer {
   id: string;
-  user: User;
+  participant: Participant;
   addedAt: Date;
 }
 
@@ -33,7 +33,7 @@ export type GameStatus = 'wunsch' | 'verfuegbar';
 export interface Game {
   id: string;
   name: string;
-  owner: User | null;
+  owner: Participant | null;
   bggId: number | null;
   yearPublished: number | null;
   bggRating: number | null;
@@ -73,9 +73,9 @@ export interface StatisticsTimelinePoint {
   date: string;
   gamesAdded: number;
   playersAdded: number;
-  newUsers: number;
-  totalUsers: number;
-  activeUsers: number;
+  newParticipants: number;
+  totalParticipants: number;
+  activeParticipants: number;
 }
 
 export interface StatisticsTimelineData {
@@ -94,7 +94,7 @@ export interface AuthVerifyResponse {
 
 export interface CreateGameRequest {
   name: string;
-  userId: string;
+  participantId: string;
   isBringing: boolean;
   isPlaying: boolean;
   isPrototype?: boolean;
@@ -106,18 +106,18 @@ export interface CreateGameRequest {
 }
 
 export interface AddPlayerRequest {
-  userId: string;
+  participantId: string;
 }
 
 export interface AddBringerRequest {
-  userId: string;
+  participantId: string;
 }
 
-export interface CreateUserRequest {
+export interface CreateParticipantRequest {
   name: string;
 }
 
-export interface UpdateUserRequest {
+export interface UpdateParticipantRequest {
   name: string;
 }
 
@@ -129,12 +129,12 @@ export interface GameResponse {
   game: Game;
 }
 
-export interface UsersResponse {
-  users: User[];
+export interface ParticipantsResponse {
+  participants: Participant[];
 }
 
-export interface UserResponse {
-  user: User;
+export interface ParticipantResponse {
+  participant: Participant;
 }
 
 // Error response from API

@@ -34,7 +34,7 @@ const createMockGame = (overrides: Partial<Game> = {}): Game => ({
 
 describe('GameCard BggRatingBadge Integration', () => {
   const defaultProps = {
-    currentUserId: 'user-1',
+    currentParticipantId: 'user-1',
     onAddPlayer: vi.fn(),
     onAddBringer: vi.fn(),
     onRemovePlayer: vi.fn(),

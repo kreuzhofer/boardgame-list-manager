@@ -4,12 +4,12 @@ import App from './App';
 
 // Storage key used by AuthGuard
 const AUTH_STORAGE_KEY = 'boardgame_event_auth';
-// Storage key used by useUser hook
-const USER_ID_STORAGE_KEY = 'boardgame_event_user_id';
+// Storage key used by useParticipant hook
+const PARTICIPANT_ID_STORAGE_KEY = 'boardgame_event_participant_id';
 
-// Mock user data
-const mockUser = { id: 'user-123', name: 'Test User' };
-const mockUsers = [
+// Mock participant data
+const mockParticipant = { id: 'user-123', name: 'Test User' };
+const mockParticipants = [
   { id: 'user-123', name: 'Test User' },
   { id: 'user-456', name: 'Another User' },
 ];
@@ -19,7 +19,7 @@ vi.mock('./api/client', () => ({
   getToken: vi.fn().mockReturnValue(null),
   setToken: vi.fn(),
   removeToken: vi.fn(),
-  usersApi: {
+  participantsApi: {
     getAll: vi.fn(),
     getById: vi.fn(),
     create: vi.fn(),
@@ -51,7 +51,7 @@ vi.mock('./api/client', () => ({
 }));
 
 // Import mocked module
-import { usersApi, gamesApi, statisticsApi } from './api/client';
+import { participantsApi, gamesApi, statisticsApi } from './api/client';
 
 describe('App', () => {
   beforeEach(() => {
@@ -61,9 +61,9 @@ describe('App', () => {
     vi.clearAllMocks();
     
     // Default mock implementations
-    vi.mocked(usersApi.getAll).mockResolvedValue({ users: mockUsers });
-    vi.mocked(usersApi.getById).mockResolvedValue({ user: mockUser });
-    vi.mocked(usersApi.create).mockResolvedValue({ user: mockUser });
+    vi.mocked(participantsApi.getAll).mockResolvedValue({ participants: mockParticipants });
+    vi.mocked(participantsApi.getById).mockResolvedValue({ participant: mockParticipant });
+    vi.mocked(participantsApi.create).mockResolvedValue({ participant: mockParticipant });
     vi.mocked(gamesApi.getAll).mockResolvedValue({ games: [] });
     vi.mocked(statisticsApi.get).mockResolvedValue({
       totalGames: 0,
@@ -112,7 +112,7 @@ describe('App', () => {
     });
   });
 
-  describe('when authenticated but no user stored', () => {
+  describe('when authenticated but no participant stored', () => {
     beforeEach(() => {
       // Simulate authenticated state without stored user
       sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
@@ -125,7 +125,7 @@ describe('App', () => {
       });
     });
 
-    it('shows existing users in the modal', async () => {
+    it('shows existing participants in the modal', async () => {
       render(<App />);
       await waitFor(() => {
         expect(screen.getByText('Test User')).toBeInTheDocument();
@@ -133,14 +133,14 @@ describe('App', () => {
       });
     });
 
-    it('allows selecting an existing user', async () => {
+    it('allows selecting an existing participant', async () => {
       render(<App />);
       
       await waitFor(() => {
         expect(screen.getByText('Test User')).toBeInTheDocument();
       });
       
-      // Click on the user to select them
+      // Click on the participant to select them
       fireEvent.click(screen.getByText('Test User'));
       
       // Should show confirmation dialog
@@ -156,21 +156,21 @@ describe('App', () => {
         expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
       });
       
-      // Verify user ID was stored in localStorage
-      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBe('user-123');
+      // Verify participant ID was stored in localStorage
+      expect(localStorage.getItem(PARTICIPANT_ID_STORAGE_KEY)).toBe('user-123');
     });
 
-    it('shows create user form when clicking create button', async () => {
+    it('shows create participant form when clicking create button', async () => {
       render(<App />);
       
       await waitFor(() => {
-        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
       });
       
-      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      fireEvent.click(screen.getByText('+ Neuen Teilnehmer erstellen'));
       
       await waitFor(() => {
-        expect(screen.getByText('Neuen Benutzer erstellen:')).toBeInTheDocument();
+        expect(screen.getByText('Neuen Teilnehmer erstellen:')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
       });
     });
@@ -179,10 +179,10 @@ describe('App', () => {
       render(<App />);
       
       await waitFor(() => {
-        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
       });
       
-      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      fireEvent.click(screen.getByText('+ Neuen Teilnehmer erstellen'));
       
       await waitFor(() => {
         expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
@@ -198,17 +198,17 @@ describe('App', () => {
       expect(submitButton).toBeDisabled();
     });
 
-    it('creates new user and closes modal after submission', async () => {
-      const newUser = { id: 'new-user-789', name: 'New User' };
-      vi.mocked(usersApi.create).mockResolvedValue({ user: newUser });
+    it('creates new participant and closes modal after submission', async () => {
+      const newParticipant = { id: 'new-user-789', name: 'New User' };
+      vi.mocked(participantsApi.create).mockResolvedValue({ participant: newParticipant });
       
       render(<App />);
       
       await waitFor(() => {
-        expect(screen.getByText('+ Neuen Benutzer erstellen')).toBeInTheDocument();
+        expect(screen.getByText('+ Neuen Teilnehmer erstellen')).toBeInTheDocument();
       });
       
-      fireEvent.click(screen.getByText('+ Neuen Benutzer erstellen'));
+      fireEvent.click(screen.getByText('+ Neuen Teilnehmer erstellen'));
       
       await waitFor(() => {
         expect(screen.getByPlaceholderText('Dein Name')).toBeInTheDocument();
@@ -225,27 +225,27 @@ describe('App', () => {
         expect(screen.queryByText('Wer bist du?')).not.toBeInTheDocument();
       });
       
-      // Verify user ID was stored in localStorage
-      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBe('new-user-789');
+      // Verify participant ID was stored in localStorage
+      expect(localStorage.getItem(PARTICIPANT_ID_STORAGE_KEY)).toBe('new-user-789');
     });
 
-    it('shows message when no users exist', async () => {
-      vi.mocked(usersApi.getAll).mockResolvedValue({ users: [] });
+    it('shows message when no participants exist', async () => {
+      vi.mocked(participantsApi.getAll).mockResolvedValue({ participants: [] });
       
       render(<App />);
       
       await waitFor(() => {
-        expect(screen.getByText('Noch keine Benutzer vorhanden.')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Ersten Benutzer erstellen' })).toBeInTheDocument();
+        expect(screen.getByText('Noch keine Teilnehmer vorhanden.')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Ersten Teilnehmer erstellen' })).toBeInTheDocument();
       });
     });
   });
 
-  describe('when authenticated with stored user', () => {
+  describe('when authenticated with stored participant', () => {
     beforeEach(() => {
-      // Simulate authenticated state with stored user ID
+      // Simulate authenticated state with stored participant ID
       sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-      localStorage.setItem(USER_ID_STORAGE_KEY, 'user-123');
+      localStorage.setItem(PARTICIPANT_ID_STORAGE_KEY, 'user-123');
     });
 
     it('renders the header with event name', async () => {
@@ -286,12 +286,12 @@ describe('App', () => {
       });
     });
 
-    it('displays the user name in the header', async () => {
+    it('displays the participant name in the header', async () => {
       render(<App />);
       
       await waitFor(() => {
         expect(screen.getByText('Test User')).toBeInTheDocument();
-        expect(screen.getByText('Event-Nutzer:')).toBeInTheDocument();
+        expect(screen.getByText('Teilnehmer:')).toBeInTheDocument();
       });
     });
 
@@ -303,8 +303,8 @@ describe('App', () => {
       });
     });
 
-    it('clears user if API returns not found', async () => {
-      vi.mocked(usersApi.getById).mockRejectedValue(new Error('User not found'));
+    it('clears participant if API returns not found', async () => {
+      vi.mocked(participantsApi.getById).mockRejectedValue(new Error('Participant not found'));
       
       render(<App />);
       
@@ -313,8 +313,8 @@ describe('App', () => {
         expect(screen.getByText('Wer bist du?')).toBeInTheDocument();
       });
       
-      // User ID should be cleared from localStorage
-      expect(localStorage.getItem(USER_ID_STORAGE_KEY)).toBeNull();
+      // Participant ID should be cleared from localStorage
+      expect(localStorage.getItem(PARTICIPANT_ID_STORAGE_KEY)).toBeNull();
     });
   });
 });

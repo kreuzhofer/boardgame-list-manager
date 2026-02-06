@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.2.4 (05. Februar 2026)
+- Du kannst die Liste jetzt nach Datum des Eintrags oder nach Namen des Spiels sortieren. Einfach auf den Link in der oberen Zeile der Spieleliste klicken.
+
 ## 0.2.3 (04. Februar 2026)
 - Neue Druckansicht: Liste der Spiele, die Du mitbringst, und Liste der Spiele, bei denen Du mitspielen willst
 - Neue Statistiken: Veröffentlichungsjahre als Balkendiagramm mit Heatmap-Farben

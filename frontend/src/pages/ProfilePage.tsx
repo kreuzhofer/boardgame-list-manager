@@ -342,6 +342,7 @@ export function ProfilePage() {
         </div>
 
         {/* Account Deactivation */}
+        {account.role !== 'admin' && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold text-red-600 mb-4">Konto deaktivieren</h2>
           <p className="text-gray-600 mb-4">
@@ -401,6 +402,7 @@ export function ProfilePage() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

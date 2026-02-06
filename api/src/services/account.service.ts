@@ -260,6 +260,15 @@ export class AccountService {
       );
     }
 
+    // Prevent admin self-deactivation
+    if (account.role === 'admin') {
+      throw new AccountError(
+        AccountErrorCodes.SELF_DEACTIVATION,
+        AccountErrorMessages.SELF_DEACTIVATION,
+        403
+      );
+    }
+
     const isValid = await this.verifyPassword(password, account.passwordHash);
     if (!isValid) {
       throw new AccountError(
@@ -340,7 +349,7 @@ export class AccountService {
   /**
    * Set account status (admin only)
    */
-  async setStatus(accountId: string, status: 'active' | 'deactivated'): Promise<AccountResponse> {
+  async setStatus(accountId: string, status: 'active' | 'deactivated', actorId?: string): Promise<AccountResponse> {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
     });
@@ -350,6 +359,15 @@ export class AccountService {
         AccountErrorCodes.ACCOUNT_NOT_FOUND,
         AccountErrorMessages.ACCOUNT_NOT_FOUND,
         404
+      );
+    }
+
+    // Prevent admin self-deactivation
+    if (status === 'deactivated' && actorId === accountId && account.role === 'admin') {
+      throw new AccountError(
+        AccountErrorCodes.SELF_DEACTIVATION,
+        AccountErrorMessages.SELF_DEACTIVATION,
+        403
       );
     }
 

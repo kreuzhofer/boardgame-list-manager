@@ -53,8 +53,8 @@ Task status reflects checkbox counts inside `tasks.md`; it is not a guarantee th
 | 017-authentication-system | Authentication System Requirements | R | — |
 | 018-event-management | Event Management Requirements | R | — |
 | 019-admin-panel | Admin Panel Requirements | R | — |
-| 020-landing-page | Landing Page Requirements | R | — |
-| 021-email-system | Email System Requirements | R | — |
+| 020-email-system | Email System Requirements | R | — |
+| 021-landing-page | Landing Page Requirements | R | — |
 | 022-prototype-toggle | Prototype Toggle | RDT | 31/31 |
 | 023-custom-thumbnail-upload | Custom Thumbnail Upload | RDT | 44/44 |
 
@@ -64,4 +64,3 @@ Task status reflects checkbox counts inside `tasks.md`; it is not a guarantee th
 - Verify attendee flow remains password-only for the event (no account required).
 - Validate organizer account flows and admin operations.
 - Confirm BGG enrichment and thumbnail pipelines with real data and configured envs.
-

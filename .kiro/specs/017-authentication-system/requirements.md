@@ -1,30 +1,31 @@
 # Authentication System Requirements
 
 ## Overview
-Implement a unified authentication system for Brettspieltreff.app that handles account owner login, attendee event access, and session management with JWT tokens.
+Define authentication for two distinct audiences:
+1) Account owners/admins (organizers) using JWT-based sessions.
+2) Event attendees using a shared event password without accounts.
+
+This spec anticipates event-specific access via slugs (e.g. `/lieberhausen2026`) while maintaining backward compatibility with the default event at `/` during the transition period.
 
 ## User Stories
 
 ### 1. Account Owner Login
-As an account owner, I want to log in to my account so that I can access the management dashboard.
+As an account owner, I want to log in so that I can access my profile and management tools.
 
 #### Acceptance Criteria
-- 1.1 User can log in with email and password at `/manage/login`
-- 1.2 Successful login redirects to `/manage` (event list dashboard)
-- 1.3 Failed login shows appropriate error message (invalid credentials)
-- 1.4 Deactivated accounts cannot log in (shown message that account is deactivated)
-- 1.5 Admin accounts logging in are redirected to `/admin` instead of `/manage`
-
-Note: Unverified account handling will be added with 021-email-system.
+- 1.1 User can log in with email and password at `/login`
+- 1.2 Successful login stores a JWT token in localStorage
+- 1.3 Successful login redirects to `/`
+- 1.4 Failed login shows an error message for invalid credentials
+- 1.5 Deactivated accounts cannot log in and receive a clear error message
 
 ### 2. Account Owner Logout
-As a logged-in account owner, I want to log out so that my session is terminated.
+As a logged-in account owner, I want to log out so that my session is terminated on this device.
 
 #### Acceptance Criteria
-- 2.1 User can log out from any page via a logout button
-- 2.2 Logout invalidates the current session token
-- 2.3 After logout, user is redirected to the landing page
-- 2.4 Attempting to access protected routes after logout redirects to login
+- 2.1 User can log out via a logout action in the account UI
+- 2.2 Logout removes the local JWT token and clears account state
+- 2.3 Protected account routes require re-authentication after logout
 
 ### 3. Session Management
 As an account owner, I want my session to persist so that I don't have to log in repeatedly.
@@ -32,90 +33,77 @@ As an account owner, I want my session to persist so that I don't have to log in
 #### Acceptance Criteria
 - 3.1 JWT tokens are issued upon successful login
 - 3.2 Tokens expire after 7 days
-- 3.3 Expired tokens require re-authentication (no refresh token mechanism)
-- 3.4 Tokens are stored in httpOnly cookies for security
-- 3.5 Each login creates a new session record for "log out all devices" functionality
+- 3.3 Expired tokens require re-authentication (no refresh tokens)
+- 3.4 Each login creates a session record for server-side session tracking
+- 3.5 Account session APIs allow listing sessions and invalidating sessions
 
 ### 4. Log Out All Devices
 As an account owner, I want to log out all my sessions so that I can secure my account.
 
 #### Acceptance Criteria
-- 4.1 User can trigger "log out all devices" from profile page
+- 4.1 User can log out all devices from the profile page
 - 4.2 All existing sessions for the account are invalidated
-- 4.3 User remains logged in on current device (new session created)
-- 4.4 This action is also triggered automatically on password change
+- 4.3 User is logged out locally after this action
+- 4.4 This action is triggered automatically on password change
 
-### 5. Attendee Event Access
-As an event attendee, I want to access an event with a password so that I can participate.
+### 5. Attendee Event Access (Slug-Based)
+As an event attendee, I want to access an event by link and password so that I can participate without an account.
 
 #### Acceptance Criteria
-- 5.1 Accessing `/{slug}` for a private event shows a password prompt
-- 5.2 Correct password grants access to the event
-- 5.3 Access is persisted in localStorage (per-event, keyed by slug)
-- 5.4 Persisted access lasts for 7 days
-- 5.5 Public events (no password) are accessible without authentication
-- 5.6 Attendees do not need an account - they just enter/select a name after password
+- 5.1 Accessing `/{slug}` prompts for the event password
+- 5.2 Correct password grants access to that event
+- 5.3 Event access is persisted per event (keyed by slug or event id)
+- 5.4 When no slug is present (root `/`), the system uses the default event during migration
+- 5.5 Attendees do not need accounts; they enter/select a name after password
 
 ### 6. Protected Routes
 As the system, I need to protect routes based on authentication status and role.
 
 #### Acceptance Criteria
-- 6.1 `/manage/*` routes require authenticated account_owner or admin
-- 6.2 `/admin/*` routes require authenticated admin role
-- 6.3 `/{slug}` routes check event password if event is private
-- 6.4 Unauthenticated access to protected routes redirects to appropriate login
-- 6.5 Insufficient role access shows 403 forbidden page
-
-### 7. Rate Limiting
-As the system, I need to prevent brute force attacks on authentication endpoints.
-
-#### Acceptance Criteria
-- 7.1 Login attempts are rate limited to 5 attempts per IP per 15 minutes
-- 7.2 Password reset requests are rate limited to 3 per email per hour
-- 7.3 Rate limited requests receive 429 Too Many Requests response
-- 7.4 Rate limit headers are included in responses (X-RateLimit-*)
+- 6.1 `/profile` and `/admin` routes require authenticated account access
+- 6.2 `/admin` routes require the admin role
+- 6.3 Event routes `/{slug}` require event password access
+- 6.4 Unauthenticated access to protected routes redirects to login or password prompt
 
 ## Data Model
 
 ### Session Entity
 - `id`: UUID, primary key
 - `accountId`: UUID, foreign key to Account
-- `tokenHash`: String, hashed JWT identifier
 - `userAgent`: String, nullable
 - `ipAddress`: String, nullable
 - `createdAt`: DateTime
-- `expiresAt`: DateTime
-- `revokedAt`: DateTime, nullable
+- `lastUsedAt`: DateTime
 
-### EventAccess (localStorage structure)
-```json
-{
-  "eventAccess": {
-    "{slug}": {
-      "authenticated": true,
-      "attendeeName": "string",
-      "expiresAt": "ISO datetime"
-    }
-  }
-}
-```
+### Event Access Storage
+- Stored per event (by slug or event id)
+- Persistence mechanism is implementation-defined (localStorage or sessionStorage)
 
 ## API Endpoints
 
 ### Account Authentication
-- `POST /api/auth/login` - Account owner login
-- `POST /api/auth/logout` - Logout current session
-- `POST /api/auth/logout-all` - Logout all sessions
-- `GET /api/auth/me` - Get current authenticated user
+- `POST /api/accounts/login` - Account login
+- `POST /api/accounts/register` - Account registration
+- `GET /api/accounts/me` - Get current account
+
+### Session Management
+- `GET /api/sessions` - List sessions for account
+- `DELETE /api/sessions` - Logout all sessions
+- `DELETE /api/sessions/{id}` - Logout a specific session
 
 ### Event Access
-- `POST /api/events/{slug}/access` - Verify event password
-- `GET /api/events/{slug}/public` - Get public event info (for password prompt)
+- `POST /api/auth/verify` - Verify event password (uses resolved event id)
 
 ## Non-Functional Requirements
 
 - JWT secret must be configured via environment variable
-- All authentication endpoints must be served over HTTPS
-- Password comparison must use constant-time comparison to prevent timing attacks
-- Session tokens should include minimal claims (accountId, role, sessionId)
+- Authentication endpoints must be served over HTTPS in production
+- Password comparison must use constant-time comparison
 - Failed login attempts should not reveal whether email exists
+
+## Out of Scope (Current State)
+
+- Public events (no password)
+- Rate limiting on authentication endpoints
+- Email verification and password reset (see spec 021)
+

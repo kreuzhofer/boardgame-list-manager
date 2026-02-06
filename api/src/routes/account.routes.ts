@@ -280,6 +280,7 @@ router.patch('/:id/role', requireAuth, requireAdmin, async (req: Request, res: R
  */
 router.patch('/:id/status', requireAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const { id } = req.params;
     const { status } = req.body;
 
@@ -291,7 +292,7 @@ router.patch('/:id/status', requireAuth, requireAdmin, async (req: Request, res:
       return;
     }
 
-    const account = await accountService.setStatus(id, status);
+    const account = await accountService.setStatus(id, status, authReq.account.id);
     res.json({ account });
   } catch (error) {
     if (error instanceof AccountError) {

@@ -55,6 +55,7 @@ export const AccountErrorCodes = {
   NOT_AUTHORIZED: 'NOT_AUTHORIZED',
   ACCOUNT_NOT_FOUND: 'ACCOUNT_NOT_FOUND',
   SESSION_NOT_FOUND: 'SESSION_NOT_FOUND',
+  SELF_DEACTIVATION: 'SELF_DEACTIVATION',
 } as const;
 
 export type AccountErrorCode = typeof AccountErrorCodes[keyof typeof AccountErrorCodes];
@@ -73,4 +74,5 @@ export const AccountErrorMessages: Record<AccountErrorCode, string> = {
   NOT_AUTHORIZED: 'Keine Berechtigung für diese Aktion.',
   ACCOUNT_NOT_FOUND: 'Konto nicht gefunden.',
   SESSION_NOT_FOUND: 'Sitzung nicht gefunden.',
+  SELF_DEACTIVATION: 'Administratoren können ihr eigenes Konto nicht deaktivieren.',
 };

@@ -114,7 +114,13 @@ export function AdminPage() {
                     </button>
                     <button
                       onClick={() => handleStatusToggle(entry)}
-                      className="text-xs px-2 py-1 rounded bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                      disabled={entry.id === account?.id && entry.status === 'active'}
+                      title={entry.id === account?.id && entry.status === 'active' ? 'Eigenes Konto kann nicht deaktiviert werden' : undefined}
+                      className={`text-xs px-2 py-1 rounded ${
+                        entry.id === account?.id && entry.status === 'active'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                      }`}
                     >
                       {entry.status === 'active' ? 'Deaktivieren' : 'Aktivieren'}
                     </button>

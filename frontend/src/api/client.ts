@@ -45,6 +45,24 @@ export const removeToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
 
+// Event token storage key
+export const EVENT_TOKEN_KEY = 'boardgame_event_token';
+
+// Get stored event token
+export const getEventToken = (): string | null => {
+  return localStorage.getItem(EVENT_TOKEN_KEY);
+};
+
+// Set event token
+export const setEventToken = (token: string): void => {
+  localStorage.setItem(EVENT_TOKEN_KEY, token);
+};
+
+// Remove event token
+export const removeEventToken = (): void => {
+  localStorage.removeItem(EVENT_TOKEN_KEY);
+};
+
 // Custom error class for API errors
 export class ApiError extends Error {
   code: string;
@@ -75,6 +93,14 @@ async function fetchApi<T>(
     const token = getToken();
     if (token) {
       (defaultHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  // Attach event token as fallback when no account token is present
+  if (!(defaultHeaders as Record<string, string>)['Authorization']) {
+    const eventToken = getEventToken();
+    if (eventToken) {
+      (defaultHeaders as Record<string, string>)['Authorization'] = `Bearer ${eventToken}`;
     }
   }
 

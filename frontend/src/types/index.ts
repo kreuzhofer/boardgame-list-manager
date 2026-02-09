@@ -90,6 +90,7 @@ export interface AuthVerifyRequest {
 export interface AuthVerifyResponse {
   success: boolean;
   message?: string;
+  token?: string;
 }
 
 export interface CreateGameRequest {

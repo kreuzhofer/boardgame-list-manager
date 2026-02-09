@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, FormEvent } from 'react';
 import { authApi, ApiError } from '../api/client';
 
 interface PasswordScreenProps {
-  onAuthenticated: () => void;
+  onAuthenticated: (token: string) => void;
 }
 
 // Get event name from environment variable
@@ -44,7 +44,7 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
       const response = await authApi.verify(password);
       
       if (response.success) {
-        onAuthenticated();
+        onAuthenticated(response.token || '');
       } else {
         setError('Falsches Passwort. Bitte erneut versuchen.');
       }

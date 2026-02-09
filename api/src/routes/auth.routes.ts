@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db/prisma';
 import { EventService } from '../services/event.service';
+import { eventTokenService } from '../services/event-token.service';
 import { resolveEventId } from '../middleware/event.middleware';
 
 const router = Router();
@@ -12,7 +13,7 @@ const eventService = new EventService(prisma);
  * 
  * Request body: { password: string }
  * Response: 
- *   - 200 { success: true } if password matches
+ *   - 200 { success: true, token: "eyJ..." } if password matches
  *   - 401 { success: false, message: "Falsches Passwort" } if password is incorrect
  *   - 400 { success: false, message: "Bitte Passwort eingeben." } if password is missing
  */
@@ -31,7 +32,8 @@ router.post('/verify', async (req: Request, res: Response) => {
   const isValid = await eventService.verifyEventPassword(eventId, password);
 
   if (isValid) {
-    return res.json({ success: true });
+    const token = eventTokenService.sign(eventId);
+    return res.json({ success: true, token });
   }
 
   return res.status(401).json({

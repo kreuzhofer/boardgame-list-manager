@@ -1,15 +1,13 @@
 /**
  * AuthGuard component for protecting routes
- * Checks sessionStorage for authentication state
- * Shows PasswordScreen if not authenticated
- * Requirements: 1.1, 1.4, 1.5
+ * Reads JWT event token from localStorage, decodes payload to check expiry
+ * Shows PasswordScreen if token is missing or expired
+ * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2
  */
 
 import { useState, useEffect, ReactNode } from 'react';
 import { PasswordScreen } from './PasswordScreen';
-
-// Storage key for authentication state
-const AUTH_STORAGE_KEY = 'boardgame_event_auth';
+import { getEventToken, setEventToken, removeEventToken } from '../api/client';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -17,31 +15,47 @@ interface AuthGuardProps {
 }
 
 /**
- * Check if event access is authenticated by reading from sessionStorage
+ * Decode a JWT payload (base64) without cryptographic verification.
+ * The frontend only needs to read the `exp` claim for expiry checks;
+ * actual signature verification happens on the backend.
  */
-function checkAuthentication(): boolean {
+function decodeTokenPayload(token: string): { exp?: number } | null {
   try {
-    const authState = sessionStorage.getItem(AUTH_STORAGE_KEY);
-    return authState === 'true';
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    return payload;
   } catch {
-    // sessionStorage might not be available
-    return false;
+    return null;
   }
 }
 
 /**
- * Store authentication state in sessionStorage
+ * Check if event access is authenticated by reading the JWT from localStorage
+ * and verifying it has not expired.
  */
-function setAuthentication(isAuthenticated: boolean): void {
+function checkAuthentication(): boolean {
   try {
-    if (isAuthenticated) {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-    } else {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    const token = getEventToken();
+    if (!token) return false;
+
+    const payload = decodeTokenPayload(token);
+    if (!payload || !payload.exp) {
+      removeEventToken();
+      return false;
     }
+
+    const now = Date.now() / 1000;
+    if (payload.exp < now) {
+      removeEventToken();
+      return false;
+    }
+
+    return true;
   } catch {
-    // sessionStorage might not be available
-    console.warn('Unable to store authentication state in sessionStorage');
+    // localStorage might not be available
+    console.warn('Unable to read authentication state from localStorage');
+    return false;
   }
 }
 
@@ -55,8 +69,8 @@ export function AuthGuard({ children, onAuthChange }: AuthGuardProps) {
     onAuthChange?.(isAuthenticated);
   }, [isAuthenticated, onAuthChange]);
 
-  const handleAuthenticated = () => {
-    setAuthentication(true);
+  const handleAuthenticated = (token: string) => {
+    setEventToken(token);
     setIsAuthenticated(true);
   };
 
@@ -73,7 +87,7 @@ export function AuthGuard({ children, onAuthChange }: AuthGuardProps) {
  * Utility function to clear authentication (for logout)
  */
 export function clearAuthentication(): void {
-  setAuthentication(false);
+  removeEventToken();
 }
 
 /**

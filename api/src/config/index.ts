@@ -21,6 +21,9 @@ export const config = {
     secret: process.env.JWT_SECRET || 'development-jwt-secret-change-in-production',
     expiresIn: '7d',
   },
+  eventToken: {
+    expiresIn: process.env.EVENT_TOKEN_EXPIRY || '7d',
+  },
   event: {
     name: process.env.EVENT_NAME || 'Brettspiel-Event',
   },

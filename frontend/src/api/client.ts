@@ -21,6 +21,7 @@ import type {
   BggSearchResponse,
 } from '../types';
 import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse } from '../types/account';
+import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
 
 // Get API URL from environment variable
 const getApiUrl = (): string => {
@@ -45,22 +46,34 @@ export const removeToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
 
-// Event token storage key
+// Event token storage — per-event keyed by slug, backward-compatible
 export const EVENT_TOKEN_KEY = 'boardgame_event_token';
 
-// Get stored event token
-export const getEventToken = (): string | null => {
-  return localStorage.getItem(EVENT_TOKEN_KEY);
+function eventTokenKey(slug?: string): string {
+  return slug ? `${EVENT_TOKEN_KEY}:${slug}` : EVENT_TOKEN_KEY;
+}
+
+export const getEventToken = (slug?: string): string | null => {
+  return localStorage.getItem(eventTokenKey(slug));
 };
 
-// Set event token
-export const setEventToken = (token: string): void => {
-  localStorage.setItem(EVENT_TOKEN_KEY, token);
+export const setEventToken = (token: string, slug?: string): void => {
+  localStorage.setItem(eventTokenKey(slug), token);
 };
 
-// Remove event token
-export const removeEventToken = (): void => {
-  localStorage.removeItem(EVENT_TOKEN_KEY);
+export const removeEventToken = (slug?: string): void => {
+  localStorage.removeItem(eventTokenKey(slug));
+};
+
+// Active event slug — set by EventContext so fetchApi sends the right token
+let activeEventSlug: string | undefined;
+
+export const setActiveEventSlug = (slug: string | undefined): void => {
+  activeEventSlug = slug;
+};
+
+export const getActiveEventSlug = (): string | undefined => {
+  return activeEventSlug;
 };
 
 // Custom error class for API errors
@@ -98,7 +111,7 @@ async function fetchApi<T>(
 
   // Attach event token as fallback when no account token is present
   if (!(defaultHeaders as Record<string, string>)['Authorization']) {
-    const eventToken = getEventToken();
+    const eventToken = getEventToken(activeEventSlug);
     if (eventToken) {
       (defaultHeaders as Record<string, string>)['Authorization'] = `Bearer ${eventToken}`;
     }
@@ -149,8 +162,9 @@ async function fetchApi<T>(
 
 // Authentication API
 export const authApi = {
-  verify: (password: string): Promise<AuthVerifyResponse> => {
-    const body: AuthVerifyRequest = { password };
+  verify: (password: string, slug?: string): Promise<AuthVerifyResponse> => {
+    const body: AuthVerifyRequest & { slug?: string } = { password };
+    if (slug) body.slug = slug;
     return fetchApi<AuthVerifyResponse>('/api/auth/verify', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -489,6 +503,35 @@ export const thumbnailsApi = {
   },
 };
 
+// Events API (account-scoped event management)
+export const eventsApi = {
+  getAll: (): Promise<{ events: Event[] }> => {
+    return fetchApi<{ events: Event[] }>('/api/events', {}, true);
+  },
+
+  getById: (id: string): Promise<{ event: Event }> => {
+    return fetchApi<{ event: Event }>(`/api/events/${id}`, {}, true);
+  },
+
+  create: (data: CreateEventRequest): Promise<{ event: Event }> => {
+    return fetchApi<{ event: Event }>('/api/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  },
+
+  update: (id: string, data: UpdateEventRequest): Promise<{ event: Event }> => {
+    return fetchApi<{ event: Event }>(`/api/events/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }, true);
+  },
+
+  getBySlug: (slug: string): Promise<{ event: EventPublicInfo }> => {
+    return fetchApi<{ event: EventPublicInfo }>(`/api/events/by-slug/${slug}`);
+  },
+};
+
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
@@ -499,6 +542,7 @@ export const api = {
   accounts: accountsApi,
   sessions: sessionsApi,
   thumbnails: thumbnailsApi,
+  events: eventsApi,
 };
 
 export default api;

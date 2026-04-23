@@ -72,7 +72,7 @@ export function useSSE(options: UseSSEOptions): UseSSEResult {
       eventSourceRef.current.close();
     }
 
-    const url = `${getApiUrl()}/api/events`;
+    const url = `${getApiUrl()}/api/sse`;
     
     try {
       const eventSource = new EventSource(url);

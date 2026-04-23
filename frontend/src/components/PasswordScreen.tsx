@@ -8,22 +8,24 @@ import { useState, useRef, useEffect, FormEvent } from 'react';
 import { authApi, ApiError } from '../api/client';
 
 interface PasswordScreenProps {
+  slug?: string;
+  eventName?: string;
   onAuthenticated: (token: string) => void;
 }
 
 // Get event name from environment variable
-const getEventName = (): string => {
+const getDefaultEventName = (): string => {
   return import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
 };
 
-export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
+export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated }: PasswordScreenProps) {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  const eventName = getEventName();
+  const eventName = eventNameProp || getDefaultEventName();
 
   useEffect(() => {
     passwordInputRef.current?.focus();
@@ -41,7 +43,7 @@ export function PasswordScreen({ onAuthenticated }: PasswordScreenProps) {
     setIsLoading(true);
 
     try {
-      const response = await authApi.verify(password);
+      const response = await authApi.verify(password, slug);
       
       if (response.success) {
         onAuthenticated(response.token || '');

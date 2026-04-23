@@ -1,6 +1,9 @@
 // SSE Event Types
 export * from './sse';
 
+// Event types
+export * from './event';
+
 // Participant entity type
 export interface ParticipantEntity {
   id: string;

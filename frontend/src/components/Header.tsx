@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Participant } from '../types';
 
 interface HeaderProps {
+  eventName?: string;
   participant?: Participant;
   onParticipantUpdated?: (participant: Participant) => void;
   onParticipantSwitch?: () => void;
@@ -36,8 +37,8 @@ const DESKTOP_TABS = [
   { path: '/statistics', label: 'Statistiken' },
 ];
 
-export function Header({ participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
-  const eventName = getEventName();
+export function Header({ eventName: eventNameProp, participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
+  const eventName = eventNameProp || getEventName();
   const location = useLocation();
   const { isAuthenticated: isAccountAuthenticated, account, logout: accountLogout } = useAuth();
 
@@ -81,6 +82,12 @@ export function Header({ participant, onParticipantUpdated, onParticipantSwitch 
             {/* Account management links */}
             {isAccountAuthenticated && account ? (
               <>
+                <Link
+                  to="/events"
+                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                >
+                  Meine Events
+                </Link>
                 {account.role === 'admin' && (
                   <Link
                     to="/admin"

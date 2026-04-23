@@ -78,7 +78,7 @@ describe('useSSE', () => {
       }));
 
       expect(MockEventSource.instances).toHaveLength(1);
-      expect(MockEventSource.instances[0].url).toContain('/api/events');
+      expect(MockEventSource.instances[0].url).toContain('/api/sse');
     });
 
     it('should not establish connection when disabled', () => {

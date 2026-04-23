@@ -12,7 +12,7 @@ export type { ImportStatus } from './bggImportService';
 export { BggEnrichmentService, bggEnrichmentService } from './bggEnrichmentService';
 export type { EnrichmentData, BulkEnrichmentStatus } from './bggEnrichmentService';
 export { ActivityLogService, activityLogService } from './activityLog.service';
-export { EventService } from './event.service';
+export { EventService, eventService, slugify, RESERVED_SLUGS } from './event.service';
 export { GameService, gameService } from './game.service';
 export { SSEManager, sseManager } from './sse.service';
 export { StatisticsService, statisticsService } from './statistics.service';

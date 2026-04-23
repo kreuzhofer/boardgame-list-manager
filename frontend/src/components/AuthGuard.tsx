@@ -11,6 +11,8 @@ import { getEventToken, setEventToken, removeEventToken } from '../api/client';
 
 interface AuthGuardProps {
   children: ReactNode;
+  slug?: string;
+  eventName?: string;
   onAuthChange?: (isAuthenticated: boolean) => void;
 }
 
@@ -34,20 +36,20 @@ function decodeTokenPayload(token: string): { exp?: number } | null {
  * Check if event access is authenticated by reading the JWT from localStorage
  * and verifying it has not expired.
  */
-function checkAuthentication(): boolean {
+function checkAuthentication(slug?: string): boolean {
   try {
-    const token = getEventToken();
+    const token = getEventToken(slug);
     if (!token) return false;
 
     const payload = decodeTokenPayload(token);
     if (!payload || !payload.exp) {
-      removeEventToken();
+      removeEventToken(slug);
       return false;
     }
 
     const now = Date.now() / 1000;
     if (payload.exp < now) {
-      removeEventToken();
+      removeEventToken(slug);
       return false;
     }
 
@@ -59,10 +61,15 @@ function checkAuthentication(): boolean {
   }
 }
 
-export function AuthGuard({ children, onAuthChange }: AuthGuardProps) {
+export function AuthGuard({ children, slug, eventName, onAuthChange }: AuthGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return checkAuthentication();
+    return checkAuthentication(slug);
   });
+
+  // Re-check auth when slug changes
+  useEffect(() => {
+    setIsAuthenticated(checkAuthentication(slug));
+  }, [slug]);
 
   // Notify parent of auth state changes
   useEffect(() => {
@@ -70,13 +77,13 @@ export function AuthGuard({ children, onAuthChange }: AuthGuardProps) {
   }, [isAuthenticated, onAuthChange]);
 
   const handleAuthenticated = (token: string) => {
-    setEventToken(token);
+    setEventToken(token, slug);
     setIsAuthenticated(true);
   };
 
   // Show password screen if not authenticated
   if (!isAuthenticated) {
-    return <PasswordScreen onAuthenticated={handleAuthenticated} />;
+    return <PasswordScreen slug={slug} eventName={eventName} onAuthenticated={handleAuthenticated} />;
   }
 
   // Render children if authenticated
@@ -86,15 +93,15 @@ export function AuthGuard({ children, onAuthChange }: AuthGuardProps) {
 /**
  * Utility function to clear authentication (for logout)
  */
-export function clearAuthentication(): void {
-  removeEventToken();
+export function clearAuthentication(slug?: string): void {
+  removeEventToken(slug);
 }
 
 /**
  * Utility function to check if event access is authenticated
  */
-export function isEventAuthenticated(): boolean {
-  return checkAuthentication();
+export function isEventAuthenticated(slug?: string): boolean {
+  return checkAuthentication(slug);
 }
 
 export default AuthGuard;

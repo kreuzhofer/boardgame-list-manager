@@ -36,7 +36,7 @@ describe('ParticipantRepository', () => {
     const event = await prisma.event.create({
       data: {
         name: `Participant Repository Test ${Date.now()}`,
-        passwordHash: 'test-hash',
+        password: 'test-password',
         ownerAccountId: account.id,
       },
     });

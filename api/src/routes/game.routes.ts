@@ -1,13 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { gameService } from '../services/game.service';
-import { EventService } from '../services/event.service';
+import { eventService } from '../services/event.service';
 import { resolveOptionalAccount } from '../middleware/auth.middleware';
 import { resolveEventId } from '../middleware/event.middleware';
 import { resolveParticipantId, resolveParticipantIdFromBody, resolveParticipantIdFromParams } from '../middleware/participant.middleware';
-import { prisma } from '../db/prisma';
 
 const router = Router();
-const eventService = new EventService(prisma);
 
 /**
  * GET /api/games

@@ -19,6 +19,29 @@ vi.mock('./api/client', () => ({
   getToken: vi.fn().mockReturnValue(null),
   setToken: vi.fn(),
   removeToken: vi.fn(),
+  EVENT_TOKEN_KEY: 'boardgame_event_token',
+  getEventToken: vi.fn((slug?: string) => {
+    const key = slug ? `boardgame_event_token:${slug}` : 'boardgame_event_token';
+    return localStorage.getItem(key);
+  }),
+  setEventToken: vi.fn((token: string, slug?: string) => {
+    const key = slug ? `boardgame_event_token:${slug}` : 'boardgame_event_token';
+    localStorage.setItem(key, token);
+  }),
+  removeEventToken: vi.fn((slug?: string) => {
+    const key = slug ? `boardgame_event_token:${slug}` : 'boardgame_event_token';
+    localStorage.removeItem(key);
+  }),
+  authApi: {
+    verify: vi.fn(),
+  },
+  eventsApi: {
+    getAll: vi.fn().mockResolvedValue({ events: [] }),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    getBySlug: vi.fn(),
+  },
   participantsApi: {
     getAll: vi.fn(),
     getById: vi.fn(),

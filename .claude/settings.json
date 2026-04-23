@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'docker-compose '; then echo 'BLOCK: Use \"docker compose\" (V2 syntax), not \"docker-compose\" (legacy).'; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE 'cd api.*npm test|api/.*npm test' && ! echo \"$TOOL_INPUT\" | grep -q '\\-\\-runInBand'; then echo 'BLOCK: Backend tests must use --runInBand to prevent DB conflicts.'; exit 2; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "werner@kreuzhofer-plugins": true
+  }
+}

@@ -6,7 +6,8 @@ export class EventRepository {
     return prisma.event.findMany({
       where: { ownerAccountId },
       orderBy: { createdAt: 'desc' },
-    }) as Promise<EventEntity[]>;
+      include: { _count: { select: { participants: true, games: true } } },
+    }) as unknown as Promise<EventEntity[]>;
   }
 
   async findById(id: string): Promise<EventEntity | null> {

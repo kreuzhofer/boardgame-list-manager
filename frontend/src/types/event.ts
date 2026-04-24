@@ -10,6 +10,8 @@ export interface Event {
   notes: string | null;
   fees: string | null;
   isDefault: boolean;
+  participantCount: number;
+  gameCount: number;
   createdAt: string;
   updatedAt: string;
 }

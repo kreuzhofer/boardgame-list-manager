@@ -13,6 +13,7 @@ export interface EventEntity {
   ownerAccountId: string;
   createdAt: Date;
   updatedAt: Date;
+  _count?: { participants: number; games: number };
 }
 
 /** API response for event owners */
@@ -28,6 +29,8 @@ export interface EventResponse {
   notes: string | null;
   fees: string | null;
   isDefault: boolean;
+  participantCount: number;
+  gameCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +79,8 @@ export function toEventResponse(entity: EventEntity): EventResponse {
     notes: entity.notes,
     fees: entity.fees,
     isDefault: entity.isDefault,
+    participantCount: entity._count?.participants ?? 0,
+    gameCount: entity._count?.games ?? 0,
     createdAt: entity.createdAt.toISOString(),
     updatedAt: entity.updatedAt.toISOString(),
   };

@@ -92,8 +92,10 @@ export function EventsPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Name</th>
                 <th className="text-left px-4 py-3 font-medium">Slug</th>
+                <th className="text-right px-4 py-3 font-medium">Teilnehmer</th>
+                <th className="text-right px-4 py-3 font-medium">Spiele</th>
                 <th className="text-left px-4 py-3 font-medium">Zeitraum</th>
-                <th className="text-left px-4 py-3 font-medium">Link</th>
+                <th className="text-left px-4 py-3 font-medium">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -115,19 +117,35 @@ export function EventsPage() {
                   <td className="px-4 py-3 text-gray-600 font-mono text-xs">
                     {event.slug}
                   </td>
+                  <td className="px-4 py-3 text-right text-gray-600">
+                    {event.participantCount}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-600">
+                    {event.gameCount}
+                  </td>
                   <td className="px-4 py-3 text-gray-600">
                     {formatDate(event.startsAt)}
                     {event.endsAt && ` – ${formatDate(event.endsAt)}`}
                   </td>
                   <td className="px-4 py-3">
-                    <a
-                      href={`/${event.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 hover:underline text-xs font-mono"
-                    >
-                      /{event.slug}
-                    </a>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`/${event.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                      >
+                        Öffnen
+                      </a>
+                      <a
+                        href={`/${event.slug}/statistics`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100"
+                      >
+                        Statistiken
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}

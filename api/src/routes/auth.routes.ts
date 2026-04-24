@@ -1,11 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../db/prisma';
-import { EventService } from '../services/event.service';
+import { eventService } from '../services/event.service';
 import { eventTokenService } from '../services/event-token.service';
 import { resolveEventId } from '../middleware/event.middleware';
 
 const router = Router();
-const eventService = new EventService(prisma);
 
 /**
  * POST /api/auth/verify
@@ -18,7 +16,7 @@ const eventService = new EventService(prisma);
  *   - 400 { success: false, message: "Bitte Passwort eingeben." } if password is missing
  */
 router.post('/verify', async (req: Request, res: Response) => {
-  const { password, eventId: bodyEventId } = req.body;
+  const { password, eventId: bodyEventId, slug } = req.body;
 
   // Check if password is provided
   if (!password || typeof password !== 'string') {
@@ -28,7 +26,21 @@ router.post('/verify', async (req: Request, res: Response) => {
     });
   }
 
-  const eventId = typeof bodyEventId === 'string' ? bodyEventId : await resolveEventId(req);
+  // Resolve event: slug → eventId → header/query → default
+  let eventId: string;
+  if (typeof slug === 'string') {
+    const event = await eventService.getEventBySlug(slug);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event nicht gefunden.',
+      });
+    }
+    eventId = event.id;
+  } else {
+    eventId = typeof bodyEventId === 'string' ? bodyEventId : await resolveEventId(req);
+  }
+
   const isValid = await eventService.verifyEventPassword(eventId, password);
 
   if (isValid) {

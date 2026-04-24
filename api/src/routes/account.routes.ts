@@ -256,7 +256,8 @@ router.patch('/:id/role', requireAuth, requireAdmin, async (req: Request, res: R
       return;
     }
 
-    const account = await accountService.setRole(id, role);
+    const authReq = req as AuthenticatedRequest;
+    const account = await accountService.setRole(id, role, authReq.account.id);
     res.json({ account });
   } catch (error) {
     if (error instanceof AccountError) {

@@ -59,7 +59,7 @@ describe('SSE Broadcast Property Tests', () => {
     const event = await prisma.event.create({
       data: {
         name: `SSE Broadcast Test ${Date.now()}`,
-        passwordHash: 'test-hash',
+        password: 'test-password',
         ownerAccountId: account.id,
       },
     });

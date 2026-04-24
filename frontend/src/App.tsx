@@ -30,6 +30,9 @@ import { AdminPage } from './pages/AdminPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { EventsPage } from './pages/EventsPage';
+import { EventSettingsPage } from './pages/EventSettingsPage';
+import { EventRoutes } from './components/EventRoutes';
 import type { Participant } from './types';
 
 // Get event name from environment variable
@@ -161,8 +164,35 @@ function App() {
                 </AccountAuthGuard>
               }
             />
+            <Route
+              path="/events"
+              element={
+                <AccountAuthGuard>
+                  <EventsPage />
+                </AccountAuthGuard>
+              }
+            />
+            <Route
+              path="/events/new"
+              element={
+                <AccountAuthGuard>
+                  <EventSettingsPage />
+                </AccountAuthGuard>
+              }
+            />
+            <Route
+              path="/events/:id"
+              element={
+                <AccountAuthGuard>
+                  <EventSettingsPage />
+                </AccountAuthGuard>
+              }
+            />
 
-            {/* Event routes - require event password */}
+            {/* Slug-based event routes */}
+            <Route path="/:slug/*" element={<EventRoutes />} />
+
+            {/* Default event routes - require event password */}
             <Route
               path="/*"
               element={

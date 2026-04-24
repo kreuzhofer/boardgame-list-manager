@@ -97,7 +97,8 @@ model HiddenGame {
 model Event {
   id             String   @id @default(uuid())
   name           String
-  passwordHash   String   @map("password_hash")
+  slug           String?  @unique
+  password       String?
   startsAt       DateTime? @map("starts_at")
   endsAt         DateTime? @map("ends_at")
   location       String?  @db.VarChar(255)

@@ -6,20 +6,21 @@ import authRoutes from './routes/auth.routes';
 import bggRoutes from './routes/bgg.routes';
 import gameRoutes from './routes/game.routes';
 import sessionRoutes from './routes/session.routes';
+import adminSseRoutes from './routes/adminSse.routes';
 import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import thumbnailRoutes from './routes/thumbnail.routes';
 import participantRoutes from './routes/participant.routes';
+import eventRoutes from './routes/event.routes';
 import { bggCache } from './services';
 import { config } from './config';
 import { prisma } from './db/prisma';
 import { AccountService } from './services/account.service';
-import { EventService } from './services/event.service';
+import { eventService } from './services/event.service';
 
 const app = express();
 const PORT = config.server.port;
 const accountService = new AccountService(prisma);
-const eventService = new EventService(prisma);
 
 // Middleware
 // CORS configuration - uses CORS_ORIGIN from env, supports comma-separated origins
@@ -40,13 +41,15 @@ app.use((req, _res, next) => {
 app.use('/api/accounts', accountRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bgg', bggRoutes);
-app.use('/api/events', sseRoutes);
+app.use('/api/sse/admin', adminSseRoutes);
+app.use('/api/sse', sseRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/thumbnails', thumbnailRoutes);
 app.use('/api/participants', participantRoutes);
 app.use('/api/users', participantRoutes);
+app.use('/api/events', eventRoutes);
 
 // Health check endpoint - includes BGG cache status for debugging
 app.get('/api/health', (_req, res) => {
@@ -118,6 +121,7 @@ const initializeSystem = async () => {
   const adminId = await ensureDefaultAdmin();
   const defaultEventId = await eventService.ensureDefaultEvent(adminId);
   await eventService.backfillDefaultEvent(defaultEventId);
+  await eventService.backfillSlugs();
 };
 
 // Start server

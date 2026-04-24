@@ -30,7 +30,7 @@ describe('Game Service Alternate Names - Property Tests', () => {
     const event = await prisma.event.create({
       data: {
         name: `Alternate Names Test ${Date.now()}`,
-        passwordHash: 'test-hash',
+        password: 'test-password',
         ownerAccountId: account.id,
       },
     });

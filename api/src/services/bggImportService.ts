@@ -8,11 +8,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'csv-parse';
 import { prisma } from '../lib/prisma';
+import { adminSseManager } from './adminSse.service';
 
 export interface ImportStatus {
   running: boolean;
   processed: number;
   total: number;
+  created: number;
+  updated: number;
   errors: number;
   etaSeconds: number | null;
   startedAt?: Date;
@@ -43,14 +46,25 @@ class BggImportService {
     running: false,
     processed: 0,
     total: 0,
+    created: 0,
+    updated: 0,
     errors: 0,
     etaSeconds: null,
   };
 
   private csvPath: string;
+  private stopRequested: boolean = false;
 
   constructor(csvPath?: string) {
     this.csvPath = csvPath || path.join(__dirname, '../../data/boardgames_ranks.csv');
+  }
+
+  stopImport(): { stopped: boolean; message: string } {
+    if (!this.status.running) {
+      return { stopped: false, message: 'No import is running' };
+    }
+    this.stopRequested = true;
+    return { stopped: true, message: 'Stop requested - will complete current batch and stop' };
   }
 
 
@@ -67,10 +81,13 @@ class BggImportService {
       running: true,
       processed: 0,
       total: 0,
+      created: 0,
+      updated: 0,
       errors: 0,
       etaSeconds: null,
       startedAt: new Date(),
     };
+    this.stopRequested = false;
 
     // Start background process
     this.processImport().catch((error) => {
@@ -204,6 +221,17 @@ class BggImportService {
     let rowCount = 0;
 
     for await (const row of parser) {
+      if (this.stopRequested) {
+        // Process remaining items in current batch before stopping
+        if (batch.length > 0) {
+          await this.processBatch(batch);
+          this.status.processed += batch.length;
+        }
+        fileStream.destroy();
+        this.finishImport('Stopped by user');
+        return;
+      }
+
       try {
         const parsed = this.parseRow(row as CsvRow);
         batch.push(parsed);
@@ -213,6 +241,16 @@ class BggImportService {
           await this.processBatch(batch);
           this.status.processed += batch.length;
           batch = [];
+          adminSseManager.broadcast({
+            type: 'bgg:import-progress',
+            running: true,
+            processed: this.status.processed,
+            total: this.status.total,
+            created: this.status.created,
+            updated: this.status.updated,
+            errors: this.status.errors,
+            etaSeconds: this.calculateEta(),
+          });
         }
 
         if (rowCount % LOG_INTERVAL === 0) {
@@ -234,14 +272,29 @@ class BggImportService {
       this.status.processed += batch.length;
     }
 
+    this.finishImport('Completed');
+  }
+
+  private finishImport(reason: string): void {
     this.status.running = false;
     this.status.completedAt = new Date();
     this.status.etaSeconds = null;
 
     const elapsed = this.status.completedAt.getTime() - (this.status.startedAt?.getTime() || 0);
+    const durationSeconds = Math.floor(elapsed / 1000);
     console.log(
-      `[BggImport] Complete: ${this.status.processed} rows imported (${this.status.errors} errors) in ${this.formatDuration(Math.floor(elapsed / 1000))}`
+      `[BggImport] ${reason}: ${this.status.processed} rows imported (${this.status.created} new, ${this.status.updated} updated, ${this.status.errors} errors) in ${this.formatDuration(durationSeconds)}`
     );
+
+    adminSseManager.broadcast({
+      type: 'bgg:import-complete',
+      processed: this.status.processed,
+      total: this.status.total,
+      created: this.status.created,
+      updated: this.status.updated,
+      errors: this.status.errors,
+      durationSeconds,
+    });
   }
 
   /**
@@ -249,6 +302,14 @@ class BggImportService {
    * Requirement 1.4: Upsert preserves scraping_done and enrichment_data
    */
   private async processBatch(batch: ReturnType<typeof this.parseRow>[]): Promise<void> {
+    // Find which IDs already exist to track created vs updated
+    const batchIds = batch.map(r => r.id);
+    const existing = await prisma.bggGame.findMany({
+      where: { id: { in: batchIds } },
+      select: { id: true },
+    });
+    const existingIds = new Set(existing.map(e => e.id));
+
     for (const row of batch) {
       try {
         await prisma.bggGame.upsert({
@@ -273,6 +334,11 @@ class BggImportService {
             // Note: scraping_done, enriched_at, enrichment_data are NOT updated
           },
         });
+        if (existingIds.has(row.id)) {
+          this.status.updated++;
+        } else {
+          this.status.created++;
+        }
       } catch (error) {
         this.status.errors++;
         console.error(`[BggImport] Error upserting game ${row.id}:`, error);

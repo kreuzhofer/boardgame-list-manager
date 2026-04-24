@@ -10,12 +10,15 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import * as fc from 'fast-check';
 
-// Mock EventService — control verifyEventPassword return value
+// Mock eventService singleton — control verifyEventPassword return value
 const mockVerifyEventPassword = jest.fn();
 jest.mock('../../services/event.service', () => ({
   EventService: jest.fn().mockImplementation(() => ({
     verifyEventPassword: mockVerifyEventPassword,
   })),
+  eventService: {
+    verifyEventPassword: mockVerifyEventPassword,
+  },
 }));
 
 // Mock resolveEventId to avoid DB access

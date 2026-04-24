@@ -13,12 +13,13 @@ import type { Participant } from '../types';
 
 interface LayoutProps {
   children: ReactNode;
+  eventName?: string;
   participant?: Participant;
   onParticipantUpdated?: (participant: Participant) => void;
   onParticipantSwitch?: () => void;
 }
 
-export function Layout({ children, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
+export function Layout({ children, eventName, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
   // Default handlers for when props are not provided
   const handleParticipantUpdated = onParticipantUpdated || (() => {});
   const handleParticipantSwitch = onParticipantSwitch || (() => {});
@@ -31,6 +32,7 @@ export function Layout({ children, participant, onParticipantUpdated, onParticip
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header
+        eventName={eventName}
         participant={participant}
         onParticipantUpdated={onParticipantUpdated}
         onParticipantSwitch={onParticipantSwitch}

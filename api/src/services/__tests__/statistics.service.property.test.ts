@@ -60,7 +60,7 @@ describe('StatisticsService Property Tests', () => {
     const event = await prisma.event.create({
       data: {
         name: `Statistics Service Test ${Date.now()}`,
-        passwordHash: 'test-hash',
+        password: 'test-password',
         ownerAccountId: account.id,
       },
     });

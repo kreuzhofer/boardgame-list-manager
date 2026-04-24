@@ -21,6 +21,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthGuard, Layout, ParticipantSelectionModal, ToastProvider, ReleaseNotesDialog } from './components';
 import { AccountAuthGuard } from './components/AccountAuthGuard';
+import { AccountLayout } from './components/AccountLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { useParticipant } from './hooks';
 import { HomePage } from './pages/HomePage';
@@ -152,7 +153,7 @@ function App() {
               path="/profile"
               element={
                 <AccountAuthGuard>
-                  <ProfilePage />
+                  <AccountLayout><ProfilePage /></AccountLayout>
                 </AccountAuthGuard>
               }
             />
@@ -160,7 +161,7 @@ function App() {
               path="/admin"
               element={
                 <AccountAuthGuard>
-                  <AdminPage />
+                  <AccountLayout><AdminPage /></AccountLayout>
                 </AccountAuthGuard>
               }
             />
@@ -168,7 +169,7 @@ function App() {
               path="/events"
               element={
                 <AccountAuthGuard>
-                  <EventsPage />
+                  <AccountLayout><EventsPage /></AccountLayout>
                 </AccountAuthGuard>
               }
             />
@@ -176,7 +177,7 @@ function App() {
               path="/events/new"
               element={
                 <AccountAuthGuard>
-                  <EventSettingsPage />
+                  <AccountLayout><EventSettingsPage /></AccountLayout>
                 </AccountAuthGuard>
               }
             />
@@ -184,7 +185,7 @@ function App() {
               path="/events/:id"
               element={
                 <AccountAuthGuard>
-                  <EventSettingsPage />
+                  <AccountLayout><EventSettingsPage /></AccountLayout>
                 </AccountAuthGuard>
               }
             />

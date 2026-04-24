@@ -40,7 +40,7 @@ const DESKTOP_TABS = [
 export function Header({ eventName: eventNameProp, participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
   const eventName = eventNameProp || getEventName();
   const location = useLocation();
-  const { isAuthenticated: isAccountAuthenticated, account, logout: accountLogout } = useAuth();
+  const { isAuthenticated: isAccountAuthenticated, account } = useAuth();
 
   // Check if a nav link is active
   const isActive = (path: string) => location.pathname === path;
@@ -79,37 +79,14 @@ export function Header({ eventName: eventNameProp, participant, onParticipantUpd
 
           {/* Desktop participant info - hidden on mobile */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Account management links */}
+            {/* Account management link */}
             {isAccountAuthenticated && account ? (
-              <>
-                <Link
-                  to="/events"
-                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                >
-                  Meine Events
-                </Link>
-                {account.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link
-                  to="/profile"
-                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                >
-                  Profil ({account.email})
-                </Link>
-                <button
-                  onClick={accountLogout}
-                  className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
-                  aria-label="Konto abmelden"
-                >
-                  Konto abmelden
-                </button>
-              </>
+              <Link
+                to="/events"
+                className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+              >
+                Verwaltung
+              </Link>
             ) : null}
 
             {/* Event participant info */}

@@ -350,6 +350,30 @@ export const bggApi = {
   search: (query: string): Promise<BggSearchResponse> => {
     return fetchApi<BggSearchResponse>(`/api/bgg/search?q=${encodeURIComponent(query)}`);
   },
+
+  startImport: (): Promise<{ message: string }> => {
+    return fetchApi<{ message: string }>('/api/bgg/import', { method: 'POST' }, true);
+  },
+
+  stopImport: (): Promise<{ message: string; stopped: boolean }> => {
+    return fetchApi<{ message: string; stopped: boolean }>('/api/bgg/import', { method: 'DELETE' }, true);
+  },
+
+  getImportStatus: (): Promise<import('../types/adminSse').ImportStatus> => {
+    return fetchApi<import('../types/adminSse').ImportStatus>('/api/bgg/import/status', {}, true);
+  },
+
+  startEnrichment: (): Promise<{ message: string }> => {
+    return fetchApi<{ message: string }>('/api/bgg/enrich', { method: 'POST' }, true);
+  },
+
+  getEnrichmentStatus: (): Promise<import('../types/adminSse').BulkEnrichmentStatus> => {
+    return fetchApi<import('../types/adminSse').BulkEnrichmentStatus>('/api/bgg/enrich/status', {}, true);
+  },
+
+  stopEnrichment: (): Promise<{ message: string; stopped: boolean }> => {
+    return fetchApi<{ message: string; stopped: boolean }>('/api/bgg/enrich', { method: 'DELETE' }, true);
+  },
 };
 
 // Account API

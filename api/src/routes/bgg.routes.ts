@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import { bggService, bggImageService } from '../services';
 import { bggImportService } from '../services/bggImportService';
 import { bggEnrichmentService } from '../services/bggEnrichmentService';
+import { requireAuth, requireAdmin } from '../middleware/auth.middleware';
 import { prisma } from '../lib/prisma';
 import type { ImageSize } from '../services/bggImageService';
 
@@ -149,7 +150,7 @@ router.get('/image/:bggId/:size', async (req: Request, res: Response) => {
  * 
  * Requirements: 3.1, 3.3
  */
-router.post('/import', async (_req: Request, res: Response) => {
+router.post('/import', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const result = bggImportService.startImport();
     
@@ -182,7 +183,7 @@ router.post('/import', async (_req: Request, res: Response) => {
  * 
  * Requirements: 3a.1, 3a.2
  */
-router.get('/import/status', async (_req: Request, res: Response) => {
+router.get('/import/status', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const status = bggImportService.getStatus();
     return res.json(status);
@@ -198,6 +199,29 @@ router.get('/import/status', async (_req: Request, res: Response) => {
 });
 
 /**
+ * DELETE /api/bgg/import
+ * Stop import process.
+ */
+router.delete('/import', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = bggImportService.stopImport();
+
+    if (result.stopped) {
+      return res.status(200).json({ message: result.message, stopped: true });
+    } else {
+      return res.status(409).json({
+        error: { code: 'NO_IMPORT_RUNNING', message: result.message },
+      });
+    }
+  } catch (error) {
+    console.error('Error stopping import:', error);
+    return res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'Import konnte nicht gestoppt werden.' },
+    });
+  }
+});
+
+/**
  * POST /api/bgg/enrich
  * Start bulk enrichment process.
  * 
@@ -205,7 +229,7 @@ router.get('/import/status', async (_req: Request, res: Response) => {
  * 
  * Requirements: 6a.1, 6a.2
  */
-router.post('/enrich', async (_req: Request, res: Response) => {
+router.post('/enrich', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const result = bggEnrichmentService.startBulkEnrichment();
     
@@ -238,7 +262,7 @@ router.post('/enrich', async (_req: Request, res: Response) => {
  * 
  * Requirements: 6b.1, 6b.2, 6c.2
  */
-router.get('/enrich/status', async (_req: Request, res: Response) => {
+router.get('/enrich/status', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const status = bggEnrichmentService.getBulkStatus();
     return res.json(status);
@@ -324,7 +348,7 @@ router.post('/enrich/:bggId', async (req: Request, res: Response) => {
  * 
  * Requirements: 6d.1, 6d.3, 6d.4
  */
-router.delete('/enrich', async (_req: Request, res: Response) => {
+router.delete('/enrich', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const result = bggEnrichmentService.stopBulkEnrichment();
     

@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes';
 import bggRoutes from './routes/bgg.routes';
 import gameRoutes from './routes/game.routes';
 import sessionRoutes from './routes/session.routes';
+import adminSseRoutes from './routes/adminSse.routes';
 import sseRoutes from './routes/sse.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import thumbnailRoutes from './routes/thumbnail.routes';
@@ -40,6 +41,7 @@ app.use((req, _res, next) => {
 app.use('/api/accounts', accountRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bgg', bggRoutes);
+app.use('/api/sse/admin', adminSseRoutes);
 app.use('/api/sse', sseRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/sessions', sessionRoutes);

@@ -325,7 +325,15 @@ export class AccountService {
   /**
    * Set account role (admin only)
    */
-  async setRole(accountId: string, role: 'account_owner' | 'admin'): Promise<AccountResponse> {
+  async setRole(accountId: string, role: 'account_owner' | 'admin', callerAccountId: string): Promise<AccountResponse> {
+    if (accountId === callerAccountId) {
+      throw new AccountError(
+        'SELF_ROLE_CHANGE',
+        'Die eigene Rolle kann nicht geändert werden.',
+        403
+      );
+    }
+
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
     });

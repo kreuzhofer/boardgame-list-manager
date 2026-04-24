@@ -15,6 +15,7 @@ export { ActivityLogService, activityLogService } from './activityLog.service';
 export { EventService, eventService, slugify, RESERVED_SLUGS } from './event.service';
 export { GameService, gameService } from './game.service';
 export { SSEManager, sseManager } from './sse.service';
+export { AdminSSEManager, adminSseManager } from './adminSse.service';
 export { StatisticsService, statisticsService } from './statistics.service';
 export { ParticipantService, participantService } from './participant.service';
 export type { Participant } from './participant.service';

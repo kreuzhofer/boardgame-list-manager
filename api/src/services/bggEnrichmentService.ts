@@ -7,6 +7,7 @@
 import { prisma } from '../lib/prisma';
 import { bggCache } from './bggCache';
 import pageFetchService, { ScraperApiError } from './pageFetchService';
+import { adminSseManager } from './adminSse.service';
 
 export interface EnrichmentData {
   alternateNames: Array<{ name: string; language?: string }>;
@@ -340,7 +341,21 @@ class BggEnrichmentService {
         
         this.bulkStatus.processed++;
         consecutiveErrors = 0; // Reset on success
-        
+
+        // Broadcast progress every 10 games
+        if (this.bulkStatus.processed % 10 === 0 || this.bulkStatus.processed === this.bulkStatus.total) {
+          adminSseManager.broadcast({
+            type: 'bgg:enrich-progress',
+            running: true,
+            processed: this.bulkStatus.processed,
+            total: this.bulkStatus.total,
+            skipped: this.bulkStatus.skipped,
+            errors: this.bulkStatus.errors,
+            bytesTransferred: this.bulkStatus.bytesTransferred,
+            etaSeconds: this.calculateEta(),
+          });
+        }
+
         // Log progress every 60 seconds
         const now = Date.now();
         if (now - lastLogTime >= LOG_INTERVAL_MS) {
@@ -420,12 +435,24 @@ class BggEnrichmentService {
     this.bulkStatus.stopReason = reason;
     
     const elapsed = this.bulkStatus.completedAt.getTime() - (this.bulkStatus.startedAt?.getTime() || 0);
+    const durationSeconds = Math.floor(elapsed / 1000);
     console.log(
       `[BggEnrichment] ${reason}: ${this.bulkStatus.processed} games enriched ` +
       `(${this.bulkStatus.skipped} skipped, ${this.bulkStatus.errors} errors) ` +
-      `in ${this.formatDuration(Math.floor(elapsed / 1000))} - ` +
+      `in ${this.formatDuration(durationSeconds)} - ` +
       `Total data transferred: ${this.formatBytes(this.bulkStatus.bytesTransferred)}`
     );
+
+    adminSseManager.broadcast({
+      type: 'bgg:enrich-complete',
+      processed: this.bulkStatus.processed,
+      total: this.bulkStatus.total,
+      skipped: this.bulkStatus.skipped,
+      errors: this.bulkStatus.errors,
+      bytesTransferred: this.bulkStatus.bytesTransferred,
+      durationSeconds,
+      stopReason: reason,
+    });
   }
 }
 

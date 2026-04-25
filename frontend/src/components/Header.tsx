@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Participant } from '../types';
 
 interface HeaderProps {
+  basePath?: string;
   eventName?: string;
   participant?: Participant;
   onParticipantUpdated?: (participant: Participant) => void;
@@ -37,21 +38,21 @@ const DESKTOP_TABS = [
   { path: '/statistics', label: 'Statistiken' },
 ];
 
-export function Header({ eventName: eventNameProp, participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
+export function Header({ basePath = '', eventName: eventNameProp, participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
   const eventName = eventNameProp || getEventName();
   const location = useLocation();
   const { isAuthenticated: isAccountAuthenticated, account } = useAuth();
 
-  // Check if a nav link is active
-  const isActive = (path: string) => location.pathname === path;
+  const resolvePath = (path: string) => basePath + path;
+  const isActive = (path: string) => location.pathname === resolvePath(path);
 
   return (
     <header className="bg-blue-600 text-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Event Title */}
-          <Link 
-            to="/" 
+          <Link
+            to={resolvePath('/')}
             className="hover:opacity-90 transition-opacity flex-shrink-0"
           >
             <h1 className="text-lg sm:text-2xl font-bold truncate max-w-[200px] sm:max-w-none">
@@ -64,7 +65,7 @@ export function Header({ eventName: eventNameProp, participant, onParticipantUpd
             {DESKTOP_TABS.map((tab) => (
               <Link
                 key={tab.path}
-                to={tab.path}
+                to={resolvePath(tab.path)}
                 className={`transition-colors text-sm font-medium ${
                   isActive(tab.path) 
                     ? 'text-white border-b-2 border-white pb-1' 

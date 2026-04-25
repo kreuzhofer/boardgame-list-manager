@@ -35,8 +35,8 @@ function App() {
             {/* Public pages */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/impressum" element={<ImpressumPage />} />
-            <Route path="/datenschutz" element={<DatenschutzPage />} />
+            <Route path="/impressum" element={<AccountLayout><ImpressumPage /></AccountLayout>} />
+            <Route path="/datenschutz" element={<AccountLayout><DatenschutzPage /></AccountLayout>} />
 
             {/* Account management */}
             <Route

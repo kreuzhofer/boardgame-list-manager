@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 export function DatenschutzPage() {
   useEffect(() => {
@@ -7,17 +6,8 @@ export function DatenschutzPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-600 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
-            Brettspieltreff
-          </Link>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Datenschutzerklärung</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-gray-800">Datenschutzerklärung</h1>
 
         <div className="bg-white rounded-lg shadow p-8 space-y-6 text-gray-700 text-sm leading-relaxed">
 
@@ -210,7 +200,6 @@ export function DatenschutzPage() {
             </p>
           </section>
         </div>
-      </main>
     </div>
   );
 }

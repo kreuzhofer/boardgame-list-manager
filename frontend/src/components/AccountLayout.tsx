@@ -56,18 +56,24 @@ export function AccountLayout({ children }: AccountLayoutProps) {
         {children}
       </main>
 
-      <footer className="bg-gray-200 text-gray-600 text-center py-4 text-sm">
-        <p>
-          &copy; {new Date().getFullYear()}{' '}
-          <a
-            href="https://danielkreuzhofer.de"
-            target="_blank"
-            rel="noreferrer"
-            className="underline decoration-dotted underline-offset-4 hover:text-gray-900"
-          >
-            Daniel Kreuzhofer
-          </a>
-        </p>
+      <footer className="bg-gray-200 text-gray-600 py-4 text-sm">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p>
+            &copy; {new Date().getFullYear()}{' '}
+            <a
+              href="https://danielkreuzhofer.de"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-dotted underline-offset-4 hover:text-gray-900"
+            >
+              Daniel Kreuzhofer
+            </a>
+          </p>
+          <nav className="flex items-center gap-4">
+            <Link to="/impressum" className="hover:text-gray-900 transition-colors">Impressum</Link>
+            <Link to="/datenschutz" className="hover:text-gray-900 transition-colors">Datenschutz</Link>
+          </nav>
+        </div>
       </footer>
     </div>
   );

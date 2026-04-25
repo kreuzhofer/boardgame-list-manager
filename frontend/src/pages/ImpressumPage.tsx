@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 export function ImpressumPage() {
   useEffect(() => {
@@ -7,17 +6,8 @@ export function ImpressumPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-600 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold hover:opacity-90 transition-opacity">
-            Brettspieltreff
-          </Link>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Impressum</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-gray-800">Impressum</h1>
 
         <div className="bg-white rounded-lg shadow p-8 space-y-6 text-gray-700 text-sm leading-relaxed">
           <section>
@@ -71,6 +61,26 @@ export function ImpressumPage() {
           </section>
 
           <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+            <p>
+              Die Europäische Kommission stellt eine Plattform zur
+              Online-Streitbeilegung (OS) bereit:{' '}
+              <a
+                href="https://ec.europa.eu/consumers/odr/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                https://ec.europa.eu/consumers/odr/
+              </a>
+            </p>
+            <p className="mt-2">
+              Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
+              vor einer Verbraucherschlichtungsstelle teilzunehmen.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Urheberrecht</h2>
             <p>
               Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten
@@ -81,7 +91,6 @@ export function ImpressumPage() {
             </p>
           </section>
         </div>
-      </main>
     </div>
   );
 }

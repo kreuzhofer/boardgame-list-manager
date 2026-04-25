@@ -15,7 +15,7 @@ interface PasswordScreenProps {
 
 // Get event name from environment variable
 const getDefaultEventName = (): string => {
-  return import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
+  return import.meta.env.VITE_EVENT_NAME || 'Brettspieltreff';
 };
 
 export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated }: PasswordScreenProps) {

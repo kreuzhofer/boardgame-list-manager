@@ -19,6 +19,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { EventsPage } from './pages/EventsPage';
 import { EventSettingsPage } from './pages/EventSettingsPage';
 import { LandingPage } from './pages/LandingPage';
+import { ImpressumPage } from './pages/ImpressumPage';
+import { DatenschutzPage } from './pages/DatenschutzPage';
 import { EventRoutes } from './components/EventRoutes';
 
 function App() {
@@ -30,9 +32,11 @@ function App() {
             {/* Public landing page */}
             <Route path="/" element={<LandingPage />} />
 
-            {/* Account auth */}
+            {/* Public pages */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/impressum" element={<ImpressumPage />} />
+            <Route path="/datenschutz" element={<DatenschutzPage />} />
 
             {/* Account management */}
             <Route

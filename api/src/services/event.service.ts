@@ -7,6 +7,7 @@ import { toEventResponse, toEventPublicInfo } from '../types/event';
 
 export const RESERVED_SLUGS = [
   'login', 'register', 'profile', 'admin', 'print', 'statistics', 'events',
+  'impressum', 'datenschutz',
   'api', 'health', 'favicon.ico', 'manifest.json', 'robots.txt',
 ];
 

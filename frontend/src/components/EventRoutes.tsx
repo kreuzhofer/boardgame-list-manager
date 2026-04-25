@@ -66,6 +66,7 @@ function EventContent() {
         onParticipantSelected={handleParticipantSelected}
       />
       <Layout
+        basePath={`/${slug}`}
         eventName={eventName}
         participant={participant ?? undefined}
         onParticipantUpdated={handleParticipantUpdated}

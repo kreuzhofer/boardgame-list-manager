@@ -13,6 +13,7 @@ import { ParticipantOptionsDialog } from './ParticipantOptionsDialog';
 import type { Participant } from '../types';
 
 interface MobileBottomTabsProps {
+  basePath?: string;
   participant: Participant | null;
   onParticipantUpdated: (participant: Participant) => void;
   onParticipantSwitch: () => void;
@@ -87,7 +88,7 @@ const TABS: TabConfig[] = [
   { id: 'profile', path: null, label: 'Profil', icon: ParticipantIcon, action: 'dialog' },
 ];
 
-export function MobileBottomTabs({ participant, onParticipantUpdated, onParticipantSwitch }: MobileBottomTabsProps) {
+export function MobileBottomTabs({ basePath = '', participant, onParticipantUpdated, onParticipantSwitch }: MobileBottomTabsProps) {
   const location = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -118,7 +119,8 @@ export function MobileBottomTabs({ participant, onParticipantUpdated, onParticip
       >
         <div className="flex justify-around items-center h-16">
           {TABS.map((tab) => {
-            const isActive = tab.path !== null && location.pathname === tab.path;
+            const resolvedPath = tab.path !== null ? basePath + tab.path : null;
+            const isActive = resolvedPath !== null && location.pathname === resolvedPath;
             const Icon = tab.icon;
 
             if (tab.action === 'dialog') {
@@ -143,7 +145,7 @@ export function MobileBottomTabs({ participant, onParticipantUpdated, onParticip
             return (
               <Link
                 key={tab.id}
-                to={tab.path!}
+                to={resolvedPath!}
                 className={`flex flex-col items-center justify-center flex-1 h-full min-w-0 px-1 transition-colors ${
                   isActive
                     ? 'text-blue-600'

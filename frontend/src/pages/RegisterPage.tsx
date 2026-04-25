@@ -65,21 +65,21 @@ export function RegisterPage() {
   const displayError = localError || error;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
+      <div className="max-w-md w-full bg-paper-hi rounded-lg shadow-md p-8">
+        <h1 className="text-2xl font-bold text-center text-ink mb-6">
           Konto erstellen
         </h1>
 
         {displayError && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded">
             {displayError}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-1">
               E-Mail
             </label>
             <input
@@ -87,7 +87,7 @@ export function RegisterPage() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
               placeholder="ihre@email.de"
               autoComplete="email"
               disabled={isLoading}
@@ -95,7 +95,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-ink-soft mb-1">
               Passwort
             </label>
             <input
@@ -103,25 +103,25 @@ export function RegisterPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
               placeholder="••••••••"
               autoComplete="new-password"
               disabled={isLoading}
             />
-            
+
             {/* Password requirements */}
             <div className="mt-2 text-sm space-y-1">
-              <p className="text-gray-600 font-medium">Passwort-Anforderungen:</p>
+              <p className="text-ink-soft font-medium">Passwort-Anforderungen:</p>
               <ul className="space-y-1">
-                <li className={`flex items-center ${passwordRequirements.minLength ? 'text-green-600' : 'text-gray-500'}`}>
+                <li className={`flex items-center ${passwordRequirements.minLength ? 'text-sage-deep' : 'text-ink-mute'}`}>
                   <span className="mr-2">{passwordRequirements.minLength ? '✓' : '○'}</span>
                   Mindestens 8 Zeichen
                 </li>
-                <li className={`flex items-center ${passwordRequirements.hasLetter ? 'text-green-600' : 'text-gray-500'}`}>
+                <li className={`flex items-center ${passwordRequirements.hasLetter ? 'text-sage-deep' : 'text-ink-mute'}`}>
                   <span className="mr-2">{passwordRequirements.hasLetter ? '✓' : '○'}</span>
                   Mindestens ein Buchstabe
                 </li>
-                <li className={`flex items-center ${passwordRequirements.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                <li className={`flex items-center ${passwordRequirements.hasNumber ? 'text-sage-deep' : 'text-ink-mute'}`}>
                   <span className="mr-2">{passwordRequirements.hasNumber ? '✓' : '○'}</span>
                   Mindestens eine Zahl
                 </li>
@@ -130,7 +130,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-ink-soft mb-1">
               Passwort bestätigen
             </label>
             <input
@@ -138,13 +138,13 @@ export function RegisterPage() {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
               placeholder="••••••••"
               autoComplete="new-password"
               disabled={isLoading}
             />
             {confirmPassword && password !== confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-sm text-blush-deep">
                 Die Passwörter stimmen nicht überein.
               </p>
             )}
@@ -153,15 +153,15 @@ export function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading || !isPasswordValid}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full py-2 px-4 bg-plum hover:bg-plum-deep disabled:bg-plum-soft text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
           >
             {isLoading ? 'Wird erstellt...' : 'Konto erstellen'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-ink-soft">
           Bereits ein Konto?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link to="/login" className="text-plum hover:text-plum-deep font-medium">
             Jetzt anmelden
           </Link>
         </p>

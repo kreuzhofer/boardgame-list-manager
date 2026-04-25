@@ -178,16 +178,16 @@ export function GameRow({
 
   // Determine background color: highlight > wunsch > default
   const getRowClassName = () => {
-    const baseClasses = 'border-b border-gray-200 transition-colors';
-    const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
-    
+    const baseClasses = 'border-b border-rule transition-colors';
+    const scrollClasses = scrollIntoView ? 'ring-2 ring-plum-soft ring-inset' : '';
+
     if (isHighlighted) {
-      return `${baseClasses} bg-green-100 hover:bg-green-200 ${scrollClasses}`;
+      return `${baseClasses} bg-sage-100 hover:bg-sage-100 ${scrollClasses}`;
     }
     if (isWunsch) {
-      return `${baseClasses} bg-yellow-50 hover:bg-yellow-100 ${scrollClasses}`;
+      return `${baseClasses} bg-butter-50 hover:bg-butter-50 ${scrollClasses}`;
     }
-    return `${baseClasses} hover:bg-gray-50 ${scrollClasses}`;
+    return `${baseClasses} hover:bg-paper-lo ${scrollClasses}`;
   };
 
   const collapseStyle =
@@ -257,10 +257,10 @@ export function GameRow({
       <td className="w-[22%] 2xl:w-[25%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex flex-col gap-1">
-            <span className="font-medium text-gray-900">{game.name}</span>
+            <span className="font-medium text-ink">{game.name}</span>
             {/* Feature: 014-alternate-names-search - Show alternate name on second line (desktop) */}
             {game.addedAsAlternateName && (
-              <span className="text-sm text-gray-500 truncate">
+              <span className="text-sm text-ink-mute truncate">
                 {game.addedAsAlternateName}
               </span>
             )}
@@ -269,14 +269,14 @@ export function GameRow({
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium min-w-[4.5rem] text-center ${
                   isWunsch
-                    ? 'bg-yellow-200 text-yellow-800'
-                    : 'bg-green-200 text-green-800'
+                    ? 'bg-butter text-butter-deep'
+                    : 'bg-sage-100 text-sage-deep'
                 }`}
               >
                 {isWunsch ? 'Gesucht' : 'Verfügbar'}
               </span>
               {isPrototype && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800">
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-plum-100 text-plum-deep">
                   Prototyp
                 </span>
               )}
@@ -345,7 +345,7 @@ export function GameRow({
                 <>
                   <button
                     onClick={() => openBggPage(game.bggId!)}
-                    className="p-1 rounded flex items-center hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded flex items-center hover:bg-paper-lo transition-colors"
                     aria-label="BoardGameGeek Info"
                   >
                     <BggRatingBadge rating={game.bggRating} />
@@ -369,8 +369,8 @@ export function GameRow({
                   aria-label={isHidden ? 'Spiel einblenden' : 'Spiel ausblenden'}
                   className={`p-1.5 rounded transition-colors ${
                     canHide
-                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      ? 'bg-paper-lo text-ink-soft hover:bg-rule'
+                      : 'bg-paper-lo text-ink-mute cursor-not-allowed'
                   }`}
                   title={isHidden ? 'Spiel einblenden' : 'Spiel ausblenden'}
                 >

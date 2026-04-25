@@ -124,14 +124,14 @@ export function SearchFilters({
   ].filter(Boolean).length;
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 space-y-4">
+    <div className="bg-paper-hi rounded-lg shadow p-4 space-y-4">
       {/* Main search and filter toggles - always visible */}
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Name search box (Requirement 5.4) - always visible */}
         <div className="flex-1">
           <label
             htmlFor="search-name"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-ink-soft mb-1"
           >
             Spielname suchen
           </label>
@@ -142,10 +142,10 @@ export function SearchFilters({
               value={nameQuery}
               onChange={handleNameChange}
               placeholder="Spielname eingeben..."
-              className="w-full px-3 py-2.5 pl-9 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+              className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
               aria-label="Spielname suchen"
             />
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
           </div>
         </div>
 
@@ -157,8 +157,8 @@ export function SearchFilters({
             onClick={handleWunschToggle}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
               wunschOnly
-                ? 'bg-amber-100 text-amber-800 border-2 border-amber-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+                ? 'bg-butter-50 text-butter-deep border-2 border-butter'
+                : 'bg-paper-lo text-ink-soft border-2 border-transparent hover:bg-rule'
             }`}
             aria-pressed={wunschOnly}
             aria-label="Nur gesuchte Spiele anzeigen"
@@ -175,8 +175,8 @@ export function SearchFilters({
             onClick={handleMyGamesToggle}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
               myGamesOnly
-                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+                ? 'bg-sage-100 text-sage-deep border-2 border-sage'
+                : 'bg-paper-lo text-ink-soft border-2 border-transparent hover:bg-rule'
             }`}
             aria-pressed={myGamesOnly}
             aria-label="Nur meine Spiele anzeigen"
@@ -194,14 +194,14 @@ export function SearchFilters({
         <button
           type="button"
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]"
+          className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink-soft bg-paper-lo rounded-lg hover:bg-paper-lo transition-colors min-h-[44px]"
           aria-expanded={showAdvancedFilters}
         >
           <span className="flex items-center gap-2">
             <FilterIcon className="w-4 h-4" />
             Erweiterte Filter
             {activeAdvancedFilters > 0 && (
-              <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-plum text-white text-xs px-2 py-0.5 rounded-full">
                 {activeAdvancedFilters}
               </span>
             )}
@@ -211,14 +211,14 @@ export function SearchFilters({
       </div>
 
       {/* Advanced search boxes - always visible on desktop, collapsible on mobile */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-200 ${
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-rule ${
         showAdvancedFilters ? 'block' : 'hidden lg:grid'
       }`}>
         {/* Player search box (Requirement 5.5) */}
         <div>
           <label
             htmlFor="search-player"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-ink-soft mb-1"
           >
             Mitspieler suchen
           </label>
@@ -229,10 +229,10 @@ export function SearchFilters({
               value={playerQuery}
               onChange={handlePlayerChange}
               placeholder="Mitspieler eingeben..."
-              className="w-full px-3 py-2.5 pl-9 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+              className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
               aria-label="Mitspieler suchen"
             />
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
           </div>
         </div>
 
@@ -240,7 +240,7 @@ export function SearchFilters({
         <div>
           <label
             htmlFor="search-bringer"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-ink-soft mb-1"
           >
             Bringt mit suchen
           </label>
@@ -251,10 +251,10 @@ export function SearchFilters({
               value={bringerQuery}
               onChange={handleBringerChange}
               placeholder="Name eingeben..."
-              className="w-full px-3 py-2.5 pl-9 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+              className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
               aria-label="Bringt mit suchen"
             />
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
           </div>
         </div>
       </div>

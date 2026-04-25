@@ -138,12 +138,12 @@ describe('MobileBottomTabs Property Tests', () => {
             const activeTab = screen.getByTestId(`tab-${activeTabConfig.id}`);
             
             // Active tab should have blue color class
-            expect(activeTab).toHaveClass('text-blue-600');
+            expect(activeTab).toHaveClass('text-plum');
             
             // Other navigation tabs should have gray color
             NAVIGATION_TABS.filter(tab => tab.path !== route).forEach(tab => {
               const inactiveTab = screen.getByTestId(`tab-${tab.id}`);
-              expect(inactiveTab).toHaveClass('text-gray-500');
+              expect(inactiveTab).toHaveClass('text-ink-mute');
             });
           }
 
@@ -169,7 +169,7 @@ describe('MobileBottomTabs Property Tests', () => {
           // Count tabs with active styling
           const activeTabs = NAVIGATION_TABS.filter(tab => {
             const tabElement = screen.getByTestId(`tab-${tab.id}`);
-            return tabElement.classList.contains('text-blue-600');
+            return tabElement.classList.contains('text-plum');
           });
 
           // Exactly one tab should be active

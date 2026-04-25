@@ -97,7 +97,7 @@ export function ParticipantNameEditor({ participant, onParticipantUpdated }: Par
       />
       <button
         type="submit"
-        className="px-2 py-1 text-blue-600 bg-white rounded text-sm hover:bg-white/90 disabled:opacity-50"
+        className="px-2 py-1 text-plum bg-white rounded text-sm hover:bg-white/90 disabled:opacity-50"
         disabled={isSubmitting || !newName.trim()}
       >
         {isSubmitting ? '...' : '✓'}
@@ -111,7 +111,7 @@ export function ParticipantNameEditor({ participant, onParticipantUpdated }: Par
         ✕
       </button>
       {error && (
-        <span className="text-red-300 text-sm">{error}</span>
+        <span className="text-blush text-sm">{error}</span>
       )}
     </form>
   );

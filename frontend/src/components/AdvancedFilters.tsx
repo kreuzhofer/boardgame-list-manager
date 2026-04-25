@@ -43,12 +43,12 @@ export function AdvancedFilters({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-paper-hi rounded-lg shadow">
       {/* Toggle button */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-ink-soft hover:bg-paper-lo transition-colors min-h-[44px]"
         aria-expanded={isExpanded}
         aria-controls="advanced-filters-content"
       >
@@ -56,7 +56,7 @@ export function AdvancedFilters({
           <FilterIcon className="w-4 h-4" />
           Erweiterte Filter
           {activeFilterCount > 0 && (
-            <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+            <span className="bg-plum text-white text-xs px-2 py-0.5 rounded-full">
               {activeFilterCount}
             </span>
           )}
@@ -70,14 +70,14 @@ export function AdvancedFilters({
       {isExpanded && (
         <div
           id="advanced-filters-content"
-          className="px-4 pb-4 pt-2 border-t border-gray-200"
+          className="px-4 pb-4 pt-2 border-t border-rule"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Player search */}
             <div>
               <label
                 htmlFor="advanced-player-search"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ink-soft mb-1"
               >
                 Mitspieler suchen
               </label>
@@ -88,10 +88,10 @@ export function AdvancedFilters({
                   value={playerQuery}
                   onChange={handlePlayerChange}
                   placeholder="Mitspieler eingeben..."
-                  className="w-full px-3 py-2.5 pl-9 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
                   aria-label="Mitspieler suchen"
                 />
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
               </div>
             </div>
 
@@ -99,7 +99,7 @@ export function AdvancedFilters({
             <div>
               <label
                 htmlFor="advanced-bringer-search"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ink-soft mb-1"
               >
                 Bringt mit suchen
               </label>
@@ -110,10 +110,10 @@ export function AdvancedFilters({
                   value={bringerQuery}
                   onChange={handleBringerChange}
                   placeholder="Name eingeben..."
-                  className="w-full px-3 py-2.5 pl-9 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
                   aria-label="Bringt mit suchen"
                 />
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
               </div>
             </div>
           </div>

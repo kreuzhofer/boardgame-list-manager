@@ -14,11 +14,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { gamesApi, ApiError } from '../api/client';
+import { gamesApi, participantsApi, ApiError } from '../api/client';
 import { GameTable } from '../components/GameTable';
 import { UnifiedSearchBar } from '../components/UnifiedSearchBar';
 import { AdvancedFilters } from '../components/AdvancedFilters';
 import { DeleteGameModal } from '../components/DeleteGameModal';
+import { EventBar } from '../components/EventBar';
+import { HomeSidebar } from '../components/HomeSidebar';
+import { FilterPill } from '../components/FilterPill';
 import { useToast } from '../components/ToastProvider';
 import { useGameFilters, useSSE } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +36,7 @@ interface HomePageProps {
 export function HomePage({ participant }: HomePageProps) {
   // Game state
   const [games, setGames] = useState<Game[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -91,6 +95,8 @@ export function HomePage({ participant }: HomePageProps) {
       setError(null);
       const response = await gamesApi.getAll(currentParticipantId || undefined);
       setGames(response.games);
+      const participantsResponse = await participantsApi.getAll();
+      setParticipants(participantsResponse.participants);
     } catch (err) {
       console.error('Failed to fetch games:', err);
       if (err instanceof ApiError) {
@@ -397,6 +403,10 @@ export function HomePage({ participant }: HomePageProps) {
     }));
   }, []);
 
+  // Derived counts for EventBar
+  const bringersCount = new Set(games.flatMap(g => g.bringers.map(b => b.participant.id))).size;
+  const wishesCount = games.filter(g => g.bringers.length === 0).length;
+
   // Apply filters to games
   const filteredGames = filterGames(games, currentParticipantName);
   const hiddenCount = games.filter((game) => game.isHidden).length;
@@ -407,267 +417,212 @@ export function HomePage({ participant }: HomePageProps) {
   // Loading state
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-800">Spieleliste</h2>
-        </div>
-        <div className="bg-white rounded-lg shadow p-8">
-          <div className="flex items-center justify-center gap-3">
-            <svg
-              className="animate-spin h-6 w-6 text-blue-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span className="text-gray-600">Spiele werden geladen...</span>
+      <>
+        <EventBar
+          eventName="Spieleabend"
+          gamesCount={0}
+          bringersCount={0}
+          wishesCount={0}
+          participantsCount={0}
+        />
+        <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
+          <div className="bg-paper-hi rounded-lg shadow p-8">
+            <div className="flex items-center justify-center gap-3">
+              <svg
+                className="animate-spin h-6 w-6 text-plum"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <span className="text-ink-soft">Spiele werden geladen...</span>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-800">Spieleliste</h2>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <div className="flex items-start gap-3">
-            <svg
-              className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <h3 className="text-red-800 font-medium">Fehler beim Laden</h3>
-              <p className="text-red-700 mt-1">{error}</p>
-              <button
-                onClick={fetchGames}
-                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+      <>
+        <EventBar
+          eventName="Spieleabend"
+          gamesCount={0}
+          bringersCount={0}
+          wishesCount={0}
+          participantsCount={0}
+        />
+        <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
+          <div className="bg-blush-50 border border-blush rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-6 h-6 text-blush-deep flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Erneut versuchen
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <h3 className="text-blush-deep font-medium">Fehler beim Laden</h3>
+                <p className="text-blush-deep mt-1">{error}</p>
+                <button
+                  onClick={fetchGames}
+                  className="mt-3 px-4 py-2 bg-blush-deep text-white rounded-lg hover:bg-blush-deep transition-colors text-sm font-medium"
+                >
+                  Erneut versuchen
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className={`space-y-6 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">Spieleliste</h2>
-      </div>
-
-      {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
-      {participant && (
-        <UnifiedSearchBar
-          games={games}
-          currentParticipantId={currentParticipantId}
-          onGameAdded={handleGameAdded}
-          onSearchQueryChange={handleSearchQueryChange}
-          onScrollToGame={handleScrollToGame}
-          clearTrigger={searchClearTrigger}
-        />
-      )}
-
-      {/* Filter toggles - Wunsch and Meine Spiele (Requirement 8.5, 8.6) */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-wrap gap-2">
-          {/* Gesuchte Spiele toggle */}
-          <button
-            type="button"
-            onClick={() => setWunschOnly(!filters.wunschOnly)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-              filters.wunschOnly
-                ? 'bg-amber-100 text-amber-800 border-2 border-amber-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
-            }`}
-            aria-pressed={filters.wunschOnly}
-            aria-label="Nur gesuchte Spiele anzeigen"
-          >
-            <span className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" aria-hidden="true" />
-            <span className="hidden sm:inline">Gesuchte Spiele</span>
-            <span className="sm:hidden">Gesucht</span>
-            {filters.wunschOnly && <CheckIcon className="w-4 h-4" />}
-          </button>
-
-          {/* Bringe ich mit toggle */}
-          <button
-            type="button"
-            onClick={() => setMyGamesOnly(!filters.myGamesOnly)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-              filters.myGamesOnly
-                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
-            }`}
-            aria-pressed={filters.myGamesOnly}
-            aria-label="Nur Spiele anzeigen, die ich mitbringe"
-          >
-            <img src="/package.svg?v=2" alt="" className="w-5 h-5" />
-            <span className="hidden sm:inline">Bringe ich mit</span>
-            <span className="sm:hidden">Bringe</span>
-            {filters.myGamesOnly && <CheckIcon className="w-4 h-4" />}
-          </button>
-
-          {/* Spiele ich mit toggle */}
-          <button
-            type="button"
-            onClick={() => setPlayerOnly(!filters.playerOnly)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-              filters.playerOnly
-                ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
-            }`}
-            aria-pressed={filters.playerOnly}
-            aria-label="Nur Spiele anzeigen, bei denen ich mitspiele"
-          >
-            <img src="/meeple.svg" alt="" className="w-4 h-4" />
-            <span className="hidden sm:inline">Spiele ich mit</span>
-            <span className="sm:hidden">Spiele</span>
-            {filters.playerOnly && <CheckIcon className="w-4 h-4" />}
-          </button>
-
-          {/* Ausgeblendet toggle */}
-          <button
-            type="button"
-            onClick={() => setHiddenOnly(!filters.hiddenOnly)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-              filters.hiddenOnly
-                ? 'bg-gray-200 text-gray-800 border-2 border-gray-400'
-                : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
-            }`}
-            aria-pressed={filters.hiddenOnly}
-            aria-label="Nur ausgeblendete Spiele anzeigen"
-          >
-            <img src="/eye-off.svg?v=3" alt="" className="w-4 h-4" />
-            <span className="hidden sm:inline">Ausgeblendet</span>
-            <span className="sm:hidden">Ausbl.</span>
-            {filters.hiddenOnly && <CheckIcon className="w-4 h-4" />}
-          </button>
-
-          {/* Prototypen filter - segmented control */}
-          <div className="flex items-end">
-            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden bg-gray-100 min-h-[44px]">
-              <button
-                type="button"
-                onClick={() => setPrototypeFilter('all')}
-                className={`px-3 text-xs sm:text-sm font-medium transition-colors ${
-                  filters.prototypeFilter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-                aria-pressed={filters.prototypeFilter === 'all'}
-                aria-label="Alle Spiele anzeigen"
-                title="Alle Spiele"
-              >
-                <span className="hidden sm:inline">Alle</span>
-                <span className="sm:hidden">Alle</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrototypeFilter('exclude')}
-                className={`px-3 text-xs sm:text-sm font-medium transition-colors border-l border-gray-200 ${
-                  filters.prototypeFilter === 'exclude'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-                aria-pressed={filters.prototypeFilter === 'exclude'}
-                aria-label="Ohne Prototypen anzeigen"
-                title="Ohne Prototypen"
-              >
-                <span className="hidden sm:inline">Ohne Prototypen</span>
-                <span className="sm:hidden">Ohne Protos</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrototypeFilter('only')}
-                className={`px-3 text-xs sm:text-sm font-medium transition-colors border-l border-gray-200 ${
-                  filters.prototypeFilter === 'only'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-                aria-pressed={filters.prototypeFilter === 'only'}
-                aria-label="Nur Prototypen anzeigen"
-                title="Nur Prototypen"
-              >
-                <span className="hidden sm:inline">Nur Prototypen</span>
-                <span className="sm:hidden">Nur Protos</span>
-              </button>
+    <>
+      <EventBar
+        eventName="Spieleabend"
+        gamesCount={games.length}
+        bringersCount={bringersCount}
+        wishesCount={wishesCount}
+        participantsCount={participants.length}
+      />
+      <div className={`px-4 sm:px-6 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1fr_320px] gap-8 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
+        <main className="space-y-6 min-w-0">
+          {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
+          {participant && (
+            <div className="bg-paper-hi border-[1.5px] border-rule rounded-2xl p-5 shadow-sm">
+              <div className="font-sans text-[11px] tracking-widest uppercase text-plum font-bold mb-2">
+                Spiel suchen oder hinzufügen
+              </div>
+              <UnifiedSearchBar
+                games={games}
+                currentParticipantId={currentParticipantId}
+                onGameAdded={handleGameAdded}
+                onSearchQueryChange={handleSearchQueryChange}
+                onScrollToGame={handleScrollToGame}
+                clearTrigger={searchClearTrigger}
+              />
             </div>
+          )}
+
+          {/* Filter pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-sans text-[11px] tracking-widest uppercase text-ink-mute font-bold mr-2">Filter</span>
+            <FilterPill
+              label="Alle"
+              count={games.length}
+              active={!hasActiveFilters && !searchQuery}
+              onClick={handleResetFilters}
+              icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
+            />
+            <FilterPill
+              label="Bringe ich mit"
+              count={games.filter(g => g.bringers.some(b => b.participant.id === currentParticipantId)).length}
+              active={filters.myGamesOnly}
+              onClick={() => setMyGamesOnly(!filters.myGamesOnly)}
+              icon={<img src="/package.svg?v=2" alt="" className="w-3.5 h-3.5" />}
+            />
+            <FilterPill
+              label="Spiele ich mit"
+              count={games.filter(g => g.players.some(p => p.participant.id === currentParticipantId)).length}
+              active={filters.playerOnly}
+              onClick={() => setPlayerOnly(!filters.playerOnly)}
+              icon={<img src="/meeple.svg" alt="" className="w-3.5 h-3.5" />}
+            />
+            <FilterPill
+              label="Wunsch"
+              count={wishesCount}
+              active={filters.wunschOnly}
+              onClick={() => setWunschOnly(!filters.wunschOnly)}
+              icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>}
+            />
+            <FilterPill
+              label="Ausgeblendet"
+              count={hiddenCount}
+              active={filters.hiddenOnly}
+              onClick={() => setHiddenOnly(!filters.hiddenOnly)}
+              icon={<img src="/eye-off.svg?v=3" alt="" className="w-3.5 h-3.5" />}
+            />
+            <FilterPill
+              label="Prototyp"
+              count={games.filter(g => g.isPrototype).length}
+              active={filters.prototypeFilter === 'only'}
+              onClick={() => setPrototypeFilter(filters.prototypeFilter === 'only' ? 'all' : 'only')}
+            />
+
+            {(hasActiveFilters || searchQuery) && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] bg-blush-50 text-blush-deep border-2 border-blush hover:bg-blush-50 ml-auto order-last"
+              >
+                Filter zurücksetzen
+              </button>
+            )}
           </div>
 
-          {(hasActiveFilters || searchQuery) && (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] bg-red-100 text-red-800 border-2 border-red-300 hover:bg-red-200 ml-auto order-last"
-            >
-              Filter zurücksetzen
-            </button>
-          )}
-        </div>
+          {/* Advanced Filters - player and bringer search (Requirement 8.1-8.4) */}
+          <AdvancedFilters
+            onPlayerSearch={setPlayerQuery}
+            onBringerSearch={setBringerQuery}
+            initialValues={{
+              playerQuery: filters.playerQuery,
+              bringerQuery: filters.bringerQuery,
+            }}
+          />
+
+          <GameTable
+            games={filteredGames}
+            currentParticipantId={currentParticipantId}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
+            onAddPlayer={handleAddPlayer}
+            onAddBringer={handleAddBringer}
+            onRemovePlayer={handleRemovePlayer}
+            onRemoveBringer={handleRemoveBringer}
+            onHideGame={handleHideGame}
+            onUnhideGame={handleUnhideGame}
+            onDeleteGame={handleDeleteGameClick}
+            onTogglePrototype={handleTogglePrototype}
+            onThumbnailUploaded={handleThumbnailUploaded}
+            scrollToGameId={scrollToGameId}
+            onScrolledToGame={handleScrolledToGame}
+            highlightedGameIds={highlightedGameIds}
+            totalGamesCount={games.length}
+            hiddenCount={hiddenCount}
+            hiddenOnly={filters.hiddenOnly}
+            thumbnailTimestamps={thumbnailTimestamps}
+            canManageGames={canManageGames}
+          />
+        </main>
+        <aside className="grid gap-5 md:grid-cols-3 lg:grid-cols-1 lg:sticky lg:top-6 lg:self-start">
+          <HomeSidebar games={games} participants={participants} />
+        </aside>
       </div>
-
-      {/* Advanced Filters - player and bringer search (Requirement 8.1-8.4) */}
-      <AdvancedFilters
-        onPlayerSearch={setPlayerQuery}
-        onBringerSearch={setBringerQuery}
-        initialValues={{
-          playerQuery: filters.playerQuery,
-          bringerQuery: filters.bringerQuery,
-        }}
-      />
-
-        <GameTable
-          games={filteredGames}
-          currentParticipantId={currentParticipantId}
-          sortKey={sortKey}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
-          onAddPlayer={handleAddPlayer}
-          onAddBringer={handleAddBringer}
-        onRemovePlayer={handleRemovePlayer}
-        onRemoveBringer={handleRemoveBringer}
-        onHideGame={handleHideGame}
-        onUnhideGame={handleUnhideGame}
-        onDeleteGame={handleDeleteGameClick}
-        onTogglePrototype={handleTogglePrototype}
-        onThumbnailUploaded={handleThumbnailUploaded}
-        scrollToGameId={scrollToGameId}
-        onScrolledToGame={handleScrolledToGame}
-        highlightedGameIds={highlightedGameIds}
-        totalGamesCount={games.length}
-        hiddenCount={hiddenCount}
-        hiddenOnly={filters.hiddenOnly}
-        thumbnailTimestamps={thumbnailTimestamps}
-        canManageGames={canManageGames}
-      />
 
       {/* Delete confirmation modal */}
       <DeleteGameModal
@@ -685,33 +640,13 @@ export function HomePage({ participant }: HomePageProps) {
           <button
             type="button"
             onClick={handleResetFilters}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-800 border-2 border-red-300 hover:bg-red-200 shadow-md"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-blush-50 text-blush-deep border-2 border-blush hover:bg-blush-50 shadow-md"
           >
             Filter zurücksetzen
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-// Icon components
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
+    </>
   );
 }
 

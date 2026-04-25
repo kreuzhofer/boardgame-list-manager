@@ -32,7 +32,7 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-paper flex flex-col">
       <Header
         basePath={basePath}
         eventName={eventName}
@@ -45,7 +45,7 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
         <main className="flex-1 container mx-auto px-4 py-6 pt-20 sm:pt-24 pb-20 md:pb-6">
           {children}
         </main>
-        <footer className="no-print bg-gray-200 text-gray-600 py-4 text-sm mb-16 md:mb-0">
+        <footer className="no-print bg-paper-lo text-ink-soft py-4 text-sm mb-16 md:mb-0">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>
               © {new Date().getFullYear()}{' '}
@@ -53,14 +53,14 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
                 href="https://danielkreuzhofer.de"
                 target="_blank"
                 rel="noreferrer"
-                className="underline decoration-dotted underline-offset-4 hover:text-gray-900"
+                className="underline decoration-dotted underline-offset-4 hover:text-ink"
               >
                 Daniel Kreuzhofer
               </a>
             </p>
             <nav className="flex items-center gap-4">
-              <Link to="/impressum" className="hover:text-gray-900 transition-colors">Impressum</Link>
-              <Link to="/datenschutz" className="hover:text-gray-900 transition-colors">Datenschutz</Link>
+              <Link to="/impressum" className="hover:text-ink transition-colors">Impressum</Link>
+              <Link to="/datenschutz" className="hover:text-ink transition-colors">Datenschutz</Link>
             </nav>
           </div>
         </footer>

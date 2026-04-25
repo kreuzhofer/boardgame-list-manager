@@ -38,12 +38,12 @@ export function DeleteGameModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-900">Spiel löschen</h2>
+        <div className="px-6 py-4 border-b border-rule flex items-center justify-between flex-shrink-0">
+          <h2 className="text-xl font-semibold text-ink">Spiel löschen</h2>
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-ink-mute hover:text-ink-soft transition-colors"
             aria-label="Schließen"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,35 +54,35 @@ export function DeleteGameModal({
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
-          <p className="text-gray-700">
+          <p className="text-ink-soft">
             Möchtest du das Spiel <strong>"{gameName}"</strong> wirklich löschen?
           </p>
           {hasParticipants && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <div className="mt-4 rounded-lg border border-butter bg-butter-50 p-3 text-sm text-butter-deep">
               <p className="font-semibold">Achtung: Es sind noch Einträge vorhanden.</p>
               <p className="mt-1">
                 Für dieses Spiel sind noch {participantDetails} eingetragen. Beim Löschen werden diese Einträge entfernt.
               </p>
             </div>
           )}
-          <p className="text-gray-500 text-sm mt-2">
+          <p className="text-ink-mute text-sm mt-2">
             Diese Aktion kann nicht rückgängig gemacht werden.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-rule flex-shrink-0 flex justify-end gap-3">
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-ink-soft bg-paper-lo hover:bg-rule rounded transition-colors disabled:opacity-50"
           >
             Abbrechen
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 text-white bg-blush-deep hover:bg-blush-deep rounded transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {isDeleting ? (
               <>

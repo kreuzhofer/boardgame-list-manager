@@ -67,7 +67,7 @@ export function AutocompleteDropdown({
 
   return (
     <div 
-      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden"
+      className="absolute z-50 w-full mt-1 bg-paper-hi border border-rule rounded-lg shadow-lg overflow-hidden"
       role="listbox"
       aria-label="Spielvorschläge"
     >
@@ -78,9 +78,9 @@ export function AutocompleteDropdown({
           style={{ maxHeight: 'min(400px, 60vh)' }}
         >
           {isLoading && (
-            <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+            <div className="px-4 py-3 text-sm text-ink-mute flex items-center gap-2">
               <svg
-                className="animate-spin h-4 w-4 text-gray-400"
+                className="animate-spin h-4 w-4 text-ink-mute"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -104,7 +104,7 @@ export function AutocompleteDropdown({
           )}
 
           {!isLoading && results.length === 0 && (
-            <div className="px-4 py-3 text-sm text-gray-500">
+            <div className="px-4 py-3 text-sm text-ink-mute">
               Keine Treffer gefunden
             </div>
           )}
@@ -115,8 +115,8 @@ export function AutocompleteDropdown({
               type="button"
               role="option"
               aria-selected={index === selectedIndex}
-              className={`w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors border-b border-gray-100 last:border-b-0 ${
-                index === selectedIndex ? 'bg-blue-50' : ''
+              className={`w-full px-4 py-3 text-left hover:bg-plum-50 focus:bg-plum-50 focus:outline-none transition-colors border-b border-rule-soft last:border-b-0 ${
+                index === selectedIndex ? 'bg-plum-50' : ''
               }`}
               onClick={() => onSelect(result)}
               onMouseDown={(e) => {
@@ -135,18 +135,18 @@ export function AutocompleteDropdown({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900 truncate">
+                    <span className="font-medium text-ink truncate">
                       {result.name}
                     </span>
                     {result.yearPublished && (
-                      <span className="ml-2 text-sm text-gray-500 flex-shrink-0">
+                      <span className="ml-2 text-sm text-ink-mute flex-shrink-0">
                         ({result.yearPublished})
                       </span>
                     )}
                   </div>
                   {/* Feature: 014-alternate-names-search - Show matched alternate name */}
                   {result.matchedAlternateName && (
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-ink-mute truncate">
                       Auch bekannt als: {result.matchedAlternateName}
                     </div>
                   )}
@@ -157,7 +157,7 @@ export function AutocompleteDropdown({
 
           {/* Show message if there are more results */}
           {!isLoading && hasMore && (
-            <div className="px-4 py-3 text-sm text-gray-500 bg-gray-50 border-t border-gray-200 text-center">
+            <div className="px-4 py-3 text-sm text-ink-mute bg-paper-lo border-t border-rule text-center">
               Weitere Treffer vorhanden. Bitte genauer suchen.
             </div>
           )}

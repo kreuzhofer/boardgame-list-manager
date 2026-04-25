@@ -164,8 +164,8 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="text-2xl font-bold text-gray-800">Admin</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-2xl font-bold text-ink">Admin</h2>
+        <p className="text-sm text-ink-soft">
           Du hast keine Berechtigung für diesen Bereich.
         </p>
       </div>
@@ -175,8 +175,8 @@ export function AdminPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="text-2xl font-bold text-gray-800">Admin</h2>
-        <p className="text-sm text-gray-500">Lade Konten...</p>
+        <h2 className="text-2xl font-bold text-ink">Admin</h2>
+        <p className="text-sm text-ink-mute">Lade Konten...</p>
       </div>
     );
   }
@@ -186,9 +186,9 @@ export function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Admin</h2>
+      <h2 className="text-2xl font-bold text-ink">Admin</h2>
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3">
+        <div className="bg-blush-50 border border-blush-50 text-blush-deep text-sm rounded p-3">
           {error}
         </div>
       )}
@@ -196,7 +196,7 @@ export function AdminPage() {
       {/* Accounts Table */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-paper-lo text-ink-soft">
             <tr>
               <th className="text-left px-4 py-3 font-medium">E-Mail</th>
               <th className="text-left px-4 py-3 font-medium">Rolle</th>
@@ -206,15 +206,15 @@ export function AdminPage() {
           </thead>
           <tbody>
             {accounts.map((entry) => (
-              <tr key={entry.id} className="border-t border-gray-100">
-                <td className="px-4 py-3 text-gray-800">{entry.email}</td>
-                <td className="px-4 py-3 text-gray-600">{entry.role}</td>
-                <td className="px-4 py-3 text-gray-600">{entry.status}</td>
+              <tr key={entry.id} className="border-t border-rule-soft">
+                <td className="px-4 py-3 text-ink">{entry.email}</td>
+                <td className="px-4 py-3 text-ink-soft">{entry.role}</td>
+                <td className="px-4 py-3 text-ink-soft">{entry.status}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => handleRoleToggle(entry)}
-                      className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                      className="text-xs px-2 py-1 rounded bg-plum-50 text-plum-deep hover:bg-plum-100"
                     >
                       Rolle wechseln
                     </button>
@@ -224,21 +224,21 @@ export function AdminPage() {
                       title={entry.id === account?.id && entry.status === 'active' ? 'Eigenes Konto kann nicht deaktiviert werden' : undefined}
                       className={`text-xs px-2 py-1 rounded ${
                         entry.id === account?.id && entry.status === 'active'
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                          ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
+                          : 'bg-butter-50 text-butter-deep hover:bg-butter-50'
                       }`}
                     >
                       {entry.status === 'active' ? 'Deaktivieren' : 'Aktivieren'}
                     </button>
                     <button
                       onClick={() => handlePasswordReset(entry)}
-                      className="text-xs px-2 py-1 rounded bg-purple-50 text-purple-700 hover:bg-purple-100"
+                      className="text-xs px-2 py-1 rounded bg-plum-50 text-plum-deep hover:bg-plum-100"
                     >
                       Passwort reset
                     </button>
                     <button
                       onClick={() => handleForceLogout(entry)}
-                      className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      className="text-xs px-2 py-1 rounded bg-paper-lo text-ink-soft hover:bg-rule"
                     >
                       Sitzungen beenden
                     </button>
@@ -248,7 +248,7 @@ export function AdminPage() {
             ))}
             {accounts.length === 0 && (
               <tr>
-                <td className="px-4 py-3 text-gray-500" colSpan={4}>
+                <td className="px-4 py-3 text-ink-mute" colSpan={4}>
                   Keine Konten gefunden.
                 </td>
               </tr>
@@ -259,7 +259,7 @@ export function AdminPage() {
 
       {/* BGG Data Management */}
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
-        <h3 className="text-lg font-semibold text-gray-800">BGG Datenverwaltung</h3>
+        <h3 className="text-lg font-semibold text-ink">BGG Datenverwaltung</h3>
 
         {/* Import Section */}
         <div className="space-y-3">
@@ -267,33 +267,33 @@ export function AdminPage() {
             <button
               onClick={handleStartImport}
               disabled={importRunning}
-              className="text-sm px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm px-4 py-2 rounded bg-plum text-white hover:bg-plum-deep disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {importRunning ? 'Import läuft...' : 'BGG Import starten'}
             </button>
             {importRunning && (
               <button
                 onClick={handleStopImport}
-                className="text-sm px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                className="text-sm px-4 py-2 rounded bg-blush-deep text-white hover:bg-blush-deep"
               >
                 Stoppen
               </button>
             )}
             {importStatus && !importRunning && importStatus.processed > 0 && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-ink-mute">
                 Letzter Import: {importStatus.created.toLocaleString()} neu, {importStatus.updated.toLocaleString()} aktualisiert, {importStatus.errors} Fehler
               </span>
             )}
           </div>
           {importRunning && importStatus && (
             <div className="space-y-1">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="w-full bg-rule rounded-full h-2.5">
                 <div
-                  className="bg-blue-600 h-2.5 rounded-full transition-all"
+                  className="bg-plum h-2.5 rounded-full transition-all"
                   style={{ width: importStatus.total > 0 ? `${(importStatus.processed / importStatus.total) * 100}%` : '0%' }}
                 />
               </div>
-              <div className="flex gap-4 text-xs text-gray-500">
+              <div className="flex gap-4 text-xs text-ink-mute">
                 <span>{importStatus.processed.toLocaleString()} / {importStatus.total.toLocaleString()}</span>
                 <span>{importStatus.created.toLocaleString()} neu</span>
                 <span>{importStatus.updated.toLocaleString()} aktualisiert</span>
@@ -304,7 +304,7 @@ export function AdminPage() {
           )}
         </div>
 
-        <hr className="border-gray-200" />
+        <hr className="border-rule" />
 
         {/* Enrichment Section */}
         <div className="space-y-3">
@@ -312,33 +312,33 @@ export function AdminPage() {
             <button
               onClick={handleStartEnrichment}
               disabled={enrichRunning}
-              className="text-sm px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm px-4 py-2 rounded bg-sage text-white hover:bg-sage-deep disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {enrichRunning ? 'Enrichment läuft...' : 'BGG Enrichment starten'}
             </button>
             {enrichRunning && (
               <button
                 onClick={handleStopEnrichment}
-                className="text-sm px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                className="text-sm px-4 py-2 rounded bg-blush-deep text-white hover:bg-blush-deep"
               >
                 Stoppen
               </button>
             )}
             {enrichStatus && !enrichRunning && (enrichStatus.stopReason || enrichStatus.processed > 0) && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-ink-mute">
                 {enrichStatus.stopReason ? `${enrichStatus.stopReason}: ` : ''}{enrichStatus.processed.toLocaleString()} neu angereichert, {enrichStatus.skipped.toLocaleString()} bereits vorhanden, {enrichStatus.errors} Fehler, {formatBytes(enrichStatus.bytesTransferred)}
               </span>
             )}
           </div>
           {enrichRunning && enrichStatus && (
             <div className="space-y-1">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="w-full bg-rule rounded-full h-2.5">
                 <div
-                  className="bg-green-600 h-2.5 rounded-full transition-all"
+                  className="bg-sage h-2.5 rounded-full transition-all"
                   style={{ width: enrichStatus.total > 0 ? `${(enrichStatus.processed / enrichStatus.total) * 100}%` : '0%' }}
                 />
               </div>
-              <div className="flex gap-4 text-xs text-gray-500">
+              <div className="flex gap-4 text-xs text-ink-mute">
                 <span>{enrichStatus.processed.toLocaleString()} / {enrichStatus.total.toLocaleString()}</span>
                 <span>{enrichStatus.skipped.toLocaleString()} übersprungen</span>
                 <span>Fehler: {enrichStatus.errors}</span>

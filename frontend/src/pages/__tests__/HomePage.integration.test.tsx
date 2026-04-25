@@ -24,6 +24,10 @@ vi.mock('../../api/client', () => ({
     hideGame: vi.fn(),
     unhideGame: vi.fn(),
     delete: vi.fn(),
+    togglePrototype: vi.fn(),
+  },
+  participantsApi: {
+    getAll: vi.fn().mockResolvedValue({ participants: [] }),
   },
   bggApi: {
     search: vi.fn(),
@@ -61,7 +65,7 @@ vi.mock('../../contexts/AuthContext', () => ({
   }),
 }));
 
-import { gamesApi, bggApi, thumbnailsApi } from '../../api/client';
+import { gamesApi, participantsApi, bggApi, thumbnailsApi } from '../../api/client';
 
 const mockParticipant: Participant = {
   id: 'user-1',
@@ -126,6 +130,7 @@ describe('HomePage Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (gamesApi.getAll as ReturnType<typeof vi.fn>).mockResolvedValue({ games: mockGames });
+    (participantsApi.getAll as ReturnType<typeof vi.fn>).mockResolvedValue({ participants: [] });
     (bggApi.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [], hasMore: false });
     mockUseSSE.mockReturnValue({ isConnected: true, connectionError: null });
   });
@@ -176,13 +181,13 @@ describe('HomePage Integration Tests', () => {
   });
 
   describe('Filter Toggles', () => {
-    it('renders Wunsch and Meine Spiele toggles', async () => {
+    it('renders Wunsch and Meine Spiele filter pills', async () => {
       render(<HomePage participant={mockParticipant} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /gesuchte spiele/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /nur spiele anzeigen, die ich mitbringe/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /nur spiele anzeigen, bei denen ich mitspiele/i })).toBeInTheDocument();
+        expect(screen.getByText('Wunsch')).toBeInTheDocument();
+        expect(screen.getByText('Bringe ich mit')).toBeInTheDocument();
+        expect(screen.getByText('Spiele ich mit')).toBeInTheDocument();
       });
     });
 
@@ -194,8 +199,8 @@ describe('HomePage Integration Tests', () => {
         expect(screen.getAllByText('Azul').length).toBeGreaterThan(0);
       });
 
-      // Click Wunsch toggle
-      const wunschButton = screen.getByRole('button', { name: /gesuchte spiele/i });
+      // Click Wunsch filter pill
+      const wunschButton = screen.getByText('Wunsch').closest('button')!;
       fireEvent.click(wunschButton);
 
       // Should show only Azul (which is wunsch)
@@ -249,7 +254,7 @@ describe('HomePage Integration Tests', () => {
       fireEvent.change(searchInput, { target: { value: 'Catan' } });
 
       // The game row/card should have highlight class
-      // Note: This is a simplified test - in reality we'd check for bg-green-100 class
+      // Note: This is a simplified test - in reality we'd check for bg-sage-100 class
       await waitFor(() => {
         expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
       });
@@ -283,7 +288,8 @@ describe('HomePage Integration Tests', () => {
       render(<HomePage participant={mockParticipant} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'Spieleliste' })).toBeInTheDocument();
+        // Page renders game content (heading removed, EventBar present instead)
+        expect(screen.getAllByText('Catan').length).toBeGreaterThan(0);
       });
 
       // Statistics component should not be rendered
@@ -440,8 +446,6 @@ describe('HomePage Integration Tests', () => {
       });
     });
   });
-});
-
 
   describe('Custom Thumbnail Upload (Spec 023)', () => {
     it('shows upload option for non-BGG games owned by user', async () => {
@@ -509,3 +513,4 @@ describe('HomePage Integration Tests', () => {
       // The actual upload flow is tested in ThumbnailUploadModal tests
     });
   });
+});

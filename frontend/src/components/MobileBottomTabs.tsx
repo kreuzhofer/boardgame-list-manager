@@ -114,7 +114,7 @@ export function MobileBottomTabs({ basePath = '', participant, onParticipantUpda
     <>
       {/* Bottom Tab Bar - visible only on mobile (<768px) */}
       <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-paper-hi border-t border-rule shadow-lg z-50"
         aria-label="Mobile Navigation"
       >
         <div className="flex justify-around items-center h-16">
@@ -130,8 +130,8 @@ export function MobileBottomTabs({ basePath = '', participant, onParticipantUpda
                   onClick={handleProfileClick}
                   className={`flex flex-col items-center justify-center flex-1 h-full min-w-0 px-1 transition-colors ${
                     isDialogOpen
-                      ? 'text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-plum'
+                      : 'text-ink-mute hover:text-ink-soft'
                   }`}
                   aria-label={tab.label}
                   data-testid={`tab-${tab.id}`}
@@ -148,8 +148,8 @@ export function MobileBottomTabs({ basePath = '', participant, onParticipantUpda
                 to={resolvedPath!}
                 className={`flex flex-col items-center justify-center flex-1 h-full min-w-0 px-1 transition-colors ${
                   isActive
-                    ? 'text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-plum'
+                    : 'text-ink-mute hover:text-ink-soft'
                 }`}
                 aria-label={tab.label}
                 aria-current={isActive ? 'page' : undefined}

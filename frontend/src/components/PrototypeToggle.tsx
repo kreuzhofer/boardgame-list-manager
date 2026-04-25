@@ -42,15 +42,15 @@ export function PrototypeToggle({
         onClick={handleToggle}
         disabled={disabled || isLoading}
         className={`flex items-center justify-between w-full px-4 py-3 text-left ${
-          disabled || isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+          disabled || isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-paper-lo'
         }`}
         aria-label={isPrototype ? 'Prototyp-Status deaktivieren' : 'Als Prototyp markieren'}
       >
-        <span className="text-sm text-gray-700">Prototyp</span>
+        <span className="text-sm text-ink-soft">Prototyp</span>
         <div className="relative">
           <div
             className={`w-10 h-6 rounded-full transition-colors ${
-              isPrototype ? 'bg-purple-500' : 'bg-gray-300'
+              isPrototype ? 'bg-ocean' : 'bg-rule'
             } ${isLoading ? 'animate-pulse' : ''}`}
           >
             <div
@@ -71,8 +71,8 @@ export function PrototypeToggle({
       disabled={disabled || isLoading}
       className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
         isPrototype
-          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          ? 'bg-ocean-50 text-ocean-deep hover:bg-ocean-50'
+          : 'bg-paper-lo text-ink-soft hover:bg-rule'
       } ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
       title={isPrototype ? 'Prototyp-Status deaktivieren' : 'Als Prototyp markieren'}
       aria-label={isPrototype ? 'Prototyp-Status deaktivieren' : 'Als Prototyp markieren'}
@@ -80,7 +80,7 @@ export function PrototypeToggle({
       <span className={isLoading ? 'animate-pulse' : ''}>Prototyp</span>
       <div
         className={`w-8 h-4 rounded-full transition-colors ${
-          isPrototype ? 'bg-purple-500' : 'bg-gray-300'
+          isPrototype ? 'bg-ocean' : 'bg-rule'
         }`}
       >
         <div

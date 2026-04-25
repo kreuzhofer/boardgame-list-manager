@@ -122,13 +122,13 @@ export function GameTable({
     const hasGamesButNoMatch = totalGamesCount !== undefined && totalGamesCount > 0;
     
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500 text-lg">
+      <div className="bg-paper-hi rounded-lg shadow p-8 text-center">
+        <p className="text-ink-mute text-lg">
           {hasGamesButNoMatch
             ? 'Keine Spiele gefunden.'
             : 'Noch keine Spiele vorhanden.'}
         </p>
-        <p className="text-gray-400 text-sm mt-2">
+        <p className="text-ink-mute text-sm mt-2">
           {hasGamesButNoMatch
             ? 'Versuche einen anderen Suchbegriff oder setze die Filter zurück.'
             : 'Füge das erste Spiel hinzu, um loszulegen!'}
@@ -188,7 +188,7 @@ export function GameTable({
     return (
       <button
         onClick={() => handleSortToggle(targetKey)}
-        className={`inline-flex items-center gap-1 focus:outline-none focus:text-blue-600 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'} ${className}`.trim()}
+        className={`inline-flex items-center gap-1 focus:outline-none focus:text-plum transition-colors ${isActive ? 'text-plum' : 'text-ink-soft hover:text-plum'} ${className}`.trim()}
         aria-label={ariaLabel}
       >
         <span>{label}</span>
@@ -206,11 +206,11 @@ export function GameTable({
       : `${totalCount} ${totalCount === 1 ? 'Spiel' : 'Spiele'}`;
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-paper-hi rounded-lg shadow overflow-hidden">
       {/* Mobile card layout (Requirement 6.3) - visible on small screens */}
       <div className="lg:hidden">
         {/* Mobile sort header */}
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="bg-paper-lo border-b border-rule px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm font-semibold">
             <SortButton
               label="Hinzugefügt"
@@ -219,11 +219,11 @@ export function GameTable({
             />
             <SortButton label="Name" targetKey="name" />
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-ink-mute">
             {countLabel}
           </span>
         </div>
-        
+
         {/* Mobile card list */}
         <div>
           {sortedGames.map((game, index) => (
@@ -232,7 +232,7 @@ export function GameTable({
               className="relative"
             >
               {index > 0 && (
-                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300/35 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-rule/35 to-transparent pointer-events-none z-10" />
               )}
               <GameCard
                 game={game}
@@ -262,24 +262,24 @@ export function GameTable({
       <div className="hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-paper-lo border-b border-rule">
               <tr>
-                <th className="px-2 py-3 text-left text-sm font-semibold text-gray-700 w-20">
+                <th className="px-2 py-3 text-left text-sm font-semibold text-ink-soft w-20">
                   <SortButton label="Hinzugefügt" targetKey="addedAt" className="leading-tight whitespace-normal break-words" />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[22%] 2xl:w-[25%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink-soft w-[22%] 2xl:w-[25%]">
                   <SortButton label="Name" targetKey="name" />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[15%] 2xl:w-[18%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink-soft w-[15%] 2xl:w-[18%]">
                   Bringt mit
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[15%] 2xl:w-[18%]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink-soft w-[15%] 2xl:w-[18%]">
                   Mitspieler
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-[320px] 2xl:w-[300px]">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink-soft w-[320px] 2xl:w-[300px]">
                   <div className="flex items-center gap-2 w-full">
                     <span>Aktionen</span>
-                    <span className="ml-auto text-right text-sm font-normal text-gray-500">
+                    <span className="ml-auto text-right text-sm font-normal text-ink-mute">
                       {countLabel}
                     </span>
                   </div>
@@ -314,8 +314,8 @@ export function GameTable({
         </div>
 
         {/* Table footer with count */}
-        <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
+        <div className="bg-paper-lo px-4 py-2 border-t border-rule">
+          <p className="text-sm text-ink-mute">
             {countLabel}
           </p>
         </div>

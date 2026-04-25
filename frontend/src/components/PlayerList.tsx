@@ -29,7 +29,7 @@ export function PlayerList({
 }: PlayerListProps) {
   if (players.length === 0) {
     return (
-      <span className="text-gray-400 italic text-sm">
+      <span className="text-ink-mute italic text-sm">
         Keine Mitspieler
       </span>
     );
@@ -50,8 +50,8 @@ export function PlayerList({
             <span
               className={
                 player.participant.id === currentParticipantId
-                  ? 'font-semibold text-blue-600'
-                  : 'text-gray-700'
+                  ? 'font-semibold text-plum'
+                  : 'text-ink-soft'
               }
               title={player.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
             >
@@ -62,7 +62,7 @@ export function PlayerList({
         {hasOverflow && (
           <button 
             onClick={onToggleExpand}
-            className="text-blue-500 text-xs hover:text-blue-700 hover:underline"
+            className="text-plum text-xs hover:text-plum-deep hover:underline"
           >
             +{overflowCount} weitere
           </button>
@@ -79,22 +79,22 @@ export function PlayerList({
           <span
             className={
               player.participant.id === currentParticipantId
-                ? 'font-semibold text-blue-600'
-                : 'text-gray-700'
+                ? 'font-semibold text-plum'
+                : 'text-ink-soft'
             }
             title={player.participant.id === currentParticipantId ? 'Das bist du!' : undefined}
           >
             {player.participant.name}
           </span>
           {index < visiblePlayers.length - 1 && (
-            <span className="text-gray-400">, </span>
+            <span className="text-ink-mute">, </span>
           )}
         </span>
       ))}
       {hasOverflow && (
         <button 
           onClick={onToggleExpand}
-          className="text-blue-500 text-xs ml-1 hover:text-blue-700 hover:underline"
+          className="text-plum text-xs ml-1 hover:text-plum-deep hover:underline"
         >
           +{overflowCount}
         </button>

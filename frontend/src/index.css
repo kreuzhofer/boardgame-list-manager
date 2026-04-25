@@ -1,51 +1,167 @@
+/* ──────────────────────────────────────────────────────────────────
+ * Würfelglück — global styles & component layer
+ * The reusable utility classes (.wg-card, .wg-btn-*, .wg-tag-*)
+ * are escape hatches for repeating patterns. Always prefer them over
+ * hand-rolled utility soup.
+ * ────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Toast slide-in animation */
+@layer base {
+  html, body {
+    @apply bg-paper text-ink font-sans;
+    /* Subtle parchment dot pattern across the app */
+    background-image: theme('backgroundImage.parchment-dots');
+    background-size: theme('backgroundSize.parchment');
+  }
+
+  /* Headings: same sans-serif as body by default.
+     Use font-display explicitly for decorative/landing headings. */
+  h1, h2, h3, h4 {
+    @apply font-sans text-ink font-bold;
+  }
+
+  /* Default focus ring — plum, soft */
+  :focus-visible {
+    outline: 2px solid theme('colors.plum.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* ── Cards ────────────────────────────────────────────────────── */
+  .wg-card {
+    @apply bg-paper-hi border border-rule rounded-xl p-5;
+  }
+  .wg-card-raised {
+    @apply wg-card shadow-raised;
+  }
+  .wg-card-accent-butter { border-top: 3px solid theme('colors.butter.DEFAULT'); }
+  .wg-card-accent-sage   { border-top: 3px solid theme('colors.sage.DEFAULT'); }
+  .wg-card-accent-plum   { border-top: 3px solid theme('colors.plum.DEFAULT'); }
+  .wg-card-accent-ocean  { border-top: 3px solid theme('colors.ocean.DEFAULT'); }
+
+  /* ── Buttons ──────────────────────────────────────────────────── */
+  .wg-btn {
+    @apply inline-flex items-center justify-center gap-2
+           h-10 px-4 rounded-lg
+           font-sans text-sm font-bold tracking-wide
+           border border-transparent
+           transition-colors whitespace-nowrap;
+    min-height: 44px;
+  }
+  .wg-btn-sm { @apply h-8 px-3 text-xs; min-height: 32px; }
+  .wg-btn-lg { @apply h-12 px-5 text-base; min-height: 48px; }
+
+  .wg-btn-primary {
+    @apply wg-btn bg-plum text-paper-hi border-plum shadow-press-plum
+           hover:bg-plum-deep hover:border-plum-deep;
+  }
+  .wg-btn-secondary {
+    @apply wg-btn bg-paper-hi text-plum border-plum
+           hover:bg-plum-50;
+  }
+  .wg-btn-ghost {
+    @apply wg-btn bg-transparent text-ink border-transparent
+           hover:bg-paper-lo;
+  }
+  .wg-btn-soft {
+    @apply wg-btn bg-plum-50 text-plum border-transparent
+           hover:bg-plum-100;
+  }
+  .wg-btn-sage {
+    @apply wg-btn bg-sage text-paper-hi border-sage shadow-press-sage
+           hover:bg-sage-deep hover:border-sage-deep;
+  }
+  .wg-btn-donate {
+    @apply wg-btn bg-butter text-plum-deep border-butter shadow-press-butter
+           hover:bg-butter-hi hover:border-butter-hi;
+  }
+  .wg-btn-danger {
+    @apply wg-btn bg-paper-hi text-blush-deep border-blush
+           hover:bg-blush-50;
+  }
+
+  .wg-btn-toggle {
+    @apply wg-btn bg-paper-hi text-ink-soft border-rule
+           hover:bg-paper-lo;
+  }
+  .wg-btn-toggle-active {
+    @apply wg-btn bg-sage text-paper-hi border-sage shadow-press-sage
+           hover:bg-sage-deep;
+  }
+  .wg-btn-proto {
+    @apply wg-btn bg-paper-hi text-ocean-deep border-rule
+           hover:bg-paper-lo;
+  }
+  .wg-btn-proto-active {
+    @apply wg-btn bg-ocean text-paper-hi border-ocean
+           hover:bg-ocean-deep;
+  }
+
+  /* ── Tags / chips ─────────────────────────────────────────────── */
+  .wg-tag {
+    @apply inline-flex items-center gap-1.5
+           px-2.5 py-0.5 rounded-full
+           font-sans text-[11px] font-bold tracking-wide
+           leading-tight whitespace-nowrap;
+  }
+  .wg-tag-plum   { @apply wg-tag bg-plum-50 text-plum; }
+  .wg-tag-sage   { @apply wg-tag bg-sage-50 text-sage-deep; }
+  .wg-tag-butter { @apply wg-tag bg-butter-50 text-butter-deep; }
+  .wg-tag-blush  { @apply wg-tag bg-blush-50 text-blush-deep; }
+  .wg-tag-ocean  { @apply wg-tag bg-ocean-50 text-ocean-deep; }
+  .wg-tag-ink    { @apply wg-tag bg-ink/10 text-ink-soft; }
+
+  .wg-tag-dot::before {
+    content: ''; display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+    margin-right: -2px;
+  }
+
+  /* ── Inputs ───────────────────────────────────────────────────── */
+  .wg-input {
+    @apply h-11 px-4 rounded-lg
+           bg-paper-hi border border-rule
+           font-sans text-base text-ink placeholder-ink-mute
+           focus:outline-none focus:ring-2 focus:ring-plum focus:border-plum;
+    min-height: 44px;
+  }
+  .wg-input-error {
+    @apply border-blush focus:ring-blush focus:border-blush;
+  }
+
+  .wg-label {
+    @apply font-sans text-[11px] font-extrabold uppercase tracking-[0.1em] text-ink-mute;
+  }
+
+  .wg-divider-dotted {
+    height: 1px;
+    background-image: radial-gradient(circle, theme('colors.rule.DEFAULT') 1px, transparent 1px);
+    background-size: 6px 1px;
+    background-repeat: repeat-x;
+  }
+}
+
+/* Preserved animations */
+.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+.animate-fade-out-up    { animation: fade-out-up 0.3s ease-in forwards; }
+.animate-fade-in-up     { animation: fade-in-up 0.2s ease-out; }
+
 @keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
-}
-
-/* Toast fade-out animation */
 @keyframes fade-out-up {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
+  from { transform: translateY(0);     opacity: 1; }
+  to   { transform: translateY(-20px); opacity: 0; }
 }
-
-.animate-fade-out-up {
-  animation: fade-out-up 0.3s ease-in forwards;
-}
-
-/* Click notification fade-in animation */
 @keyframes fade-in-up {
-  from {
-    transform: translateX(-50%) translateY(8px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.2s ease-out;
+  from { transform: translateX(-50%) translateY(8px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
 }

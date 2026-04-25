@@ -116,7 +116,7 @@ describe('GameRow Alternate Names Display', () => {
       // The alternate name should be in a span with smaller, muted styling
       const alternateNameElement = screen.getByText('Arche Nova');
       expect(alternateNameElement).toHaveClass('text-sm');
-      expect(alternateNameElement).toHaveClass('text-gray-500');
+      expect(alternateNameElement).toHaveClass('text-ink-mute');
     });
   });
 
@@ -130,9 +130,9 @@ describe('GameRow Alternate Names Display', () => {
       renderGameRow(game, currentParticipantId);
 
       expect(screen.getByText('Gloomhaven')).toBeInTheDocument();
-      // The name cell should not contain an alternate name span with text-sm text-gray-500
+      // The name cell should not contain an alternate name span with text-sm text-ink-mute
       const nameCell = screen.getByText('Gloomhaven').closest('td');
-      const alternateNameSpan = nameCell?.querySelector('span.text-sm.text-gray-500');
+      const alternateNameSpan = nameCell?.querySelector('span.text-sm.text-ink-mute');
       expect(alternateNameSpan).toBeNull();
     });
 

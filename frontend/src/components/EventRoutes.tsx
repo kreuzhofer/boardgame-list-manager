@@ -33,9 +33,9 @@ function EventContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-plum to-plum-deep flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
-          <p className="text-gray-500">Lade Event...</p>
+          <p className="text-ink-mute">Lade Event...</p>
         </div>
       </div>
     );
@@ -43,13 +43,13 @@ function EventContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-ink-mute to-ink-soft flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">Event nicht gefunden</h1>
-          <p className="text-gray-600">
+          <h1 className="text-xl font-bold text-ink mb-2">Event nicht gefunden</h1>
+          <p className="text-ink-soft">
             Unter dieser Adresse gibt es kein Event.
           </p>
-          <a href="/" className="text-blue-600 hover:underline mt-4 inline-block">
+          <a href="/" className="text-plum hover:underline mt-4 inline-block">
             Zur Startseite
           </a>
         </div>

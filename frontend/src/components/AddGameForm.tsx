@@ -207,7 +207,7 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <h3 className="text-lg font-semibold text-ink mb-4">
         Neues Spiel hinzufügen
       </h3>
       
@@ -217,7 +217,7 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
           <div ref={containerRef} className="relative">
             <label
               htmlFor="game-name-input"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-ink-soft mb-1"
             >
               Spielname
             </label>
@@ -242,17 +242,17 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="listbox"
                 aria-autocomplete="list"
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-plum disabled:bg-paper-lo disabled:cursor-not-allowed ${
                   error
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300'
+                    ? 'border-blush focus:ring-blush'
+                    : 'border-rule'
                 }`}
                 aria-describedby={error ? 'game-name-error' : undefined}
                 aria-invalid={error ? 'true' : 'false'}
               />
               {/* BGG selection indicator */}
               {selectedBggId !== undefined && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-sage-100 text-sage-deep px-2 py-0.5 rounded">
                   BGG
                 </span>
               )}
@@ -279,8 +279,8 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
               disabled={isSubmitting}
               className={`${toggleButtonBase} ${
                 isPlaying
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-plum text-white hover:bg-plum-deep'
+                  : 'bg-paper-lo text-ink-soft hover:bg-rule'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {isPlaying ? 'Mitspielen ✓' : 'Mitspielen'}
@@ -293,8 +293,8 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
               disabled={isSubmitting}
               className={`${toggleButtonBase} ${
                 isBringing
-                  ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-sage text-white hover:bg-sage-deep'
+                  : 'bg-paper-lo text-ink-soft hover:bg-rule'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> {isBringing ? 'Mitbringen ✓' : 'Mitbringen'}
@@ -304,7 +304,7 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+              className="px-6 py-2 bg-plum text-white rounded-lg hover:bg-plum-deep transition-colors font-medium disabled:bg-plum-soft disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
             >
               {isSubmitting ? (
                 <>
@@ -341,7 +341,7 @@ export function AddGameForm({ currentParticipantId, onGameAdded }: AddGameFormPr
         {error && (
           <p
             id="game-name-error"
-            className="mt-2 text-sm text-red-600"
+            className="mt-2 text-sm text-blush-deep"
             role="alert"
           >
             {error}

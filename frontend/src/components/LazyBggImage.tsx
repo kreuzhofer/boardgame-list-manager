@@ -176,7 +176,7 @@ export function LazyBggImage({
         {/* Shimmer placeholder */}
         {(loadState === 'idle' || loadState === 'loading') && (
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"
+            className="absolute inset-0 bg-gradient-to-r from-paper-lo via-paper-hi to-paper-lo animate-pulse"
             data-testid="shimmer-placeholder"
           />
         )}
@@ -184,11 +184,11 @@ export function LazyBggImage({
         {/* Error placeholder */}
         {loadState === 'error' && (
           <div 
-            className="absolute inset-0 bg-gray-100 flex items-center justify-center"
+            className="absolute inset-0 bg-paper-lo flex items-center justify-center"
             data-testid="error-placeholder"
           >
             <svg 
-              className={`${iconSize} text-gray-400`}
+              className={`${iconSize} text-ink-mute`}
               viewBox="0 0 24 24" 
               fill="currentColor"
               aria-hidden="true"

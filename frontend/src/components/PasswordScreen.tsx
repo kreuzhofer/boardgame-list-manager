@@ -68,14 +68,14 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-plum to-plum-deep flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl font-bold text-ink mb-2">
             {eventName}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-ink-soft">
             Bitte melde Dich an, um fortzufahren.
           </p>
         </div>
@@ -85,7 +85,7 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-ink-soft mb-2"
             >
               Passwort eingeben
             </label>
@@ -96,14 +96,14 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 pr-12 border border-rule rounded-lg focus:ring-2 focus:ring-plum focus:border-plum transition-colors"
                 placeholder="Passwort"
                 disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setIsPasswordVisible((visible) => !visible)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded text-gray-500 hover:text-gray-700 disabled:text-gray-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded text-ink-mute hover:text-ink-soft disabled:text-ink-mute"
                 aria-label={isPasswordVisible ? 'Passwort verbergen' : 'Passwort anzeigen'}
                 disabled={isLoading}
               >
@@ -119,7 +119,7 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-blush-50 border border-blush-50 text-blush-deep px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -128,7 +128,7 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-plum hover:bg-plum-deep text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">

@@ -102,11 +102,11 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="px-6 py-4 border-b border-rule flex-shrink-0">
+          <h2 className="text-xl font-semibold text-ink">
             Wer bist du?
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-ink-soft mt-1">
             Wähle deinen Namen aus der Liste oder erstelle einen neuen Teilnehmer.
           </p>
         </div>
@@ -116,19 +116,19 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
           {/* Confirmation view */}
           {pendingParticipant ? (
             <div className="text-center py-4">
-              <p className="text-lg text-gray-900 mb-6">
+              <p className="text-lg text-ink mb-6">
                 Du meldest Dich als <span className="font-semibold">{pendingParticipant.name}</span> an
               </p>
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={handleCancelConfirm}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-ink-soft bg-paper-lo rounded-lg hover:bg-rule transition-colors"
                 >
                   Nein, nochmal zurück
                 </button>
                 <button
                   onClick={handleConfirmParticipant}
-                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
                 >
                   Ja
                 </button>
@@ -136,14 +136,14 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
             </div>
           ) : isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-plum"></div>
             </div>
           ) : error ? (
-            <div className="text-red-600 text-center py-4">
+            <div className="text-blush-deep text-center py-4">
               {error}
               <button
                 onClick={fetchParticipants}
-                className="block mx-auto mt-2 text-blue-600 hover:underline"
+                className="block mx-auto mt-2 text-plum hover:underline"
               >
                 Erneut versuchen
               </button>
@@ -153,7 +153,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
               {/* Existing users list */}
               {participants.length > 0 && !showCreateForm && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  <h3 className="text-sm font-medium text-ink-soft mb-2">
                     Bestehende Teilnehmer ({participants.length}):
                   </h3>
                   <div className="relative">
@@ -162,9 +162,9 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                         <button
                           key={participant.id}
                           onClick={() => handleSelectParticipant(participant)}
-                          className="w-full px-4 py-3 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                          className="w-full px-4 py-3 text-left hover:bg-plum-50 focus:bg-plum-50 focus:outline-none transition-colors"
                         >
-                          <span className="text-gray-900">{participant.name}</span>
+                          <span className="text-ink">{participant.name}</span>
                         </button>
                       ))}
                     </div>
@@ -173,7 +173,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                     )}
                   </div>
                   {participants.length > 4 && (
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-ink-mute text-center">
                       ↓ Scrolle für mehr
                     </p>
                   )}
@@ -184,7 +184,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
               {!showCreateForm && participants.length > 0 && (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="mt-4 w-full py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="mt-4 w-full py-2 text-plum hover:text-plum-deep text-sm font-medium"
                 >
                   + Neuen Teilnehmer erstellen
                 </button>
@@ -193,7 +193,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
               {/* Create new participant form */}
               {showCreateForm && (
                 <form onSubmit={handleCreateParticipant} className="mt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  <h3 className="text-sm font-medium text-ink-soft mb-2">
                     Neuen Teilnehmer erstellen:
                   </h3>
                   <div className="space-y-3">
@@ -211,12 +211,12 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                       }}
                       placeholder="Dein Name"
                       maxLength={MAX_USERNAME_LENGTH}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-rule rounded-lg focus:ring-2 focus:ring-plum focus:border-plum"
                       autoFocus
                       disabled={isCreating}
                     />
                     {createError && (
-                      <p className="text-red-600 text-sm">{createError}</p>
+                      <p className="text-blush-deep text-sm">{createError}</p>
                     )}
                     <div className="flex gap-2">
                       <button
@@ -226,14 +226,14 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                           setNewParticipantName('');
                           setCreateError(null);
                         }}
-                        className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        className="flex-1 px-4 py-2 text-ink-soft bg-paper-lo rounded-lg hover:bg-rule transition-colors"
                         disabled={isCreating}
                       >
                         Abbrechen
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex-1 px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep disabled:opacity-50 transition-colors"
                         disabled={isCreating || !newParticipantName.trim()}
                       >
                         {isCreating ? 'Erstelle...' : 'Erstellen'}
@@ -246,12 +246,12 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
               {/* Show create form directly if no participants exist */}
               {participants.length === 0 && !showCreateForm && (
                 <div className="text-center py-4">
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-ink-soft mb-4">
                     Noch keine Teilnehmer vorhanden.
                   </p>
                   <button
                     onClick={() => setShowCreateForm(true)}
-                    className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
                   >
                     Ersten Teilnehmer erstellen
                   </button>

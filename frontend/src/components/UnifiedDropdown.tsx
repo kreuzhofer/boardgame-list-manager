@@ -98,13 +98,13 @@ export function UnifiedDropdown({
 
   const dropdownContent = (
     <div
-      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden"
+      className="absolute z-50 w-full mt-1 bg-paper-hi border border-rule rounded-lg shadow-lg overflow-hidden"
       role="listbox"
     >
       {/* Schon eingetragen section */}
       {hasInListeResults && (
-        <div className="border-b border-gray-200">
-          <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        <div className="border-b border-rule">
+          <div className="px-3 py-2 bg-paper-lo text-xs font-semibold text-ink-soft uppercase tracking-wide">
             📋 Schon eingetragen
           </div>
           <ul>
@@ -117,8 +117,8 @@ export function UnifiedDropdown({
                     onClick={() => onInListeClick(game.id)}
                     className={`w-full px-3 py-3 text-left flex items-center gap-3 min-h-[44px] transition-colors ${
                       isSelected
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-plum-50 text-ink'
+                        : 'hover:bg-paper-lo'
                     }`}
                     role="option"
                     aria-selected={isSelected}
@@ -135,24 +135,24 @@ export function UnifiedDropdown({
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <span className="font-medium text-gray-900 truncate block">
+                      <span className="font-medium text-ink truncate block">
                         ✓ {game.name}
                       </span>
                       {/* Feature: 014-alternate-names-search - Show matched alternate name */}
                       {game.matchedAlternateName && (
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-ink-mute truncate">
                           Auch bekannt als: {game.matchedAlternateName}
                         </div>
                       )}
                     </div>
                     {game.bringerNames.length > 0 ? (
-                      <span className="text-sm text-green-700 flex-shrink-0 flex items-center gap-1">
-                        <img src="/package.svg?v=2" alt="" className="w-5 h-5" /> {game.bringerNames.length === 1 
-                          ? game.bringerNames[0] 
+                      <span className="text-sm text-sage-deep flex-shrink-0 flex items-center gap-1">
+                        <img src="/package.svg?v=2" alt="" className="w-5 h-5" /> {game.bringerNames.length === 1
+                          ? game.bringerNames[0]
                           : `${game.bringerNames[0]} +${game.bringerNames.length - 1}`}
                       </span>
                     ) : (
-                      <span className="text-sm text-red-600 flex-shrink-0 flex items-center gap-1">
+                      <span className="text-sm text-blush-deep flex-shrink-0 flex items-center gap-1">
                         <img src="/package.svg?v=2" alt="" className="w-5 h-5" /> Keiner
                       </span>
                     )}
@@ -162,7 +162,7 @@ export function UnifiedDropdown({
             })}
           </ul>
           {totalMatchingGames > IN_LISTE_MAX_ITEMS && (
-            <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50">
+            <div className="px-3 py-2 text-xs text-ink-mute bg-paper-lo">
               + {totalMatchingGames - IN_LISTE_MAX_ITEMS} weitere in der Liste
             </div>
           )}
@@ -172,11 +172,11 @@ export function UnifiedDropdown({
       {/* Von BGG section */}
       {(hasBggResults || isBggLoading) && (
         <div>
-          <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="px-3 py-2 bg-paper-lo text-xs font-semibold text-ink-soft uppercase tracking-wide">
             🌐 Von BGG
           </div>
           {isBggLoading && visibleBggResults.length === 0 ? (
-            <div className="px-3 py-3 text-sm text-gray-500 flex items-center gap-2">
+            <div className="px-3 py-3 text-sm text-ink-mute flex items-center gap-2">
               <LoadingSpinner />
               Suche...
             </div>
@@ -192,8 +192,8 @@ export function UnifiedDropdown({
                       onClick={() => onBggClick(result)}
                       className={`w-full px-3 py-3 text-left flex items-center gap-3 min-h-[44px] transition-colors ${
                         isSelected
-                          ? 'bg-blue-100 text-blue-900'
-                          : 'hover:bg-gray-100'
+                          ? 'bg-plum-50 text-ink'
+                          : 'hover:bg-paper-lo'
                       }`}
                       role="option"
                       aria-selected={isSelected}
@@ -209,18 +209,18 @@ export function UnifiedDropdown({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-900 truncate">
+                          <span className="text-ink truncate">
                             {result.name}
                           </span>
                           {result.yearPublished && (
-                            <span className="text-gray-500 flex-shrink-0">
+                            <span className="text-ink-mute flex-shrink-0">
                               ({result.yearPublished})
                             </span>
                           )}
                         </div>
                         {/* Feature: 014-alternate-names-search - Show matched alternate name */}
                         {result.matchedAlternateName && (
-                          <div className="text-xs text-gray-500 truncate">
+                          <div className="text-xs text-ink-mute truncate">
                             Auch bekannt als: {result.matchedAlternateName}
                           </div>
                         )}
@@ -240,7 +240,7 @@ export function UnifiedDropdown({
             <button
               type="button"
               onClick={onShowMore}
-              className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+              className="w-full px-3 py-2 text-left text-sm text-plum hover:bg-plum-50 transition-colors"
             >
               {remainingBggCount > 0 ? (
                 <>+ {remainingBggCount} weitere Treffer anzeigen...</>
@@ -269,7 +269,7 @@ export function UnifiedDropdown({
 function LoadingSpinner() {
   return (
     <svg
-      className="animate-spin h-4 w-4 text-gray-400"
+      className="animate-spin h-4 w-4 text-ink-mute"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

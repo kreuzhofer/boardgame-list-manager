@@ -139,7 +139,7 @@ describe('GameCard Alternate Names Display', () => {
 
       // The alternate name should be in a span with muted styling
       const alternateNameSpan = screen.getByText(/Alternate Name/).closest('span');
-      expect(alternateNameSpan).toHaveClass('text-gray-500');
+      expect(alternateNameSpan).toHaveClass('text-ink-mute');
     });
   });
 });

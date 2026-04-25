@@ -24,7 +24,7 @@ function renderMarkdown(content: string): ReactNode[] {
     elements.push(
       <ul className="list-disc pl-5 mt-2 space-y-1" key={`list-${elements.length}`}>
         {items.map((item, index) => (
-          <li className="text-sm text-gray-700" key={`item-${elements.length}-${index}`}>
+          <li className="text-sm text-ink-soft" key={`item-${elements.length}-${index}`}>
             {item}
           </li>
         ))}
@@ -37,7 +37,7 @@ function renderMarkdown(content: string): ReactNode[] {
     const text = paragraph.join(' ');
     paragraph = [];
     elements.push(
-      <p className="text-sm text-gray-700 mt-2" key={`p-${elements.length}`}>
+      <p className="text-sm text-ink-soft mt-2" key={`p-${elements.length}`}>
         {text}
       </p>
     );
@@ -55,7 +55,7 @@ function renderMarkdown(content: string): ReactNode[] {
       flushParagraph();
       flushList();
       elements.push(
-        <h2 className="text-base font-semibold text-gray-900 mt-4 first:mt-0" key={`h2-${elements.length}`}>
+        <h2 className="text-base font-semibold text-ink mt-4 first:mt-0" key={`h2-${elements.length}`}>
           {trimmed.slice(3)}
         </h2>
       );
@@ -66,7 +66,7 @@ function renderMarkdown(content: string): ReactNode[] {
       flushParagraph();
       flushList();
       elements.push(
-        <h1 className="text-lg font-semibold text-gray-900 mt-4 first:mt-0" key={`h1-${elements.length}`}>
+        <h1 className="text-lg font-semibold text-ink mt-4 first:mt-0" key={`h1-${elements.length}`}>
           {trimmed.slice(2)}
         </h1>
       );
@@ -108,13 +108,13 @@ export function ReleaseNotesDialog({ isOpen, content, onDismiss }: ReleaseNotesD
       aria-labelledby="release-notes-title"
     >
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 id="release-notes-title" className="text-xl font-semibold text-gray-900">
+        <div className="px-6 py-4 border-b border-rule flex items-center justify-between flex-shrink-0">
+          <h2 id="release-notes-title" className="text-xl font-semibold text-ink">
             Neuigkeiten
           </h2>
           <button
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+            className="text-ink-mute hover:text-ink-soft transition-colors p-1 rounded-lg hover:bg-paper-lo"
             aria-label="Schliessen"
           >
             <svg
@@ -138,10 +138,10 @@ export function ReleaseNotesDialog({ isOpen, content, onDismiss }: ReleaseNotesD
           {renderMarkdown(content)}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end flex-shrink-0">
+        <div className="px-6 py-4 border-t border-rule flex justify-end flex-shrink-0">
           <button
             onClick={onDismiss}
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
           >
             Gelesen
           </button>

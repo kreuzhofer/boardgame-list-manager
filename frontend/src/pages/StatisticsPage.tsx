@@ -16,7 +16,7 @@ import { Statistics } from '../components/Statistics';
 export function StatisticsPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Statistiken</h2>
+      <h2 className="text-2xl font-bold text-ink">Statistiken</h2>
       <Statistics />
     </div>
   );

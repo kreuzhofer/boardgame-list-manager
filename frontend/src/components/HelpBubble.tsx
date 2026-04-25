@@ -207,10 +207,10 @@ export function HelpBubble({
 
   // Arrow/tip position classes
   const arrowPositionClasses: Record<Position, string> = {
-    'top-right': 'top-full right-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
-    'top-left': 'top-full left-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
-    'bottom-right': 'bottom-full right-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
-    'bottom-left': 'bottom-full left-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
+    'top-right': 'top-full right-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
+    'top-left': 'top-full left-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
+    'bottom-right': 'bottom-full right-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
+    'bottom-left': 'bottom-full left-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
   };
 
   // When showIndicator is false, we need the container to cover the parent for events
@@ -233,7 +233,7 @@ export function HelpBubble({
           type="button"
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
-          className="w-4 h-4 rounded-full bg-gray-500 text-white text-xs font-bold flex items-center justify-center hover:bg-gray-600 transition-colors"
+          className="w-4 h-4 rounded-full bg-ink-mute text-white text-xs font-bold flex items-center justify-center hover:bg-ink-soft transition-colors"
           aria-label="Hilfe"
         >
           ?
@@ -247,7 +247,7 @@ export function HelpBubble({
           style={getBubblePositionStyle()}
           className={`transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
         >
-          <div className="relative bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg max-w-48 whitespace-normal">
+          <div className="relative bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-lg max-w-48 whitespace-normal">
             {text}
             {/* Arrow/tip */}
             <div

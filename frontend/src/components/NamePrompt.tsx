@@ -83,9 +83,9 @@ export function NamePrompt({
   // Character counter color based on length (Requirement 1.1)
   const getCounterColor = () => {
     const length = name.length;
-    if (length > MAX_USERNAME_LENGTH) return 'text-red-600';
-    if (length >= MAX_USERNAME_LENGTH - 5) return 'text-yellow-600';
-    return 'text-gray-500';
+    if (length > MAX_USERNAME_LENGTH) return 'text-blush-deep';
+    if (length >= MAX_USERNAME_LENGTH - 5) return 'text-butter-deep';
+    return 'text-ink-mute';
   };
 
   const modalContent = (
@@ -97,10 +97,10 @@ export function NamePrompt({
     >
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-rule">
           <h2
             id="name-prompt-title"
-            className="text-xl font-semibold text-gray-900"
+            className="text-xl font-semibold text-ink"
           >
             Wie heißen Sie?
           </h2>
@@ -111,7 +111,7 @@ export function NamePrompt({
           <div className="px-6 py-4">
             <label
               htmlFor="user-name-input"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-ink-soft mb-2"
             >
               Name eingeben
             </label>
@@ -122,10 +122,10 @@ export function NamePrompt({
               value={name}
               onChange={handleInputChange}
               placeholder="Ihr Name"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-plum ${
                 error
-                  ? 'border-red-500 focus:ring-red-500'
-                  : 'border-gray-300'
+                  ? 'border-blush focus:ring-blush'
+                  : 'border-rule'
               }`}
               aria-describedby={error ? 'name-error' : 'char-counter'}
               aria-invalid={error ? 'true' : 'false'}
@@ -142,7 +142,7 @@ export function NamePrompt({
             {error && (
               <p
                 id="name-error"
-                className="mt-1 text-sm text-red-600"
+                className="mt-1 text-sm text-blush-deep"
                 role="alert"
               >
                 {error}
@@ -151,12 +151,12 @@ export function NamePrompt({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          <div className="px-6 py-4 border-t border-rule flex justify-end gap-3">
             {showCancel && onCancel && (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-4 py-2 text-ink-soft bg-paper-lo hover:bg-rule rounded-lg transition-colors"
               >
                 Abbrechen
               </button>
@@ -166,8 +166,8 @@ export function NamePrompt({
               disabled={isSubmitDisabled}
               className={`px-4 py-2 rounded-lg transition-colors font-medium ${
                 isSubmitDisabled
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-ink-mute text-rule cursor-not-allowed'
+                  : 'bg-plum text-white hover:bg-plum-deep'
               }`}
             >
               Speichern

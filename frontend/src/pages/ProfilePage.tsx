@@ -163,30 +163,30 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="min-h-screen bg-paper py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Account Info */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Mein Profil</h1>
+          <h1 className="text-2xl font-bold text-ink mb-4">Mein Profil</h1>
           
           <div className="space-y-3">
             <div>
-              <span className="text-sm text-gray-500">E-Mail</span>
-              <p className="text-gray-900">{account.email}</p>
+              <span className="text-sm text-ink-mute">E-Mail</span>
+              <p className="text-ink">{account.email}</p>
             </div>
             <div>
-              <span className="text-sm text-gray-500">Konto erstellt am</span>
-              <p className="text-gray-900">{formatDate(account.createdAt)}</p>
+              <span className="text-sm text-ink-mute">Konto erstellt am</span>
+              <p className="text-ink">{formatDate(account.createdAt)}</p>
             </div>
             <div>
-              <span className="text-sm text-gray-500">Status</span>
-              <p className={`font-medium ${account.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-sm text-ink-mute">Status</span>
+              <p className={`font-medium ${account.status === 'active' ? 'text-sage-deep' : 'text-blush-deep'}`}>
                 {account.status === 'active' ? 'Aktiv' : 'Deaktiviert'}
               </p>
             </div>
             <div>
-              <span className="text-sm text-gray-500">Rolle</span>
-              <p className="text-gray-900">
+              <span className="text-sm text-ink-mute">Rolle</span>
+              <p className="text-ink">
                 {account.role === 'admin' ? 'Administrator' : 'Kontoinhaber'}
               </p>
             </div>
@@ -195,23 +195,23 @@ export function ProfilePage() {
 
         {/* Password Change */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Passwort ändern</h2>
+          <h2 className="text-xl font-bold text-ink mb-4">Passwort ändern</h2>
 
           {passwordError && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded">
               {passwordError}
             </div>
           )}
 
           {passwordSuccess && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="mb-4 p-3 bg-sage-100 border border-sage text-sage-deep rounded">
               {passwordSuccess}
             </div>
           )}
 
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-ink-soft mb-1">
                 Aktuelles Passwort
               </label>
               <input
@@ -219,13 +219,13 @@ export function ProfilePage() {
                 id="currentPassword"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum"
                 disabled={isChangingPassword}
               />
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-ink-soft mb-1">
                 Neues Passwort
               </label>
               <input
@@ -233,20 +233,20 @@ export function ProfilePage() {
                 id="newPassword"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum"
                 disabled={isChangingPassword}
               />
               
               {newPassword && (
                 <div className="mt-2 text-sm space-y-1">
                   <ul className="space-y-1">
-                    <li className={passwordRequirements.minLength ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordRequirements.minLength ? 'text-sage-deep' : 'text-ink-mute'}>
                       {passwordRequirements.minLength ? '✓' : '○'} Mindestens 8 Zeichen
                     </li>
-                    <li className={passwordRequirements.hasLetter ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordRequirements.hasLetter ? 'text-sage-deep' : 'text-ink-mute'}>
                       {passwordRequirements.hasLetter ? '✓' : '○'} Mindestens ein Buchstabe
                     </li>
-                    <li className={passwordRequirements.hasNumber ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordRequirements.hasNumber ? 'text-sage-deep' : 'text-ink-mute'}>
                       {passwordRequirements.hasNumber ? '✓' : '○'} Mindestens eine Zahl
                     </li>
                   </ul>
@@ -255,7 +255,7 @@ export function ProfilePage() {
             </div>
 
             <div>
-              <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-ink-soft mb-1">
                 Neues Passwort bestätigen
               </label>
               <input
@@ -263,7 +263,7 @@ export function ProfilePage() {
                 id="confirmNewPassword"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum"
                 disabled={isChangingPassword}
               />
             </div>
@@ -271,7 +271,7 @@ export function ProfilePage() {
             <button
               type="submit"
               disabled={isChangingPassword || !isNewPasswordValid}
-              className="py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md transition-colors"
+              className="py-2 px-4 bg-plum hover:bg-plum-deep disabled:bg-plum-soft text-white font-medium rounded-md transition-colors"
             >
               {isChangingPassword ? 'Wird geändert...' : 'Passwort ändern'}
             </button>
@@ -281,47 +281,47 @@ export function ProfilePage() {
         {/* Active Sessions */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Aktive Sitzungen</h2>
+            <h2 className="text-xl font-bold text-ink">Aktive Sitzungen</h2>
             <button
               onClick={handleLogoutAll}
-              className="text-sm text-red-600 hover:text-red-800 font-medium"
+              className="text-sm text-blush-deep hover:text-blush-deep font-medium"
             >
               Alle abmelden
             </button>
           </div>
 
           {sessionsError && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded">
               {sessionsError}
             </div>
           )}
 
           {isLoadingSessions ? (
-            <p className="text-gray-500">Laden...</p>
+            <p className="text-ink-mute">Laden...</p>
           ) : sessions.length === 0 ? (
-            <p className="text-gray-500">Keine aktiven Sitzungen.</p>
+            <p className="text-ink-mute">Keine aktiven Sitzungen.</p>
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className={`p-3 border rounded-md ${session.isCurrent ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                  className={`p-3 border rounded-md ${session.isCurrent ? 'border-plum bg-plum-50' : 'border-rule'}`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-ink">
                         {session.userAgent || 'Unbekanntes Gerät'}
                         {session.isCurrent && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                          <span className="ml-2 text-xs bg-plum-100 text-plum-deep px-2 py-0.5 rounded">
                             Aktuelle Sitzung
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-ink-mute mt-1">
                         Zuletzt aktiv: {formatDate(session.lastUsedAt)}
                       </p>
                       {session.ipAddress && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-ink-mute">
                           IP: {session.ipAddress}
                         </p>
                       )}
@@ -329,7 +329,7 @@ export function ProfilePage() {
                     {!session.isCurrent && (
                       <button
                         onClick={() => handleLogoutSession(session.id)}
-                        className="text-sm text-red-600 hover:text-red-800"
+                        className="text-sm text-blush-deep hover:text-blush-deep"
                       >
                         Abmelden
                       </button>
@@ -344,8 +344,8 @@ export function ProfilePage() {
         {/* Account Deactivation */}
         {account.role !== 'admin' && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Konto deaktivieren</h2>
-          <p className="text-gray-600 mb-4">
+          <h2 className="text-xl font-bold text-blush-deep mb-4">Konto deaktivieren</h2>
+          <p className="text-ink-soft mb-4">
             Wenn Sie Ihr Konto deaktivieren, können Sie sich nicht mehr anmelden. 
             Ihre Daten bleiben erhalten und können von einem Administrator wiederhergestellt werden.
           </p>
@@ -353,20 +353,20 @@ export function ProfilePage() {
           {!showDeactivateConfirm ? (
             <button
               onClick={() => setShowDeactivateConfirm(true)}
-              className="py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors"
+              className="py-2 px-4 bg-blush-deep hover:bg-blush-deep text-white font-medium rounded-md transition-colors"
             >
               Konto deaktivieren
             </button>
           ) : (
             <div className="space-y-4">
               {deactivateError && (
-                <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="p-3 bg-blush-50 border border-blush text-blush-deep rounded">
                   {deactivateError}
                 </div>
               )}
 
               <div>
-                <label htmlFor="deactivatePassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="deactivatePassword" className="block text-sm font-medium text-ink-soft mb-1">
                   Passwort zur Bestätigung
                 </label>
                 <input
@@ -374,7 +374,7 @@ export function ProfilePage() {
                   id="deactivatePassword"
                   value={deactivatePassword}
                   onChange={(e) => setDeactivatePassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-blush"
                   disabled={isDeactivating}
                 />
               </div>
@@ -383,7 +383,7 @@ export function ProfilePage() {
                 <button
                   onClick={handleDeactivate}
                   disabled={isDeactivating}
-                  className="py-2 px-4 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium rounded-md transition-colors"
+                  className="py-2 px-4 bg-blush-deep hover:bg-blush-deep disabled:bg-blush text-white font-medium rounded-md transition-colors"
                 >
                   {isDeactivating ? 'Wird deaktiviert...' : 'Endgültig deaktivieren'}
                 </button>
@@ -394,7 +394,7 @@ export function ProfilePage() {
                     setDeactivateError(null);
                   }}
                   disabled={isDeactivating}
-                  className="py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors"
+                  className="py-2 px-4 bg-rule hover:bg-rule text-ink-soft font-medium rounded-md transition-colors"
                 >
                   Abbrechen
                 </button>

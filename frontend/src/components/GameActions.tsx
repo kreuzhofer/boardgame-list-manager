@@ -88,8 +88,8 @@ export function GameActions({
           onClick={isBringer ? handleRemoveBringer : handleAddBringer}
           className={`${baseButtonClasses} ${
             isBringer
-              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-sage text-white hover:bg-sage-deep shadow-sm'
+              : 'bg-paper-lo text-ink-soft hover:bg-rule'
           }`}
           title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
         >
@@ -113,8 +113,8 @@ export function GameActions({
           onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
           className={`${baseButtonClasses} ${
             isPlayer
-              ? 'bg-green-500 text-white hover:bg-green-600 shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-sage text-white hover:bg-sage-deep shadow-sm'
+              : 'bg-paper-lo text-ink-soft hover:bg-rule'
           }`}
           title={isPlayer ? 'Mich als Mitspieler austragen' : 'Als Mitspieler eintragen'}
         >

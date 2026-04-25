@@ -115,7 +115,7 @@ export function MobileActionsMenu({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-6 h-6 flex items-center justify-center text-gray-600 bg-gray-200 hover:text-gray-700 hover:bg-gray-300 rounded-full transition-colors"
+        className="w-6 h-6 flex items-center justify-center text-ink-soft bg-rule hover:text-ink-soft hover:bg-rule rounded-full transition-colors"
         aria-label="Weitere Aktionen"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -134,7 +134,7 @@ export function MobileActionsMenu({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[200px]"
+            className="fixed bg-paper-hi rounded-lg shadow-lg border border-rule py-1 z-50 min-w-[200px]"
             style={{
               top: menuPosition.top,
               left: menuPosition.left,
@@ -145,11 +145,11 @@ export function MobileActionsMenu({
             {canShowUpload && (
               <button
                 onClick={handleUploadThumbnail}
-                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2 min-h-[44px]"
+                className="w-full px-4 py-2 text-left text-ink-soft hover:bg-paper-lo flex items-center gap-2 min-h-[44px]"
                 role="menuitem"
               >
                 <svg
-                  className="w-5 h-5 text-gray-500"
+                  className="w-5 h-5 text-ink-mute"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -166,7 +166,7 @@ export function MobileActionsMenu({
             )}
             {canShowPrototype && (
               <>
-                {canShowUpload && <div className="border-t border-gray-200 my-1" />}
+                {canShowUpload && <div className="border-t border-rule my-1" />}
                 <PrototypeToggle
                   gameId={game.id}
                   isPrototype={game.isPrototype}
@@ -178,7 +178,7 @@ export function MobileActionsMenu({
             {canShowDeleteAction && (
               <>
                 {(canShowUpload || canShowPrototype) && (
-                  <div className="border-t border-gray-200 my-1" />
+                  <div className="border-t border-rule my-1" />
                 )}
                 <ClickNotification
                   message="Andere Spieler oder Mitbringer sind eingetragen"
@@ -190,8 +190,8 @@ export function MobileActionsMenu({
                     disabled={!canDelete}
                     className={`w-full px-4 py-2 text-left flex items-center gap-2 min-h-[44px] ${
                       canDelete
-                        ? 'text-red-700 hover:bg-red-50'
-                        : 'text-gray-400 cursor-not-allowed'
+                        ? 'text-blush-deep hover:bg-blush-50'
+                        : 'text-ink-mute cursor-not-allowed'
                     }`}
                     role="menuitem"
                   >

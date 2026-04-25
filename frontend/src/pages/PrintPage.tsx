@@ -72,13 +72,13 @@ export function PrintPage({ participant }: PrintPageProps) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
+          <h2 className="text-2xl font-bold text-ink">Druckansicht</h2>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-rule rounded w-1/3"></div>
+            <div className="h-4 bg-rule rounded w-1/4"></div>
+            <div className="h-32 bg-rule rounded"></div>
           </div>
         </div>
       </div>
@@ -89,13 +89,13 @@ export function PrintPage({ participant }: PrintPageProps) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
+          <h2 className="text-2xl font-bold text-ink">Druckansicht</h2>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-blush-50 border border-blush-50 rounded-lg p-4">
+          <p className="text-blush-deep text-sm">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            className="mt-2 text-sm text-blush-deep hover:text-blush-deep underline"
           >
             Erneut versuchen
           </button>
@@ -108,10 +108,10 @@ export function PrintPage({ participant }: PrintPageProps) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
+          <h2 className="text-2xl font-bold text-ink">Druckansicht</h2>
         </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-700 text-sm">
+        <div className="bg-butter-50 border border-butter rounded-lg p-4">
+          <p className="text-butter-deep text-sm">
             Bitte wählen Sie zuerst einen Teilnehmer aus, um die Druckansicht zu nutzen.
           </p>
         </div>
@@ -124,18 +124,18 @@ export function PrintPage({ participant }: PrintPageProps) {
       {/* Page header - hidden when printing */}
       <div className="no-print flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Druckansicht</h2>
-          <p className="text-gray-600 text-sm mt-1">
+          <h2 className="text-2xl font-bold text-ink">Druckansicht</h2>
+          <p className="text-ink-soft text-sm mt-1">
             {filterSummary} ({countSummary})
           </p>
-          <div className="mt-3 inline-flex rounded-lg border border-gray-200 overflow-hidden bg-gray-100 min-h-[44px]">
+          <div className="mt-3 inline-flex rounded-lg border border-rule overflow-hidden bg-paper-lo min-h-[44px]">
             <button
               type="button"
               onClick={() => setPrintFilter('all')}
               className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
                 printFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  ? 'bg-plum text-white'
+                  : 'text-ink-soft hover:bg-rule'
               }`}
               aria-pressed={printFilter === 'all'}
               aria-label="Alle relevanten Spiele anzeigen"
@@ -148,8 +148,8 @@ export function PrintPage({ participant }: PrintPageProps) {
               onClick={() => setPrintFilter('bringing')}
               className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
                 printFilter === 'bringing'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  ? 'bg-plum text-white'
+                  : 'text-ink-soft hover:bg-rule'
               }`}
               aria-pressed={printFilter === 'bringing'}
               aria-label="Nur Spiele anzeigen, die ich mitbringe"
@@ -162,8 +162,8 @@ export function PrintPage({ participant }: PrintPageProps) {
               onClick={() => setPrintFilter('playing')}
               className={`px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
                 printFilter === 'playing'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  ? 'bg-plum text-white'
+                  : 'text-ink-soft hover:bg-rule'
               }`}
               aria-pressed={printFilter === 'playing'}
               aria-label="Nur Spiele anzeigen, bei denen ich mitspiele"
@@ -180,8 +180,8 @@ export function PrintPage({ participant }: PrintPageProps) {
           disabled={participantGamesCount === 0}
           className={`px-6 py-2 rounded-lg font-medium transition-colors ${
             participantGamesCount > 0
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-gray-400 text-white cursor-not-allowed'
+              ? 'bg-plum text-white hover:bg-plum-deep'
+              : 'bg-ink-mute text-white cursor-not-allowed'
           }`}
         >
           <span className="flex items-center gap-2">
@@ -206,8 +206,8 @@ export function PrintPage({ participant }: PrintPageProps) {
 
       {/* Instructions - hidden when printing */}
       {participantGamesCount === 0 && (
-        <div className="no-print bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-700 text-sm">
+        <div className="no-print bg-butter-50 border border-butter rounded-lg p-4">
+          <p className="text-butter-deep text-sm">
             {emptyHint}
           </p>
         </div>

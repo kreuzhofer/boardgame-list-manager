@@ -157,13 +157,13 @@ function ToastItem({ toast, isExiting, onDismiss }: ToastItemProps) {
   
   return (
     <div
-      className={`pointer-events-auto bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm ${animationClass} flex items-center gap-3`}
+      className={`pointer-events-auto bg-ink text-white px-4 py-3 rounded-lg shadow-lg max-w-sm ${animationClass} flex items-center gap-3`}
       role="alert"
     >
       <span className="flex-1 text-sm">{toast.message}</span>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="text-gray-400 hover:text-white transition-colors"
+        className="text-ink-mute hover:text-white transition-colors"
         aria-label="Schließen"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -99,7 +99,7 @@ function CompactList({
   expanded: boolean;
 }) {
   if (items.length === 0) {
-    return <span className="text-gray-400 italic text-sm">{emptyText}</span>;
+    return <span className="text-ink-mute italic text-sm">{emptyText}</span>;
   }
 
   // When expanded: show all. When collapsed: show 1 + "+X" if >2, otherwise show all (up to 2)
@@ -115,8 +115,8 @@ function CompactList({
           <span
             className={
               item.participant.id === currentParticipantId
-                ? 'font-semibold text-blue-600'
-                : 'text-gray-700'
+                ? 'font-semibold text-plum'
+                : 'text-ink-soft'
             }
           >
             {item.participant.name}
@@ -124,7 +124,7 @@ function CompactList({
         </div>
       ))}
       {hasOverflow && (
-        <span className="text-blue-500 text-xs">+{overflowCount} weitere</span>
+        <span className="text-plum text-xs">+{overflowCount} weitere</span>
       )}
     </div>
   );
@@ -467,16 +467,16 @@ export function GameCard({
 
   // Determine background color: highlight > wunsch > default
   const getCardClassName = () => {
-    const baseClasses = `relative px-4 py-2 ${isLast ? '' : 'border-b border-gray-200'}`;
-    const scrollClasses = scrollIntoView ? 'ring-2 ring-blue-400 ring-inset' : '';
-    
+    const baseClasses = `relative px-4 py-2 ${isLast ? '' : 'border-b border-rule'}`;
+    const scrollClasses = scrollIntoView ? 'ring-2 ring-plum-soft ring-inset' : '';
+
     if (isHighlighted) {
-      return `${baseClasses} bg-green-100 ${scrollClasses}`;
+      return `${baseClasses} bg-sage-100 ${scrollClasses}`;
     }
     if (isWunsch) {
-      return `${baseClasses} bg-yellow-50 ${scrollClasses}`;
+      return `${baseClasses} bg-butter-50 ${scrollClasses}`;
     }
-    return `${baseClasses} bg-white ${scrollClasses}`;
+    return `${baseClasses} bg-paper-hi ${scrollClasses}`;
   };
 
   const swipeDirection = swipeX > 0 ? 'right' : swipeX < 0 ? 'left' : 'none';
@@ -536,7 +536,7 @@ export function GameCard({
           style={{ backgroundColor: swipeBackgroundColor }}
         >
           <div
-            className="flex flex-col items-center text-xs font-semibold text-green-800"
+            className="flex flex-col items-center text-xs font-semibold text-sage-deep"
             style={{ opacity: swipeDirection === 'right' ? swipeIntensity : 0 }}
           >
             <div className="relative w-6 h-6">
@@ -545,7 +545,7 @@ export function GameCard({
               </div>
               {visualIsPlayer && (
                 <span
-                  className="absolute left-0 right-0 top-1/2 h-[2px] bg-green-800 -rotate-12 origin-left"
+                  className="absolute left-0 right-0 top-1/2 h-[2px] bg-sage-deep -rotate-12 origin-left"
                   style={playStrikeStyle}
                 />
               )}
@@ -553,7 +553,7 @@ export function GameCard({
             <span className="mt-1">{rightActionLabel}</span>
           </div>
           <div
-            className={`flex flex-col items-center text-xs font-semibold ${canHide ? 'text-amber-800' : 'text-gray-400'}`}
+            className={`flex flex-col items-center text-xs font-semibold ${canHide ? 'text-butter-deep' : 'text-ink-mute'}`}
             style={{ opacity: swipeDirection === 'left' ? swipeIntensity : 0 }}
           >
             <img src={isHidden ? '/eye.svg?v=3' : '/eye-off.svg?v=3'} alt="" className="w-6 h-6" />
@@ -573,8 +573,8 @@ export function GameCard({
             <div
               className={`pointer-events-none absolute left-4 top-3 z-10 text-xs font-semibold px-2 py-1 rounded-full shadow-sm transition-all duration-200 ${
                 inlineFeedback.tone === 'positive'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-200 text-gray-700'
+                  ? 'bg-sage-100 text-sage-deep'
+                  : 'bg-rule text-ink-soft'
               } ${inlineFeedbackVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'}`}
             >
               {inlineFeedback.message}
@@ -617,14 +617,14 @@ export function GameCard({
                 <div className="flex items-start gap-2">
                   <h3 
                     ref={titleRef}
-                    className={`font-semibold text-gray-900 leading-tight flex-1 line-clamp-2 ${
+                    className={`font-semibold text-ink leading-tight flex-1 line-clamp-2 ${
                       isTitleWrapped ? 'text-sm' : 'text-lg'
                     }`}
                   >
                     {game.name}
                     {/* Feature: 014-alternate-names-search - Show alternate name inline on mobile */}
                     {game.addedAsAlternateName && (
-                      <span className={`font-normal text-gray-500 ${isTitleWrapped ? 'text-sm' : 'text-base'}`}>
+                      <span className={`font-normal text-ink-mute ${isTitleWrapped ? 'text-sm' : 'text-base'}`}>
                         {' · '}{game.addedAsAlternateName}
                       </span>
                     )}
@@ -647,7 +647,7 @@ export function GameCard({
                     <div className="relative">
                       <button
                         onClick={() => openBggPage(game.bggId!)}
-                        className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 transition-colors"
+                        className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-paper-lo transition-colors"
                         aria-label="BoardGameGeek Info"
                       >
                         <BggRatingBadge rating={game.bggRating} />
@@ -675,7 +675,7 @@ export function GameCard({
                 <div className="relative">
                   <div
                     className={`w-6 h-6 rounded-full ${
-                      isWunsch ? 'bg-yellow-400' : 'bg-green-500'
+                      isWunsch ? 'bg-butter' : 'bg-sage'
                     }`}
                     aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
                   />
@@ -688,7 +688,7 @@ export function GameCard({
                 {isPrototype && (
                   <div className="relative">
                     <div
-                      className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center"
+                      className="w-6 h-6 rounded-full bg-plum text-white text-xs font-bold flex items-center justify-center"
                       aria-label="Prototyp"
                     >
                       P
@@ -716,12 +716,12 @@ export function GameCard({
 
           {/* Players and Bringers - Two column layout for mobile, tappable to expand */}
           <div 
-            className={`grid grid-cols-2 gap-3 pt-1 border-t border-gray-200 ${hasOverflow ? 'cursor-pointer' : ''}`}
+            className={`grid grid-cols-2 gap-3 pt-1 border-t border-rule ${hasOverflow ? 'cursor-pointer' : ''}`}
             onClick={handleListClick}
           >
             {/* Bringers (Bringt mit) - First column to match Mitbringen button */}
             <div className="min-w-0">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
+              <span className="text-xs font-medium text-ink-mute uppercase tracking-wide block mb-1">
                 Bringt mit
               </span>
               <CompactList 
@@ -734,7 +734,7 @@ export function GameCard({
 
             {/* Players (Mitspieler) - Second column to match Mitspielen button */}
             <div className="min-w-0">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-1">
+              <span className="text-xs font-medium text-ink-mute uppercase tracking-wide block mb-1">
                 Mitspieler
               </span>
               <CompactList 

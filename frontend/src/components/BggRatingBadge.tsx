@@ -10,35 +10,32 @@ interface BggRatingBadgeProps {
 
 /**
  * Get the background color for a BGG rating
- * Colors based on BGG's rating breakdown chart:
- * 1-4: Red shades
- * 5-6: Blue shades
- * 7: Light blue
- * 8-10: Green shades
+ * Uses design system token hex values:
+ * 1-4: blush (bad)
+ * 5-7: ocean/plum (mid)
+ * 8-10: sage (good)
  */
 export function getRatingColor(rating: number): string {
   const roundedRating = Math.floor(rating);
-  
+
   switch (roundedRating) {
     case 1:
     case 2:
     case 3:
     case 4:
-      return '#d32f2f'; // Red
+      return '#9c4537'; // blush-deep
     case 5:
-      return '#3f51b5'; // Dark blue
     case 6:
-      return '#3f51b5'; // Dark blue
+      return '#3f6f8f'; // ocean
     case 7:
-      return '#2196f3'; // Light blue
+      return '#6b3a5c'; // plum
     case 8:
-      return '#4caf50'; // Green
+      return '#7a9476'; // sage
     case 9:
-      return '#2e7d32'; // Dark green
     case 10:
-      return '#1b5e20'; // Darker green
+      return '#5b7458'; // sage-deep
     default:
-      return '#9e9e9e'; // Gray for invalid ratings
+      return '#8c7d92'; // ink-mute
   }
 }
 

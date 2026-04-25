@@ -44,7 +44,7 @@ describe('NamePrompt Length Validation', () => {
       fireEvent.change(input, { target: { value: 'a'.repeat(26) } });
       
       const counter = screen.getByText('26/30');
-      expect(counter).toHaveClass('text-yellow-600');
+      expect(counter).toHaveClass('text-butter-deep');
     });
 
     it('should show counter in red when exceeding limit', () => {
@@ -55,7 +55,7 @@ describe('NamePrompt Length Validation', () => {
       fireEvent.change(input, { target: { value: 'a'.repeat(31) } });
       
       const counter = screen.getByText('31/30');
-      expect(counter).toHaveClass('text-red-600');
+      expect(counter).toHaveClass('text-blush-deep');
     });
   });
 

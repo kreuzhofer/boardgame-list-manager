@@ -77,19 +77,19 @@ describe('RegisterPage', () => {
     // Type a short password
     fireEvent.change(passwordInput, { target: { value: 'abc' } });
 
-    // Requirements should show as not met (gray)
+    // Requirements should show as not met (ink-mute)
     await waitFor(() => {
       const minLengthItem = screen.getByText(/mindestens 8 zeichen/i);
-      expect(minLengthItem.className).toContain('text-gray');
+      expect(minLengthItem.className).toContain('text-ink-mute');
     });
 
     // Type a valid password
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
-    // Requirements should show as met (green)
+    // Requirements should show as met (sage)
     await waitFor(() => {
       const minLengthItem = screen.getByText(/mindestens 8 zeichen/i);
-      expect(minLengthItem.className).toContain('text-green');
+      expect(minLengthItem.className).toContain('text-sage');
     });
   });
 

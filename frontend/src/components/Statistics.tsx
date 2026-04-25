@@ -29,19 +29,19 @@ interface StatCardProps {
 function StatCard({ title, value, subtitle, icon, highlight }: StatCardProps) {
   return (
     <div
-      className={`bg-white rounded-lg shadow p-4 ${
-        highlight ? 'ring-2 ring-blue-500' : ''
+      className={`bg-paper-hi rounded-lg shadow p-4 ${
+        highlight ? 'ring-2 ring-plum' : ''
       }`}
     >
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="flex-shrink-0 text-blue-600">{icon}</div>
+          <div className="flex-shrink-0 text-plum">{icon}</div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-ink-mute truncate">{title}</p>
+          <p className="text-2xl font-bold text-ink">{value}</p>
           {subtitle && (
-            <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
+            <p className="text-xs text-ink-mute mt-1">{subtitle}</p>
           )}
         </div>
       </div>
@@ -60,11 +60,11 @@ interface PopularGamesListProps {
 function PopularGamesList({ games }: PopularGamesListProps) {
   if (games.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">
+      <div className="bg-paper-hi rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-ink-mute mb-3">
           Beliebteste Spiele
         </h3>
-        <p className="text-gray-400 text-sm">Noch keine Spiele vorhanden.</p>
+        <p className="text-ink-mute text-sm">Noch keine Spiele vorhanden.</p>
       </div>
     );
   }
@@ -73,35 +73,35 @@ function PopularGamesList({ games }: PopularGamesListProps) {
   const topGames = games.slice(0, 5);
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-sm font-medium text-gray-500 mb-3">
+    <div className="bg-paper-hi rounded-lg shadow p-4">
+      <h3 className="text-sm font-medium text-ink-mute mb-3">
         Beliebteste Spiele
       </h3>
       <ul className="space-y-2">
         {topGames.map((game, index) => (
           <li
             key={game.id}
-            className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+            className="flex items-center justify-between py-2 border-b border-rule-soft last:border-0"
           >
             <div className="flex items-center gap-3">
               <span
                 className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                   index === 0
-                    ? 'bg-yellow-100 text-yellow-700'
+                    ? 'bg-butter text-butter-deep'
                     : index === 1
-                    ? 'bg-gray-100 text-gray-600'
+                    ? 'bg-paper-lo text-ink-soft'
                     : index === 2
-                    ? 'bg-orange-100 text-orange-700'
-                    : 'bg-gray-50 text-gray-500'
+                    ? 'bg-butter-50 text-butter-deep'
+                    : 'bg-paper-lo text-ink-mute'
                 }`}
               >
                 {index + 1}
               </span>
-              <span className="text-sm font-medium text-gray-900 truncate">
+              <span className="text-sm font-medium text-ink truncate">
                 {game.name}
               </span>
             </div>
-            <span className="text-sm text-gray-500 flex-shrink-0">
+            <span className="text-sm text-ink-mute flex-shrink-0">
               {game.playerCount} {game.playerCount === 1 ? 'Spieler' : 'Spieler'}
             </span>
           </li>
@@ -127,11 +127,11 @@ function getHeatColor(value: number, min: number, max: number) {
 function ReleaseYearChart({ data }: ReleaseYearChartProps) {
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">
+      <div className="bg-paper-hi rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-ink-mute mb-3">
           Spiele nach Veröffentlichungsjahr
         </h3>
-        <p className="text-gray-400 text-sm">
+        <p className="text-ink-mute text-sm">
           Keine Veröffentlichungsjahre vorhanden.
         </p>
       </div>
@@ -145,12 +145,12 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
   const maxBarHeight = 120;
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-paper-hi rounded-lg shadow p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium text-gray-500">
+        <h3 className="text-sm font-medium text-ink-mute">
           Spiele nach Veröffentlichungsjahr
         </h3>
-        <div className="flex items-center gap-2 text-[10px] text-gray-400">
+        <div className="flex items-center gap-2 text-[10px] text-ink-mute">
           <span>Kühl</span>
           <span
             className="w-16 h-2 rounded-full"
@@ -172,7 +172,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
 
             return (
               <div key={item.year} className="flex flex-col items-center w-8">
-                <div className="text-[10px] text-gray-500 mb-1">
+                <div className="text-[10px] text-ink-mute mb-1">
                   {item.count}
                 </div>
                 <div
@@ -181,7 +181,7 @@ function ReleaseYearChart({ data }: ReleaseYearChartProps) {
                   title={`${item.year}: ${item.count}`}
                   aria-label={`${item.year}: ${item.count} Spiele`}
                 ></div>
-                <div className="mt-1 text-[10px] text-gray-500">
+                <div className="mt-1 text-[10px] text-ink-mute">
                   {item.year}
                 </div>
               </div>
@@ -256,11 +256,11 @@ function TimelineChart({ data }: TimelineChartProps) {
   const points = data.points;
   if (points.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">
+      <div className="bg-paper-hi rounded-lg shadow p-4">
+        <h3 className="text-sm font-medium text-ink-mute mb-3">
           Tagesverlauf der Aktivität
         </h3>
-        <p className="text-gray-400 text-sm">Noch keine Aktivität vorhanden.</p>
+        <p className="text-ink-mute text-sm">Noch keine Aktivität vorhanden.</p>
       </div>
     );
   }
@@ -287,26 +287,26 @@ function TimelineChart({ data }: TimelineChartProps) {
   const tickIndices = buildTickIndices(points.length, 6);
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-paper-hi rounded-lg shadow p-4">
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-sm font-medium text-gray-500">
+        <h3 className="text-sm font-medium text-ink-mute">
           Tagesverlauf der Aktivität
         </h3>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-ink-mute">
           <span className="flex items-center gap-2">
-            <span className="w-3 h-0.5 bg-red-500"></span>
+            <span className="w-3 h-0.5 bg-blush"></span>
             Spiele hinzugefügt
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-0.5 bg-blue-500"></span>
+            <span className="w-3 h-0.5 bg-plum"></span>
             Spieler hinzugefügt
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-0.5 bg-emerald-500"></span>
+            <span className="w-3 h-0.5 bg-sage"></span>
             Neue Teilnehmer
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-0.5 bg-amber-500"></span>
+            <span className="w-3 h-0.5 bg-butter"></span>
             Aktive Teilnehmer
           </span>
         </div>
@@ -324,7 +324,7 @@ function TimelineChart({ data }: TimelineChartProps) {
             width={width - padding * 2}
             height={height - padding * 2}
             fill="transparent"
-            stroke="#e5e7eb"
+            stroke="#e3d5b8"
             strokeWidth={1}
           />
           {[0, 0.5, 1].map((ratio) => {
@@ -337,14 +337,14 @@ function TimelineChart({ data }: TimelineChartProps) {
                   x2={width - padding}
                   y1={y}
                   y2={y}
-                  stroke="#f3f4f6"
+                  stroke="#ede4d0"
                   strokeWidth={1}
                 />
                 <text
                   x={padding - 8}
                   y={y + 4}
                   textAnchor="end"
-                  className="fill-gray-400 text-[10px]"
+                  className="fill-ink-mute text-[10px]"
                 >
                   {value}
                 </text>
@@ -354,28 +354,28 @@ function TimelineChart({ data }: TimelineChartProps) {
           <path
             d={gamePath}
             fill="none"
-            stroke="#ef4444"
+            stroke="#d97a6c"
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
           <path
             d={playerPath}
             fill="none"
-            stroke="#3b82f6"
+            stroke="#6b3a5c"
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
           <path
             d={newParticipantsPath}
             fill="none"
-            stroke="#10b981"
+            stroke="#7a9476"
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
           <path
             d={activeParticipantsPath}
             fill="none"
-            stroke="#f59e0b"
+            stroke="#e8c75c"
             strokeWidth={2.5}
             strokeLinejoin="round"
             strokeDasharray="6 4"
@@ -388,7 +388,7 @@ function TimelineChart({ data }: TimelineChartProps) {
                 x={x}
                 y={height - padding + 16}
                 textAnchor="middle"
-                className="fill-gray-400 text-[10px]"
+                className="fill-ink-mute text-[10px]"
               >
                 {formatTickDate(points[index]?.date ?? '')}
               </text>
@@ -415,11 +415,11 @@ function TotalParticipantsChart({ data }: TimelineChartProps) {
   const tickIndices = buildTickIndices(points.length, 6);
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-paper-hi rounded-lg shadow p-4">
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-sm font-medium text-gray-500">Gesamtzahl Teilnehmer</h3>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span className="w-3 h-0.5 bg-purple-500"></span>
+        <h3 className="text-sm font-medium text-ink-mute">Gesamtzahl Teilnehmer</h3>
+        <div className="flex items-center gap-2 text-xs text-ink-mute">
+          <span className="w-3 h-0.5 bg-ocean"></span>
           Gesamt
         </div>
       </div>
@@ -436,7 +436,7 @@ function TotalParticipantsChart({ data }: TimelineChartProps) {
             width={width - padding * 2}
             height={height - padding * 2}
             fill="transparent"
-            stroke="#e5e7eb"
+            stroke="#e3d5b8"
             strokeWidth={1}
           />
           {[0, 0.5, 1].map((ratio) => {
@@ -449,14 +449,14 @@ function TotalParticipantsChart({ data }: TimelineChartProps) {
                   x2={width - padding}
                   y1={y}
                   y2={y}
-                  stroke="#f3f4f6"
+                  stroke="#ede4d0"
                   strokeWidth={1}
                 />
                 <text
                   x={padding - 8}
                   y={y + 4}
                   textAnchor="end"
-                  className="fill-gray-400 text-[10px]"
+                  className="fill-ink-mute text-[10px]"
                 >
                   {value}
                 </text>
@@ -466,7 +466,7 @@ function TotalParticipantsChart({ data }: TimelineChartProps) {
           <path
             d={totalParticipantsPath}
             fill="none"
-            stroke="#a855f7"
+            stroke="#3f6f8f"
             strokeWidth={2.5}
             strokeLinejoin="round"
           />
@@ -478,7 +478,7 @@ function TotalParticipantsChart({ data }: TimelineChartProps) {
                 x={x}
                 y={height - padding + 16}
                 textAnchor="middle"
-                className="fill-gray-400 text-[10px]"
+                className="fill-ink-mute text-[10px]"
               >
                 {formatTickDate(points[index]?.date ?? '')}
               </text>
@@ -536,15 +536,15 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Statistiken</h2>
+        <h2 className="text-lg font-semibold text-ink">Statistiken</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-lg shadow p-4 animate-pulse"
+              className="bg-paper-hi rounded-lg shadow p-4 animate-pulse"
             >
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-rule rounded w-2/3 mb-2"></div>
+              <div className="h-8 bg-rule rounded w-1/2"></div>
             </div>
           ))}
         </div>
@@ -554,11 +554,11 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-700 text-sm">{error}</p>
+      <div className="bg-blush-50 border border-blush rounded-lg p-4">
+        <p className="text-blush-deep text-sm">{error}</p>
         <button
           onClick={() => setError(null)}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          className="mt-2 text-sm text-blush-deep hover:text-blush-deep underline"
         >
           Erneut versuchen
         </button>
@@ -641,8 +641,8 @@ export function Statistics({ refreshTrigger }: StatisticsProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">Statistiken</h2>
-      
+      <h2 className="text-lg font-semibold text-ink">Statistiken</h2>
+
       {/* Main statistics grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Requirement 8.1: Total games count */}

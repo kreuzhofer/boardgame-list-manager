@@ -7,11 +7,11 @@ export function ImpressumPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">Impressum</h1>
+      <h1 className="text-3xl font-bold text-ink">Impressum</h1>
 
-        <div className="bg-white rounded-lg shadow p-8 space-y-6 text-gray-700 text-sm leading-relaxed">
+        <div className="bg-white rounded-lg shadow p-8 space-y-6 text-ink-soft text-sm leading-relaxed">
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Angaben gemäß § 5 TMG</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Angaben gemäß § 5 TMG</h2>
             <p>
               Daniel Kreuzhofer<br />
               Hofmarkstr. 8<br />
@@ -21,14 +21,14 @@ export function ImpressumPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Kontakt</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Kontakt</h2>
             <p>
-              E-Mail: <a href="mailto:daniel@kreuzhofer.de" className="text-blue-600 hover:underline">daniel@kreuzhofer.de</a>
+              E-Mail: <a href="mailto:daniel@kreuzhofer.de" className="text-plum hover:underline">daniel@kreuzhofer.de</a>
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Verantwortlich für den Inhalt gemäß § 55 Abs. 2 RStV</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Verantwortlich für den Inhalt gemäß § 55 Abs. 2 RStV</h2>
             <p>
               Daniel Kreuzhofer<br />
               Hofmarkstr. 8<br />
@@ -37,9 +37,9 @@ export function ImpressumPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Haftungsausschluss</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Haftungsausschluss</h2>
 
-            <h3 className="font-semibold text-gray-800 mt-4 mb-1">Haftung für Inhalte</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-1">Haftung für Inhalte</h3>
             <p>
               Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die
               Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch
@@ -51,7 +51,7 @@ export function ImpressumPage() {
               Tätigkeit hinweisen.
             </p>
 
-            <h3 className="font-semibold text-gray-800 mt-4 mb-1">Haftung für Links</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-1">Haftung für Links</h3>
             <p>
               Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte
               wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch
@@ -61,7 +61,7 @@ export function ImpressumPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
             <p>
               Die Europäische Kommission stellt eine Plattform zur
               Online-Streitbeilegung (OS) bereit:{' '}
@@ -69,7 +69,7 @@ export function ImpressumPage() {
                 href="https://ec.europa.eu/consumers/odr/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-plum hover:underline"
               >
                 https://ec.europa.eu/consumers/odr/
               </a>
@@ -81,7 +81,7 @@ export function ImpressumPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Urheberrecht</h2>
+            <h2 className="text-lg font-semibold text-ink mb-2">Urheberrecht</h2>
             <p>
               Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten
               unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung,

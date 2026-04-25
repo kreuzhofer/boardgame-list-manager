@@ -27,10 +27,10 @@ export function SortControls({ sortOrder, onSortOrderChange }: SortControlsProps
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600">Sortierung:</span>
+      <span className="text-sm text-ink-soft">Sortierung:</span>
       <button
         onClick={handleToggle}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-ink-soft bg-paper-hi border border-rule rounded-md hover:bg-paper-lo focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-1 transition-colors"
         aria-label={sortOrder === 'asc' ? 'Sortierung: A bis Z, klicken für Z bis A' : 'Sortierung: Z bis A, klicken für A bis Z'}
       >
         <span>Name</span>
@@ -65,7 +65,7 @@ export function SortControls({ sortOrder, onSortOrderChange }: SortControlsProps
             />
           </svg>
         )}
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-ink-mute">
           {sortOrder === 'asc' ? '(A→Z)' : '(Z→A)'}
         </span>
       </button>

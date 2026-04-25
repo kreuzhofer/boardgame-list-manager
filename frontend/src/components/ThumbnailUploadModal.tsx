@@ -108,12 +108,12 @@ export function ThumbnailUploadModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-900">Bild hochladen</h2>
+        <div className="px-6 py-4 border-b border-rule flex items-center justify-between flex-shrink-0">
+          <h2 className="text-xl font-semibold text-ink">Bild hochladen</h2>
           <button
             onClick={handleClose}
             disabled={isUploading}
-            className="text-gray-400 hover:text-gray-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="text-ink-mute hover:text-ink-soft transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Schließen"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@ export function ThumbnailUploadModal({
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
-          <p className="text-gray-700 mb-4">
+          <p className="text-ink-soft mb-4">
             Wähle ein Bild für <strong>"{gameName}"</strong>
           </p>
 
@@ -140,9 +140,9 @@ export function ThumbnailUploadModal({
             />
             <label
               htmlFor="thumbnail-upload"
-              className="block w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors min-h-[44px]"
+              className="block w-full px-4 py-3 border-2 border-dashed border-rule rounded-lg text-center cursor-pointer hover:border-plum hover:bg-plum-50 transition-colors min-h-[44px]"
             >
-              <span className="text-gray-600">
+              <span className="text-ink-soft">
                 {selectedFile ? selectedFile.name : 'Klicke hier um ein Bild auszuwählen'}
               </span>
             </label>
@@ -151,12 +151,12 @@ export function ThumbnailUploadModal({
           {/* Preview */}
           {preview && (
             <div className="mb-4">
-              <p className="text-sm text-gray-500 mb-2">Vorschau:</p>
+              <p className="text-sm text-ink-mute mb-2">Vorschau:</p>
               <div className="flex justify-center">
                 <img
                   src={preview}
                   alt="Vorschau"
-                  className="max-w-full max-h-48 rounded border border-gray-200"
+                  className="max-w-full max-h-48 rounded border border-rule"
                 />
               </div>
             </div>
@@ -164,7 +164,7 @@ export function ThumbnailUploadModal({
 
           {/* File size info */}
           {selectedFile && (
-            <div className={`text-sm mb-4 ${isFileTooLarge ? 'text-red-600' : 'text-gray-500'}`}>
+            <div className={`text-sm mb-4 ${isFileTooLarge ? 'text-blush-deep' : 'text-ink-mute'}`}>
               Dateigröße: {formatFileSize(selectedFile.size)}
               {isFileTooLarge && (
                 <span className="block mt-1 font-medium">
@@ -176,30 +176,30 @@ export function ThumbnailUploadModal({
 
           {/* Error message */}
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded mb-4">
+            <div className="text-sm text-blush-deep bg-blush-50 px-3 py-2 rounded mb-4">
               {error}
             </div>
           )}
 
           {/* Allowed formats info */}
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-mute">
             Erlaubte Formate: JPEG, PNG, WebP, GIF (max. 5 MB)
           </p>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-rule flex-shrink-0 flex justify-end gap-3">
           <button
             onClick={handleClose}
             disabled={isUploading}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50 min-h-[44px]"
+            className="px-4 py-2 text-ink-soft bg-paper-lo hover:bg-rule rounded transition-colors disabled:opacity-50 min-h-[44px]"
           >
             Abbrechen
           </button>
           <button
             onClick={handleUpload}
             disabled={isUploading || !selectedFile || isFileTooLarge}
-            className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px]"
+            className="px-4 py-2 text-white bg-plum hover:bg-plum-deep rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px]"
           >
             {isUploading ? (
               <>

@@ -54,27 +54,27 @@ export function LoginPage() {
   const displayError = localError || error;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-paper-lo px-4">
+      <div className="max-w-md w-full bg-paper-hi rounded-lg shadow-md p-8">
+        <h1 className="text-2xl font-bold text-center text-ink mb-6">
           Anmelden
         </h1>
 
         {successMessage && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          <div className="mb-4 p-3 bg-sage-100 border border-sage text-sage-deep rounded">
             {successMessage}
           </div>
         )}
 
         {displayError && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded">
             {displayError}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-1">
               E-Mail
             </label>
             <input
@@ -82,7 +82,7 @@ export function LoginPage() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
               placeholder="ihre@email.de"
               autoComplete="email"
               disabled={isLoading}
@@ -90,7 +90,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-ink-soft mb-1">
               Passwort
             </label>
             <input
@@ -98,7 +98,7 @@ export function LoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
               placeholder="••••••••"
               autoComplete="current-password"
               disabled={isLoading}
@@ -108,15 +108,15 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full py-2 px-4 bg-plum hover:bg-plum-deep disabled:bg-plum-soft text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
           >
             {isLoading ? 'Wird angemeldet...' : 'Anmelden'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-ink-soft">
           Noch kein Konto?{' '}
-          <Link to="/register" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link to="/register" className="text-plum hover:text-plum-deep font-medium">
             Jetzt registrieren
           </Link>
         </p>

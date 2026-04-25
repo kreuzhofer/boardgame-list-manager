@@ -108,7 +108,7 @@ export function ImageZoomOverlay({
     >
       {/* Loading shimmer */}
       {!imageLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg shadow-xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-paper-lo via-paper-hi to-paper-lo animate-pulse rounded-lg shadow-xl" />
       )}
 
       {/* Zoomed image */}

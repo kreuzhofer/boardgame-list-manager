@@ -114,7 +114,7 @@ export function DesktopActionsMenu({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+        className="w-8 h-8 flex items-center justify-center text-ink-mute hover:text-ink-soft hover:bg-paper-lo rounded-full transition-colors"
         aria-label="Weitere Aktionen"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -133,7 +133,7 @@ export function DesktopActionsMenu({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[200px]"
+            className="fixed bg-paper-hi rounded-lg shadow-lg border border-rule py-1 z-50 min-w-[200px]"
             style={{
               top: menuPosition.top,
               left: menuPosition.left,
@@ -144,11 +144,11 @@ export function DesktopActionsMenu({
             {canShowUpload && (
               <button
                 onClick={handleUploadThumbnail}
-                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-ink-soft hover:bg-paper-lo flex items-center gap-2"
                 role="menuitem"
               >
                 <svg
-                  className="w-5 h-5 text-gray-500"
+                  className="w-5 h-5 text-ink-mute"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -166,7 +166,7 @@ export function DesktopActionsMenu({
 
             {canShowPrototype && (
               <>
-                {canShowUpload && <div className="border-t border-gray-200 my-1" />}
+                {canShowUpload && <div className="border-t border-rule my-1" />}
                 <PrototypeToggle
                   gameId={game.id}
                   isPrototype={game.isPrototype}
@@ -179,7 +179,7 @@ export function DesktopActionsMenu({
             {canShowDeleteAction && (
               <>
                 {(canShowUpload || canShowPrototype) && (
-                  <div className="border-t border-gray-200 my-1" />
+                  <div className="border-t border-rule my-1" />
                 )}
                 <ClickNotification
                   message="Andere Spieler oder Mitbringer sind eingetragen"
@@ -191,8 +191,8 @@ export function DesktopActionsMenu({
                     disabled={!canDelete}
                     className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
                       canDelete
-                        ? 'text-red-700 hover:bg-red-50'
-                        : 'text-gray-400 cursor-not-allowed'
+                        ? 'text-blush-deep hover:bg-blush-50'
+                        : 'text-ink-mute cursor-not-allowed'
                     }`}
                     role="menuitem"
                   >

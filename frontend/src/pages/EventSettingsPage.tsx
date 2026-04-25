@@ -137,7 +137,7 @@ export function EventSettingsPage() {
   if (!account) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <p className="text-sm text-gray-600">Bitte melde dich an.</p>
+        <p className="text-sm text-ink-soft">Bitte melde dich an.</p>
       </div>
     );
   }
@@ -145,7 +145,7 @@ export function EventSettingsPage() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <p className="text-sm text-gray-500">Lade Event...</p>
+        <p className="text-sm text-ink-mute">Lade Event...</p>
       </div>
     );
   }
@@ -157,23 +157,23 @@ export function EventSettingsPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/events')}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-ink-mute hover:text-ink-soft"
         >
           &larr; Zurück
         </button>
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold text-ink">
           {isEditMode ? 'Event bearbeiten' : 'Neues Event erstellen'}
         </h2>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3">
+        <div className="bg-blush-50 border border-blush-50 text-blush-deep text-sm rounded p-3">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded p-3">
+        <div className="bg-sage-50 border border-sage-100 text-sage-deep text-sm rounded p-3">
           {success}
         </div>
       )}
@@ -181,7 +181,7 @@ export function EventSettingsPage() {
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4">
         {/* Name */}
         <div>
-          <label htmlFor="event-name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-name" className="block text-sm font-medium text-ink-soft mb-1">
             Name *
           </label>
           <input
@@ -190,31 +190,31 @@ export function EventSettingsPage() {
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="z.B. Brettspielabend März"
           />
         </div>
 
         {/* Slug */}
         <div>
-          <label htmlFor="event-slug" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-slug" className="block text-sm font-medium text-ink-soft mb-1">
             Slug (URL-Pfad)
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">/</span>
+            <span className="text-sm text-ink-mute">/</span>
             <input
               id="event-slug"
               type="text"
               value={slug}
               onChange={(e) => handleSlugChange(e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 border border-rule rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-plum focus:border-plum"
               placeholder="brettspielabend-maerz"
             />
           </div>
           {shareableLink && (
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-ink-mute">
               Teilnehmer-Link:{' '}
-              <a href={shareableLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+              <a href={shareableLink} target="_blank" rel="noreferrer" className="text-plum hover:underline">
                 {shareableLink}
               </a>
             </p>
@@ -223,7 +223,7 @@ export function EventSettingsPage() {
 
         {/* Password */}
         <div>
-          <label htmlFor="event-password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-password" className="block text-sm font-medium text-ink-soft mb-1">
             Passwort {isEditMode ? '' : '*'}
           </label>
           <input
@@ -232,7 +232,7 @@ export function EventSettingsPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="Passwort für Teilnehmer"
           />
         </div>
@@ -240,7 +240,7 @@ export function EventSettingsPage() {
         {/* Date range */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="event-starts" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="event-starts" className="block text-sm font-medium text-ink-soft mb-1">
               Startdatum
             </label>
             <input
@@ -248,11 +248,11 @@ export function EventSettingsPage() {
               type="datetime-local"
               value={startsAt}
               onChange={(e) => setStartsAt(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             />
           </div>
           <div>
-            <label htmlFor="event-ends" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="event-ends" className="block text-sm font-medium text-ink-soft mb-1">
               Enddatum
             </label>
             <input
@@ -260,14 +260,14 @@ export function EventSettingsPage() {
               type="datetime-local"
               value={endsAt}
               onChange={(e) => setEndsAt(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             />
           </div>
         </div>
 
         {/* Location */}
         <div>
-          <label htmlFor="event-location" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-location" className="block text-sm font-medium text-ink-soft mb-1">
             Ort
           </label>
           <input
@@ -275,14 +275,14 @@ export function EventSettingsPage() {
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="z.B. Vereinsheim, Musterstr. 1"
           />
         </div>
 
         {/* Capacity */}
         <div>
-          <label htmlFor="event-capacity" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-capacity" className="block text-sm font-medium text-ink-soft mb-1">
             Kapazität
           </label>
           <input
@@ -291,14 +291,14 @@ export function EventSettingsPage() {
             min="1"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="Max. Teilnehmerzahl"
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label htmlFor="event-notes" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-notes" className="block text-sm font-medium text-ink-soft mb-1">
             Notizen
           </label>
           <textarea
@@ -306,14 +306,14 @@ export function EventSettingsPage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="Zusätzliche Informationen..."
           />
         </div>
 
         {/* Fees */}
         <div>
-          <label htmlFor="event-fees" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="event-fees" className="block text-sm font-medium text-ink-soft mb-1">
             Gebühren
           </label>
           <textarea
@@ -321,7 +321,7 @@ export function EventSettingsPage() {
             value={fees}
             onChange={(e) => setFees(e.target.value)}
             rows={2}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
             placeholder="z.B. 5€ pro Person"
           />
         </div>
@@ -331,7 +331,7 @@ export function EventSettingsPage() {
           <button
             type="submit"
             disabled={saving || !name}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-plum text-white px-6 py-2 rounded-lg hover:bg-plum-deep transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Speichern...' : isEditMode ? 'Speichern' : 'Erstellen'}
           </button>

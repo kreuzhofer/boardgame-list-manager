@@ -339,14 +339,14 @@ export function UnifiedSearchBar({
   const isPrototypeDisabled = Boolean(selectedBggItem);
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-paper-hi rounded-lg shadow p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4">
           {/* Search input with dropdown */}
           <div ref={containerRef} className="relative max-w-xl">
             <label
               htmlFor="unified-search-input"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-ink-soft mb-1"
             >
               Spiel suchen oder hinzufügen
             </label>
@@ -354,22 +354,22 @@ export function UnifiedSearchBar({
             {/* Show either the selected game tag OR the search input */}
             {selectedBggItem ? (
               /* Selected BGG game tag/chip */
-              <div className="flex items-center gap-2 px-3 py-2 border border-green-300 bg-green-50 rounded-lg min-h-[44px]">
-                <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">
+              <div className="flex items-center gap-2 px-3 py-2 border border-sage bg-sage-50 rounded-lg min-h-[44px]">
+                <span className="text-xs bg-sage text-white px-1.5 py-0.5 rounded font-medium">
                   BGG
                 </span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-gray-900 font-medium truncate block">
+                  <span className="text-ink font-medium truncate block">
                     {selectedBggItem.name}
                     {selectedBggItem.yearPublished && (
-                      <span className="text-gray-500 font-normal ml-1">
+                      <span className="text-ink-mute font-normal ml-1">
                         ({selectedBggItem.yearPublished})
                       </span>
                     )}
                   </span>
                   {/* Feature: 014-alternate-names-search - Show matched alternate name */}
                   {selectedBggItem.matchedAlternateName && (
-                    <span className="text-xs text-gray-500 truncate block">
+                    <span className="text-xs text-ink-mute truncate block">
                       Auch bekannt als: {selectedBggItem.matchedAlternateName}
                     </span>
                   )}
@@ -378,7 +378,7 @@ export function UnifiedSearchBar({
                   type="button"
                   onClick={handleClearSelection}
                   disabled={isSubmitting}
-                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-green-200 text-green-700 transition-colors disabled:opacity-50"
+                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-sage-100 text-sage-deep transition-colors disabled:opacity-50"
                   aria-label="Auswahl aufheben"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,15 +408,15 @@ export function UnifiedSearchBar({
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="listbox"
                   aria-autocomplete="list"
-                  className={`w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed min-h-[44px] ${
-                    error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-plum disabled:bg-paper-lo disabled:cursor-not-allowed min-h-[44px] ${
+                    error ? 'border-blush focus:ring-blush' : 'border-rule'
                   }`}
                   aria-describedby={error ? 'unified-search-error' : undefined}
                   aria-invalid={error ? 'true' : 'false'}
                 />
                 {/* Search icon */}
                 <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-mute"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -450,7 +450,7 @@ export function UnifiedSearchBar({
 
             {/* Inline no results message */}
             {showNoResultsMessage && isDropdownOpen && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blush">
                 Keine Treffer
               </span>
             )}
@@ -466,8 +466,8 @@ export function UnifiedSearchBar({
                 disabled={isSubmitting}
                 className={`${toggleButtonBase} ${
                   isBringing
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-sage text-white hover:bg-sage-deep'
+                    : 'bg-paper-lo text-ink-soft hover:bg-rule'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> Mitbringen<span className="inline-block w-3 text-left">{isBringing ? ' ✓' : ''}</span>
@@ -480,8 +480,8 @@ export function UnifiedSearchBar({
                 disabled={isSubmitting}
                 className={`${toggleButtonBase} ${
                   isPlaying
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-sage text-white hover:bg-sage-deep'
+                    : 'bg-paper-lo text-ink-soft hover:bg-rule'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitspielen<span className="inline-block w-3 text-left">{isPlaying ? ' ✓' : ''}</span>
@@ -494,8 +494,8 @@ export function UnifiedSearchBar({
                 disabled={isSubmitting || isPrototypeDisabled}
                 className={`${toggleButtonBase} ${
                   isPrototype
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-plum text-white hover:bg-plum-deep'
+                    : 'bg-paper-lo text-ink-soft hover:bg-rule'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={isPrototypeDisabled ? 'Nur für manuelle Einträge verfügbar' : 'Prototyp markieren'}
                 aria-pressed={isPrototype}
@@ -507,7 +507,7 @@ export function UnifiedSearchBar({
               <button
                 type="submit"
                 disabled={isSubmitting || addButtonState.state === 'disabled'}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+                className="px-6 py-2 bg-plum text-white rounded-lg hover:bg-plum-deep transition-colors font-medium disabled:bg-plum-soft disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
               >
                 {isSubmitting ? (
                   <>
@@ -521,7 +521,7 @@ export function UnifiedSearchBar({
 
               {/* Duplicate message */}
               {addButtonState.message && (
-                <span className="text-sm text-amber-600 ml-2">
+                <span className="text-sm text-butter-deep ml-2">
                   {addButtonState.message}
                 </span>
               )}
@@ -533,7 +533,7 @@ export function UnifiedSearchBar({
         {error && (
           <p
             id="unified-search-error"
-            className="mt-2 text-sm text-red-600"
+            className="mt-2 text-sm text-blush-deep"
             role="alert"
           >
             {error}

@@ -73,52 +73,45 @@ describe('BggRatingBadge', () => {
 describe('getRatingColor', () => {
   describe('Color mapping', () => {
     /**
-     * Requirement 4.1: Red for ratings 1-4
+     * Requirement 4.1: Blush-deep for ratings 1-4
      */
-    it.each([1, 1.5, 2, 2.9, 3, 3.5, 4, 4.9])('should return red (#d32f2f) for rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#d32f2f');
+    it.each([1, 1.5, 2, 2.9, 3, 3.5, 4, 4.9])('should return blush-deep (#9c4537) for rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#9c4537');
     });
 
     /**
-     * Requirement 4.2: Dark blue for ratings 5-6
+     * Requirement 4.2: Ocean for ratings 5-6
      */
-    it.each([5, 5.5, 6, 6.9])('should return dark blue (#3f51b5) for rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#3f51b5');
+    it.each([5, 5.5, 6, 6.9])('should return ocean (#3f6f8f) for rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#3f6f8f');
     });
 
     /**
-     * Requirement 4.3: Light blue for rating 7
+     * Requirement 4.3: Plum for rating 7
      */
-    it.each([7, 7.5, 7.9])('should return light blue (#2196f3) for rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#2196f3');
+    it.each([7, 7.5, 7.9])('should return plum (#6b3a5c) for rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#6b3a5c');
     });
 
     /**
-     * Requirement 4.4: Green for rating 8
+     * Requirement 4.4: Sage for rating 8
      */
-    it.each([8, 8.5, 8.9])('should return green (#4caf50) for rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#4caf50');
+    it.each([8, 8.5, 8.9])('should return sage (#7a9476) for rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#7a9476');
     });
 
     /**
-     * Requirement 4.5: Dark green for rating 9
+     * Requirement 4.5: Sage-deep for ratings 9-10
      */
-    it.each([9, 9.5, 9.9])('should return dark green (#2e7d32) for rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#2e7d32');
+    it.each([9, 9.5, 9.9, 10])('should return sage-deep (#5b7458) for rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#5b7458');
     });
 
     /**
-     * Requirement 4.6: Darker green for rating 10
+     * Requirement 4.7: Ink-mute for invalid ratings
      */
-    it('should return darker green (#1b5e20) for rating 10', () => {
-      expect(getRatingColor(10)).toBe('#1b5e20');
-    });
-
-    /**
-     * Requirement 4.7: Gray for invalid ratings
-     */
-    it.each([0, -1, 11, 100])('should return gray (#9e9e9e) for invalid rating %s', (rating) => {
-      expect(getRatingColor(rating)).toBe('#9e9e9e');
+    it.each([0, -1, 11, 100])('should return ink-mute (#8c7d92) for invalid rating %s', (rating) => {
+      expect(getRatingColor(rating)).toBe('#8c7d92');
     });
   });
 });

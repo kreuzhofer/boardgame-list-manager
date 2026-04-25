@@ -47,15 +47,22 @@ export function Header({ basePath = '', eventName: eventNameProp, participant, o
   const isActive = (path: string) => location.pathname === resolvePath(path);
 
   return (
-    <header className="bg-blue-600 text-white shadow-lg fixed top-0 left-0 right-0 z-50">
+    <header className="bg-plum-deep text-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          {/* Event Title */}
+          {/* Brand: logo mark + event title */}
           <Link
             to={resolvePath('/')}
-            className="hover:opacity-90 transition-opacity flex-shrink-0"
+            className="hover:opacity-90 transition-opacity flex-shrink-0 flex items-center gap-2 sm:gap-3"
+            aria-label={`${eventName} – Startseite`}
           >
-            <h1 className="text-lg sm:text-2xl font-bold truncate max-w-[200px] sm:max-w-none">
+            <img
+              src="/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+            />
+            <h1 className="font-display italic text-xl sm:text-3xl font-medium tracking-tight truncate max-w-[180px] sm:max-w-none text-paper-hi">
               {eventName}
             </h1>
           </Link>

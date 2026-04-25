@@ -34,7 +34,7 @@ describe('PrototypeToggle', () => {
       );
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-gray-100');
+      expect(button).toHaveClass('bg-paper-lo');
     });
 
     it('shows active styling when isPrototype is true', () => {
@@ -48,7 +48,7 @@ describe('PrototypeToggle', () => {
       );
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-purple-100');
+      expect(button).toHaveClass('bg-ocean-50');
     });
 
     it('calls onToggle with correct parameters when clicked (false -> true)', async () => {

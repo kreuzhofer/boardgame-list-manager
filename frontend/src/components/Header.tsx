@@ -27,7 +27,7 @@ interface HeaderProps {
 
 // Get event name from environment variable
 const getEventName = (): string => {
-  return import.meta.env.VITE_EVENT_NAME || 'Brettspiel-Event';
+  return import.meta.env.VITE_EVENT_NAME || 'Brettspieltreff';
 };
 
 // Desktop navigation tabs configuration

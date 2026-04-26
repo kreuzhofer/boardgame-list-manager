@@ -13,6 +13,7 @@ import thumbnailRoutes from './routes/thumbnail.routes';
 import participantRoutes from './routes/participant.routes';
 import eventRoutes from './routes/event.routes';
 import webhookRoutes from './routes/webhook.routes';
+import donationRoutes from './routes/donation.routes';
 import { bggCache } from './services';
 import { config } from './config';
 import { prisma } from './db/prisma';
@@ -58,6 +59,7 @@ app.use('/api/participants', participantRoutes);
 app.use('/api/users', participantRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/donations', donationRoutes);
 
 // Health check endpoint - includes BGG cache status for debugging
 app.get('/api/health', (_req, res) => {

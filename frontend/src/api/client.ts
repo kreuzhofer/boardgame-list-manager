@@ -556,6 +556,18 @@ export const eventsApi = {
   },
 };
 
+export interface DonationStats {
+  count: number;
+  total: number;
+  currency: string;
+  since: string;
+}
+
+export const donationsApi = {
+  getStats: (days = 30) =>
+    fetchApi<DonationStats>(`/api/donations/stats?days=${days}`, {}, true),
+};
+
 // Export all APIs as a single object
 export const api = {
   auth: authApi,
@@ -567,6 +579,7 @@ export const api = {
   sessions: sessionsApi,
   thumbnails: thumbnailsApi,
   events: eventsApi,
+  donations: donationsApi,
 };
 
 export default api;

@@ -1,32 +1,18 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { config } from '../config';
+import { persistBmcDonation, type BmcWebhookEnvelope } from '../services/donation.service';
 
 const router = Router();
 
-// BMC and similar services typically send the HMAC signature in one of these
-// header names. We try each — once we capture a real payload from production,
-// we'll know which one to lock in.
-const SIGNATURE_HEADER_CANDIDATES = [
-  'x-signature-sha256',
-  'x-signature',
-  'x-bmc-signature',
-  'x-webhook-signature',
-];
+// BMC sends the HMAC-SHA256 signature in this header (confirmed against a
+// real production payload, 2026-04-26).
+const BMC_SIGNATURE_HEADER = 'x-signature-sha256';
 
-/**
- * Compute HMAC-SHA256 hex digest over the raw request body.
- * Returns lowercase hex without any prefix.
- */
 function computeHmac(rawBody: Buffer, secret: string): string {
   return crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 }
 
-/**
- * Compare two signature strings in constant time. Tolerates:
- *   - lower/upper case hex
- *   - optional `sha256=` prefix
- */
 function signaturesMatch(provided: string, expected: string): boolean {
   if (!provided) return false;
   const normalised = provided.replace(/^sha256=/i, '').trim().toLowerCase();
@@ -41,62 +27,77 @@ function signaturesMatch(provided: string, expected: string): boolean {
 
 /**
  * POST /api/webhooks/bmc
- * Buy Me a Coffee webhook receiver — discovery / dev mode.
+ * Buy Me a Coffee webhook receiver.
  *
- * Logs full headers + body so we can capture real payloads from production.
- * If `BMC_WEBHOOK_SECRET` is configured, computes the expected HMAC-SHA256
- * over the raw body and reports whether any of the candidate signature headers
- * matched. Mismatches are **still accepted** for now — once we've seen one
- * real payload and know the exact header name, the handler will switch to
- * rejecting bad signatures with 401.
+ * Auth: HMAC-SHA256 signature in `X-Signature-Sha256` header, computed over
+ * the raw request body using `BMC_WEBHOOK_SECRET`. Mismatches → 401.
+ *
+ * Behaviour:
+ *  - `donation.created` / `donation.refunded` → upserted into `donations`
+ *    table (idempotent by BMC payment id).
+ *  - Other event types (membership.*, extra.*, …) → logged + 200, no
+ *    persistence yet. Add handlers as we encounter them.
+ *  - Test-mode events (`live_mode === false`) are still persisted but flagged
+ *    so they don't pollute donation stats.
  */
-router.post('/bmc', (req: Request, res: Response) => {
+router.post('/bmc', async (req: Request, res: Response) => {
   const ts = new Date().toISOString();
   const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody;
   const secret = config.webhooks.bmcSecret;
 
-  let signatureReport:
-    | { mode: 'no-secret-configured' }
-    | { mode: 'no-raw-body' }
-    | {
-        mode: 'checked';
-        expected: string;
-        matchedHeader: string | null;
-        candidates: Array<{ header: string; provided: string; matches: boolean }>;
-      };
-
+  // ── Signature verification ──────────────────────────────────────────
   if (!secret) {
-    signatureReport = { mode: 'no-secret-configured' };
-  } else if (!rawBody) {
-    signatureReport = { mode: 'no-raw-body' };
-  } else {
-    const expected = computeHmac(rawBody, secret);
-    const candidates = SIGNATURE_HEADER_CANDIDATES.flatMap((header) => {
-      const provided = req.header(header);
-      if (!provided) return [];
-      return [{
-        header,
-        provided,
-        matches: signaturesMatch(provided, expected),
-      }];
-    });
-    const matched = candidates.find((c) => c.matches);
-    signatureReport = {
-      mode: 'checked',
-      expected,
-      matchedHeader: matched?.header ?? null,
-      candidates,
-    };
+    console.error(`[${ts}] BMC webhook: BMC_WEBHOOK_SECRET not configured — rejecting.`);
+    res.status(503).json({ error: 'WEBHOOK_NOT_CONFIGURED' });
+    return;
+  }
+  if (!rawBody) {
+    console.error(`[${ts}] BMC webhook: raw body unavailable — rejecting.`);
+    res.status(400).json({ error: 'BAD_REQUEST' });
+    return;
   }
 
-  console.log('=== BMC webhook ===');
-  console.log(`[${ts}] method=${req.method} path=${req.path} ip=${req.ip}`);
-  console.log(`[${ts}] headers=${JSON.stringify(req.headers, null, 2)}`);
-  console.log(`[${ts}] body=${JSON.stringify(req.body, null, 2)}`);
-  console.log(`[${ts}] signature_check=${JSON.stringify(signatureReport, null, 2)}`);
-  console.log('=== /BMC webhook ===');
+  const provided = req.header(BMC_SIGNATURE_HEADER);
+  const expected = computeHmac(rawBody, secret);
+  if (!provided || !signaturesMatch(provided, expected)) {
+    console.warn(
+      `[${ts}] BMC webhook: signature mismatch ` +
+        `(provided=${provided ?? 'none'} expected=${expected})`,
+    );
+    res.status(401).json({ error: 'BAD_SIGNATURE' });
+    return;
+  }
 
-  // BMC expects a 2xx within a short timeout — respond immediately.
+  // ── Dispatch by event type ──────────────────────────────────────────
+  const payload = req.body as BmcWebhookEnvelope;
+  const type = payload?.type ?? 'unknown';
+
+  console.log(`[${ts}] BMC webhook: type=${type} live_mode=${payload?.live_mode}`);
+
+  try {
+    switch (type) {
+      case 'donation.created':
+      case 'donation.refunded': {
+        const row = await persistBmcDonation(payload);
+        console.log(
+          `[${ts}] BMC donation persisted: id=${row.id} ` +
+            `bmc_payment_id=${row.bmcPaymentId} amount=${row.amount} ${row.currency} ` +
+            `live_mode=${row.liveMode} refunded=${row.refunded}`,
+        );
+        break;
+      }
+      default:
+        // Unknown type — log full payload so we can decide how to handle it.
+        console.log(
+          `[${ts}] BMC webhook: unhandled type=${type} body=${JSON.stringify(payload, null, 2)}`,
+        );
+    }
+  } catch (err) {
+    // Don't 500 — BMC will retry hard on 5xx, which we want to avoid for
+    // bugs in our handler. Log and acknowledge.
+    console.error(`[${ts}] BMC webhook: handler error`, err);
+  }
+
   res.status(200).json({ ok: true, receivedAt: ts });
 });
 

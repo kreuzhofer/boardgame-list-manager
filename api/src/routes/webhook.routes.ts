@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { config } from '../config';
-import { persistBmcDonation, type BmcWebhookEnvelope } from '../services/donation.service';
+import {
+  persistBmcDonation,
+  persistBmcSubscription,
+  type BmcWebhookEnvelope,
+} from '../services/donation.service';
 
 const router = Router();
 
@@ -82,10 +86,40 @@ router.post('/bmc', async (req: Request, res: Response) => {
         console.log(
           `[${ts}] BMC donation persisted: id=${row.id} ` +
             `bmc_payment_id=${row.bmcPaymentId} amount=${row.amount} ${row.currency} ` +
-            `live_mode=${row.liveMode} refunded=${row.refunded}`,
+            `live_mode=${row.liveMode} refunded=${row.refunded} ` +
+            `supporter_id=${row.supporterId ?? 'anon'}`,
         );
         break;
       }
+
+      case 'recurring_donation.started':
+      case 'recurring_donation.updated':
+      case 'recurring_donation.cancelled': {
+        const row = await persistBmcSubscription(payload, 'recurring');
+        console.log(
+          `[${ts}] BMC subscription persisted (recurring): id=${row.id} ` +
+            `bmc_subscription_id=${row.bmcSubscriptionId} amount=${row.amount} ${row.currency} ` +
+            `status=${row.status} canceled=${row.canceled} ` +
+            `live_mode=${row.liveMode} supporter_id=${row.supporterId ?? 'anon'}`,
+        );
+        break;
+      }
+
+      case 'membership.started':
+      case 'membership.updated':
+      case 'membership.cancelled': {
+        const row = await persistBmcSubscription(payload, 'membership');
+        console.log(
+          `[${ts}] BMC subscription persisted (membership): id=${row.id} ` +
+            `bmc_subscription_id=${row.bmcSubscriptionId} ` +
+            `tier=${row.membershipLevelName ?? '—'} ` +
+            `amount=${row.amount} ${row.currency} status=${row.status} ` +
+            `canceled=${row.canceled} live_mode=${row.liveMode} ` +
+            `supporter_id=${row.supporterId ?? 'anon'}`,
+        );
+        break;
+      }
+
       default:
         // Unknown type — log full payload so we can decide how to handle it.
         console.log(

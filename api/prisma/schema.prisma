@@ -225,6 +225,24 @@ model Session {
   @@map("sessions")
 }
 
+/// One row per BMC supporter (deduped by `bmcSupporterId`). Donations and
+/// subscriptions FK to this. Lets us answer "all activity by John" with a
+/// simple JOIN. Anonymous events (no BMC supporter id) keep the FK null.
+model Supporter {
+  id              String    @id @default(uuid())
+  bmcSupporterId  Int       @unique @map("bmc_supporter_id")
+  name            String?
+  email           String?
+  firstSeenAt     DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt      DateTime  @default(now()) @map("last_seen_at")
+
+  donations       Donation[]
+  subscriptions   Subscription[]
+
+  @@index([email])
+  @@map("supporters")
+}
+
 model Donation {
   id                  String    @id @default(uuid())
   // BMC payment id — unique per donation event. Used for idempotent upserts
@@ -245,10 +263,10 @@ model Donation {
   // payload, parsed to decimal). Null if not provided.
   totalAmountCharged  Decimal?  @db.Decimal(10, 2) @map("total_amount_charged")
   applicationFee      Decimal?  @db.Decimal(10, 2) @map("application_fee")
-  // Supporter info — all nullable: BMC supports anonymous coffees.
-  supporterId         Int?      @map("supporter_id")
-  supporterName       String?   @map("supporter_name")
-  supporterEmail      String?   @map("supporter_email")
+  // Supporter FK — nullable for anonymous donations. Cascades to SET NULL
+  // if a supporter row is deleted (donation history is preserved).
+  supporterId         String?   @map("supporter_id")
+  supporter           Supporter? @relation(fields: [supporterId], references: [id], onDelete: SetNull)
   supportNote         String?   @db.Text @map("support_note")
   message             String?   @db.Text
   status              String?
@@ -263,5 +281,53 @@ model Donation {
 
   @@index([bmcCreatedAt])
   @@index([liveMode, refunded])
+  @@index([supporterId])
   @@map("donations")
 }
+
+/// Ongoing supporter subscriptions. Covers both BMC `recurring_donation` and
+/// `membership` events — they share an identical shape; memberships add the
+/// `membership_level_*` fields. The `kind` discriminator + `bmcSubscriptionId`
+/// form a composite unique key (BMC's id space overlaps between the two kinds).
+model Subscription {
+  id                   String    @id @default(uuid())
+  bmcSubscriptionId    Int       @map("bmc_subscription_id")
+  /// 'recurring' | 'membership'
+  kind                 String
+  liveMode             Boolean   @default(false) @map("live_mode")
+  /// Per-period amount, e.g. 5.00 / month
+  amount               Decimal   @db.Decimal(10, 2)
+  currency             String    @db.VarChar(8)
+  /// 'month' | 'year' (so far)
+  durationType         String?   @map("duration_type")
+  /// Stripe subscription id ("sub_…")
+  pspId                String?   @map("psp_id")
+  /// 'active' | 'canceled' | …
+  status               String
+  paused               Boolean   @default(false)
+  canceled             Boolean   @default(false)
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  /// Membership tier metadata, only for kind='membership'.
+  membershipLevelId    Int?      @map("membership_level_id")
+  membershipLevelName  String?   @map("membership_level_name")
+  /// Supporter FK — nullable for anonymous subscriptions (rare).
+  supporterId          String?   @map("supporter_id")
+  supporter            Supporter? @relation(fields: [supporterId], references: [id], onDelete: SetNull)
+  supportNote          String?   @db.Text @map("support_note")
+  /// Free-text feedback, e.g. "Cancelled from stripe dashboard"
+  supporterFeedback    String?   @db.Text @map("supporter_feedback")
+  startedAt            DateTime  @map("started_at")
+  canceledAt           DateTime? @map("canceled_at")
+  currentPeriodStart   DateTime? @map("current_period_start")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  bmcCreatedAt         DateTime  @map("bmc_created_at")
+  receivedAt           DateTime  @default(now()) @map("received_at")
+  rawPayload           Json      @map("raw_payload")
+
+  @@unique([kind, bmcSubscriptionId])
+  @@index([supporterId])
+  @@index([liveMode, status])
+  @@index([pspId])
+  @@map("subscriptions")
+}
+

@@ -40,7 +40,7 @@ export function EventBar({
       <div className="flex flex-col md:flex-row md:items-end md:justify-between">
         {/* Left: eyebrow + title + meta */}
         <div>
-          <span className="font-sans text-[11px] tracking-widest uppercase text-plum font-bold">
+          <span className="wg-label text-plum">
             Aktueller Treff
           </span>
           <h2 className="font-display italic text-3xl lg:text-[42px] text-plum-deep mt-1.5">

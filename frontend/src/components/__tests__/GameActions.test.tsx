@@ -72,8 +72,8 @@ describe('GameActions', () => {
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       
-      expect(bringButton).toHaveClass('bg-paper-lo');
-      expect(playButton).toHaveClass('bg-paper-lo');
+      expect(bringButton).toHaveClass('wg-btn-toggle');
+      expect(playButton).toHaveClass('wg-btn-toggle');
     });
 
     it('calls onAddBringer when Mitbringen button is clicked', () => {
@@ -106,7 +106,7 @@ describe('GameActions', () => {
       
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       expect(playButton).toHaveTextContent('✓');
-      expect(playButton).toHaveClass('bg-sage');
+      expect(playButton).toHaveClass('wg-btn-toggle-active');
     });
 
     it('calls onRemovePlayer when active Mitspielen button is clicked', () => {
@@ -132,7 +132,7 @@ describe('GameActions', () => {
       
       const bringButton = screen.getByRole('button', { name: /Mitbringen/i });
       expect(bringButton).toHaveTextContent('✓');
-      expect(bringButton).toHaveClass('bg-sage');
+      expect(bringButton).toHaveClass('wg-btn-toggle-active');
     });
 
     it('calls onRemoveBringer when active Mitbringen button is clicked', () => {
@@ -162,9 +162,9 @@ describe('GameActions', () => {
       const playButton = screen.getByRole('button', { name: /Mitspielen/i });
       
       expect(bringButton).toHaveTextContent('✓');
-      expect(bringButton).toHaveClass('bg-sage');
+      expect(bringButton).toHaveClass('wg-btn-toggle-active');
       expect(playButton).toHaveTextContent('✓');
-      expect(playButton).toHaveClass('bg-sage');
+      expect(playButton).toHaveClass('wg-btn-toggle-active');
     });
   });
 

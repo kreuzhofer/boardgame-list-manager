@@ -167,7 +167,7 @@ export function ProfilePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Account Info */}
         <div className="bg-paper-hi rounded-lg shadow-raised p-6">
-          <h1 className="text-2xl font-bold text-ink mb-4">Mein Profil</h1>
+          <h1 className="font-display italic text-3xl text-plum-deep mb-4">Mein Profil</h1>
           
           <div className="space-y-3">
             <div>
@@ -271,7 +271,7 @@ export function ProfilePage() {
             <button
               type="submit"
               disabled={isChangingPassword || !isNewPasswordValid}
-              className="py-2 px-4 bg-plum hover:bg-plum-deep disabled:bg-plum-soft text-white font-medium rounded-md transition-colors"
+              className="wg-btn-primary disabled:bg-plum-soft"
             >
               {isChangingPassword ? 'Wird geändert...' : 'Passwort ändern'}
             </button>
@@ -353,7 +353,7 @@ export function ProfilePage() {
           {!showDeactivateConfirm ? (
             <button
               onClick={() => setShowDeactivateConfirm(true)}
-              className="py-2 px-4 bg-blush-deep hover:bg-blush-deep text-white font-medium rounded-md transition-colors"
+              className="wg-btn-danger"
             >
               Konto deaktivieren
             </button>
@@ -383,7 +383,7 @@ export function ProfilePage() {
                 <button
                   onClick={handleDeactivate}
                   disabled={isDeactivating}
-                  className="py-2 px-4 bg-blush-deep hover:bg-blush-deep disabled:bg-blush text-white font-medium rounded-md transition-colors"
+                  className="wg-btn-danger disabled:opacity-50"
                 >
                   {isDeactivating ? 'Wird deaktiviert...' : 'Endgültig deaktivieren'}
                 </button>
@@ -394,7 +394,7 @@ export function ProfilePage() {
                     setDeactivateError(null);
                   }}
                   disabled={isDeactivating}
-                  className="py-2 px-4 bg-rule hover:bg-rule text-ink-soft font-medium rounded-md transition-colors"
+                  className="wg-btn-ghost disabled:opacity-50"
                 >
                   Abbrechen
                 </button>

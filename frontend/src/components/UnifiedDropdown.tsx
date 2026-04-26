@@ -105,7 +105,7 @@ export function UnifiedDropdown({
       {hasInListeResults && (
         <div className="border-b border-rule">
           <div className="px-3 py-2 bg-paper-lo text-xs font-semibold text-ink-soft uppercase tracking-wide">
-            📋 Schon eingetragen
+            Schon eingetragen
           </div>
           <ul>
             {matchingGames.map((game, index) => {
@@ -173,7 +173,7 @@ export function UnifiedDropdown({
       {(hasBggResults || isBggLoading) && (
         <div>
           <div className="px-3 py-2 bg-paper-lo text-xs font-semibold text-ink-soft uppercase tracking-wide">
-            🌐 Von BGG
+            Von BoardGameGeek
           </div>
           {isBggLoading && visibleBggResults.length === 0 ? (
             <div className="px-3 py-3 text-sm text-ink-mute flex items-center gap-2">

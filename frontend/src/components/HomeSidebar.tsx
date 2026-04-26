@@ -9,7 +9,7 @@ interface HomeSidebarProps {
 // ── Eyebrow helper ────────────────────────────────────────────────────
 function Eyebrow({ text }: { text: string }) {
   return (
-    <div className="font-sans text-[11px] tracking-widest uppercase font-bold text-ink-mute">
+    <div className="wg-label">
       {text}
     </div>
   );
@@ -20,7 +20,7 @@ function DonateCard() {
   const href = 'https://www.buymeacoffee.com/kreuzhofer';
 
   return (
-    <div className="bg-paper-hi border-l-4 border-butter bg-gradient-to-b from-butter-50 to-transparent rounded-2xl p-5">
+    <div className="wg-card wg-card-accent-butter bg-gradient-to-b from-butter-50 to-transparent rounded-2xl">
       <div className="flex items-center gap-2.5">
         <span className="w-8 h-8 rounded-full bg-butter flex items-center justify-center">
           <svg
@@ -99,7 +99,7 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
     .slice(0, 4);
 
   return (
-    <div className="bg-paper-hi border border-rule rounded-2xl p-5">
+    <div className="wg-card rounded-2xl">
       <Eyebrow text="Wer bringt was" />
 
       <h3 className="font-display italic text-xl text-ink mt-1.5">
@@ -125,7 +125,7 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
               <span className="text-sm font-bold text-ink flex-1">
                 {bringer.name}
               </span>
-              <span className="bg-sage-50 text-sage-deep text-[11px] font-bold px-2 py-0.5 rounded-full">
+              <span className="wg-tag-sage">
                 {bringer.count} Spiele
               </span>
             </div>
@@ -142,7 +142,7 @@ function ParticipantsCard({ participants }: { participants: Participant[] }) {
   const remaining = participants.length - visible.length;
 
   return (
-    <div className="bg-paper-hi border border-rule rounded-2xl p-5">
+    <div className="wg-card rounded-2xl">
       <div className="flex justify-between items-center">
         <Eyebrow text="Teilnehmer" />
         <span className="text-ink-mute text-xs">{participants.length}</span>

@@ -276,7 +276,7 @@ export function GameRow({
                 {isWunsch ? 'Gesucht' : 'Verfügbar'}
               </span>
               {isPrototype && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-plum-100 text-plum-deep">
+                <span className="wg-tag-ocean">
                   Prototyp
                 </span>
               )}

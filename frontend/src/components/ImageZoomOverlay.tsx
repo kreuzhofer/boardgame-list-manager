@@ -108,7 +108,7 @@ export function ImageZoomOverlay({
     >
       {/* Loading shimmer */}
       {!imageLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-r from-paper-lo via-paper-hi to-paper-lo animate-pulse rounded-lg shadow-xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-paper-lo via-paper-hi to-paper-lo animate-pulse rounded-lg shadow-floating" />
       )}
 
       {/* Zoomed image */}
@@ -118,7 +118,7 @@ export function ImageZoomOverlay({
         width={ZOOM_SIZE}
         height={ZOOM_SIZE}
         className={`
-          w-full h-full object-cover rounded-lg shadow-xl border-2 border-white
+          w-full h-full object-cover rounded-lg shadow-floating border-2 border-paper-hi
           transition-opacity duration-150
           ${imageLoaded ? 'opacity-100' : 'opacity-0'}
         `}

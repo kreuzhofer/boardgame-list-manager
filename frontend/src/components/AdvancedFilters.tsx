@@ -88,7 +88,7 @@ export function AdvancedFilters({
                   value={playerQuery}
                   onChange={handlePlayerChange}
                   placeholder="Mitspieler eingeben..."
-                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
+                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg focus:ring-plum focus:border-plum text-base sm:text-sm"
                   aria-label="Mitspieler suchen"
                 />
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />
@@ -110,7 +110,7 @@ export function AdvancedFilters({
                   value={bringerQuery}
                   onChange={handleBringerChange}
                   placeholder="Name eingeben..."
-                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg shadow-sm focus:ring-plum focus:border-plum text-base sm:text-sm"
+                  className="w-full px-3 py-2.5 pl-9 border border-rule rounded-lg focus:ring-plum focus:border-plum text-base sm:text-sm"
                   aria-label="Bringt mit suchen"
                 />
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-mute" />

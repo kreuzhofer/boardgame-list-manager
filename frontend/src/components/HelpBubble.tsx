@@ -247,7 +247,7 @@ export function HelpBubble({
           style={getBubblePositionStyle()}
           className={`transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
         >
-          <div className="relative bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-lg max-w-48 whitespace-normal">
+          <div className="relative bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-floating max-w-48 whitespace-normal">
             {text}
             {/* Arrow/tip */}
             <div

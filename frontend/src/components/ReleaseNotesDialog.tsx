@@ -107,7 +107,7 @@ export function ReleaseNotesDialog({ isOpen, content, onDismiss }: ReleaseNotesD
       aria-modal="true"
       aria-labelledby="release-notes-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-paper-hi rounded-lg shadow-floating max-w-2xl w-full max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b border-rule flex items-center justify-between flex-shrink-0">
           <h2 id="release-notes-title" className="text-xl font-semibold text-ink">
             Neuigkeiten

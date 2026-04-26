@@ -114,7 +114,7 @@ export function MobileBottomTabs({ basePath = '', participant, onParticipantUpda
     <>
       {/* Bottom Tab Bar - visible only on mobile (<768px) */}
       <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-paper-hi border-t border-rule shadow-lg z-50"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-paper-hi border-t border-rule shadow-floating z-50"
         aria-label="Mobile Navigation"
       >
         <div className="flex justify-around items-center h-16">

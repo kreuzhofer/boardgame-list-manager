@@ -166,7 +166,7 @@ export function ProfilePage() {
     <div className="min-h-screen bg-paper py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Account Info */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
           <h1 className="text-2xl font-bold text-ink mb-4">Mein Profil</h1>
           
           <div className="space-y-3">
@@ -194,7 +194,7 @@ export function ProfilePage() {
         </div>
 
         {/* Password Change */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
           <h2 className="text-xl font-bold text-ink mb-4">Passwort ändern</h2>
 
           {passwordError && (
@@ -279,7 +279,7 @@ export function ProfilePage() {
         </div>
 
         {/* Active Sessions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-ink">Aktive Sitzungen</h2>
             <button
@@ -343,7 +343,7 @@ export function ProfilePage() {
 
         {/* Account Deactivation */}
         {account.role !== 'admin' && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
           <h2 className="text-xl font-bold text-blush-deep mb-4">Konto deaktivieren</h2>
           <p className="text-ink-soft mb-4">
             Wenn Sie Ihr Konto deaktivieren, können Sie sich nicht mehr anmelden. 

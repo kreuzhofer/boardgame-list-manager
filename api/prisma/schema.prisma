@@ -204,12 +204,40 @@ model Account {
   passwordHash String        @map("password_hash")
   role         AccountRole   @default(account_owner)
   status       AccountStatus @default(active)
+  /// ISO 639-1 language tag, e.g. 'de', 'en'. Drives email-template
+  /// locale resolution. Null = use default ('de').
+  locale       String?       @db.VarChar(8)
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   sessions     Session[]
   events       Event[]
+  loginTokens  LoginToken[]
 
   @@map("accounts")
+}
+
+/// Single-use, time-limited tokens for magic-link login (and future
+/// invitation / password-reset flows that need a one-shot URL).
+model LoginToken {
+  id          String    @id @default(uuid())
+  /// Random URL-safe token (~32 bytes). Indexed for the consume lookup.
+  token       String    @unique
+  accountId   String    @map("account_id")
+  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  /// What the token is for. Lets us route on consume + log usage.
+  purpose     String    /// 'login' | 'invite-claim' | 'legacy-claim' | 'reset-password'
+  /// Optional URL to land on after consumption (e.g. the event slug the
+  /// invite was sent for). Null falls back to /events.
+  targetPath  String?   @map("target_path")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  expiresAt   DateTime  @map("expires_at")
+  consumedAt  DateTime? @map("consumed_at")
+  /// IP address of the consumer (for audit; null for unconsumed)
+  consumedIp  String?   @map("consumed_ip")
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("login_tokens")
 }
 
 model Session {

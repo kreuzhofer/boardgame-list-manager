@@ -47,6 +47,9 @@ COPY --from=builder /app/dist ./dist
 # Copy data files (BGG CSV)
 COPY data ./data
 
+# Copy email templates (rendered at runtime via Handlebars)
+COPY templates ./templates
+
 # Copy startup script
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh

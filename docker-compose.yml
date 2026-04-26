@@ -33,6 +33,14 @@ services:
       - BGG_IMAGE_CACHE_DIR=/app/cache/bgg-images
       - CRAWLER_URL=${CRAWLER_URL:-http://crawler:3001}
       - BMC_WEBHOOK_SECRET=${BMC_WEBHOOK_SECRET:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - SMTP_REPLY_TO=${SMTP_REPLY_TO:-}
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-http://localhost:8086}
     volumes:
       - bgg_image_cache:/app/cache/bgg-images
     depends_on:

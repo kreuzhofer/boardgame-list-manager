@@ -44,6 +44,22 @@ export const config = {
     // the exact header BMC uses, the handler will start rejecting bad sigs.
     bmcSecret: process.env.BMC_WEBHOOK_SECRET || '',
   },
+  smtp: {
+    // When `host` is empty, the email service runs in console-print mode
+    // (dev fallback). All other fields ignored in that case.
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_SECURE === 'true',  // true on port 465; false on 587 (STARTTLS)
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || 'Brettspieltreff <noreply@brettspieltreff.app>',
+    replyTo: process.env.SMTP_REPLY_TO || undefined,
+  },
+  app: {
+    // Public URL the frontend is served from — used to build magic-link
+    // URLs in outgoing emails.
+    publicUrl: (process.env.APP_PUBLIC_URL || 'http://localhost:8086').replace(/\/$/, ''),
+  },
   customThumbnails: {
     cacheDir: process.env.CUSTOM_THUMBNAIL_DIR || '/app/cache/custom-thumbnails',
     maxFileSize: 5 * 1024 * 1024, // 5 MB

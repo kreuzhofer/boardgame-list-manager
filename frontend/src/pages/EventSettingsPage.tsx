@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventsApi, ApiError } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import type { Event, CreateEventRequest, UpdateEventRequest } from '../types/event';
+import type { Event, CreateEventRequest, UpdateEventRequest, EventStatus } from '../types/event';
+import { EVENT_STATUS_LABEL } from '../types/event';
 
 function slugify(name: string): string {
   return name
@@ -30,6 +31,9 @@ export function EventSettingsPage() {
   const [slug, setSlug] = useState('');
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [password, setPassword] = useState('');
+  const [status, setStatus] = useState<EventStatus>('planning');
+  const [description, setDescription] = useState('');
+  const [welcomeMessage, setWelcomeMessage] = useState('');
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [location, setLocation] = useState('');
@@ -46,6 +50,9 @@ export function EventSettingsPage() {
       setName(event.name);
       setSlug(event.slug);
       setSlugManuallyEdited(true); // Don't auto-generate in edit mode
+      setStatus(event.status);
+      setDescription(event.description || '');
+      setWelcomeMessage(event.welcomeMessage || '');
       setStartsAt(event.startsAt ? event.startsAt.slice(0, 16) : '');
       setEndsAt(event.endsAt ? event.endsAt.slice(0, 16) : '');
       setLocation(event.location || '');
@@ -97,6 +104,9 @@ export function EventSettingsPage() {
           name,
           slug,
           password,
+          status,
+          description: description || null,
+          welcomeMessage: welcomeMessage || null,
           startsAt: startsAt ? new Date(startsAt).toISOString() : null,
           endsAt: endsAt ? new Date(endsAt).toISOString() : null,
           location: location || null,
@@ -116,6 +126,9 @@ export function EventSettingsPage() {
           name,
           slug: slug || undefined,
           password,
+          status,
+          description: description || undefined,
+          welcomeMessage: welcomeMessage || undefined,
           startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
           endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
           location: location || undefined,
@@ -161,7 +174,7 @@ export function EventSettingsPage() {
         >
           &larr; Zurück
         </button>
-        <h2 className="text-2xl font-bold text-ink">
+        <h2 className="font-display italic text-3xl text-plum-deep">
           {isEditMode ? 'Event bearbeiten' : 'Neues Event erstellen'}
         </h2>
       </div>
@@ -237,6 +250,34 @@ export function EventSettingsPage() {
           />
         </div>
 
+        {/* Status */}
+        <div>
+          <label className="block text-sm font-medium text-ink-soft mb-1">
+            Status
+          </label>
+          <div className="inline-flex rounded-lg border border-rule overflow-hidden bg-paper-lo">
+            {(['planning', 'active', 'archived'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatus(s)}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  status === s
+                    ? 'bg-plum text-paper-hi'
+                    : 'text-ink-soft hover:bg-rule'
+                }`}
+              >
+                {EVENT_STATUS_LABEL[s]}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-ink-mute">
+            <strong>Planung:</strong> Teilnehmer sehen eine Vorschau-Seite mit Beschreibung und Begrüßung statt der Spieleliste.
+            {' '}<strong>Aktiv:</strong> Spieleliste ist freigeschaltet.
+            {' '}<strong>Archiviert:</strong> Treff ist beendet, nur lesbar.
+          </p>
+        </div>
+
         {/* Date range */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -296,10 +337,40 @@ export function EventSettingsPage() {
           />
         </div>
 
+        {/* Description (public — shown on welcome page) */}
+        <div>
+          <label htmlFor="event-description" className="block text-sm font-medium text-ink-soft mb-1">
+            Beschreibung
+          </label>
+          <textarea
+            id="event-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
+            placeholder="Was erwartet die Teilnehmer? (Wird auf der Willkommens-Seite angezeigt)"
+          />
+        </div>
+
+        {/* Welcome message (public — shown on welcome page) */}
+        <div>
+          <label htmlFor="event-welcome" className="block text-sm font-medium text-ink-soft mb-1">
+            Begrüßung
+          </label>
+          <textarea
+            id="event-welcome"
+            value={welcomeMessage}
+            onChange={(e) => setWelcomeMessage(e.target.value)}
+            rows={3}
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
+            placeholder="Persönliche Nachricht an deine Teilnehmer (optional)"
+          />
+        </div>
+
         {/* Notes */}
         <div>
           <label htmlFor="event-notes" className="block text-sm font-medium text-ink-soft mb-1">
-            Notizen
+            Notizen <span className="text-ink-mute font-normal">(intern, nur für dich)</span>
           </label>
           <textarea
             id="event-notes"
@@ -307,7 +378,7 @@ export function EventSettingsPage() {
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             className="w-full border border-rule rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-plum focus:border-plum"
-            placeholder="Zusätzliche Informationen..."
+            placeholder="Zusätzliche Informationen, die nur du siehst..."
           />
         </div>
 
@@ -331,7 +402,7 @@ export function EventSettingsPage() {
           <button
             type="submit"
             disabled={saving || !name}
-            className="bg-plum text-white px-6 py-2 rounded-lg hover:bg-plum-deep transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="wg-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Speichern...' : isEditMode ? 'Speichern' : 'Erstellen'}
           </button>

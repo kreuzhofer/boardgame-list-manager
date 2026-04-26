@@ -3,7 +3,7 @@ import { config } from '../config';
 import { prisma as defaultPrisma } from '../db/prisma';
 import { eventRepository } from '../repositories/event.repository';
 import type { EventEntity, EventResponse, EventPublicInfo, CreateEventInput, UpdateEventInput } from '../types/event';
-import { toEventResponse, toEventPublicInfo } from '../types/event';
+import { toEventResponse, toEventPublicInfo, EVENT_STATUSES } from '../types/event';
 
 export const RESERVED_SLUGS = [
   'login', 'register', 'profile', 'admin', 'print', 'statistics', 'events',
@@ -210,11 +210,18 @@ export class EventService {
       throw new Error('Dieser Slug ist bereits vergeben.');
     }
 
+    if (input.status && !EVENT_STATUSES.includes(input.status)) {
+      throw new Error('Ungültiger Status.');
+    }
+
     const event = await eventRepository.create({
       name: input.name,
       slug,
       password: input.password,
       ownerAccountId,
+      status: input.status,
+      description: input.description ?? null,
+      welcomeMessage: input.welcomeMessage ?? null,
       startsAt: input.startsAt ? new Date(input.startsAt) : null,
       endsAt: input.endsAt ? new Date(input.endsAt) : null,
       location: input.location ?? null,
@@ -242,8 +249,17 @@ export class EventService {
     if (input.capacity !== undefined) data.capacity = input.capacity;
     if (input.notes !== undefined) data.notes = input.notes;
     if (input.fees !== undefined) data.fees = input.fees;
+    if (input.description !== undefined) data.description = input.description;
+    if (input.welcomeMessage !== undefined) data.welcomeMessage = input.welcomeMessage;
     if (input.startsAt !== undefined) data.startsAt = input.startsAt ? new Date(input.startsAt) : null;
     if (input.endsAt !== undefined) data.endsAt = input.endsAt ? new Date(input.endsAt) : null;
+
+    if (input.status !== undefined) {
+      if (!EVENT_STATUSES.includes(input.status)) {
+        throw new Error('Ungültiger Status.');
+      }
+      data.status = input.status;
+    }
 
     if (input.slug !== undefined) {
       const slugError = this.validateSlug(input.slug);

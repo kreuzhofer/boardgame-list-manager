@@ -26,22 +26,38 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">
-      <header className="bg-plum-deep text-paper-hi shadow-raised fixed top-0 left-0 right-0 z-50">
+      {/* Light organizer chrome — paper-hi with rule border-bottom, plum-deep wordmark */}
+      <header className="bg-paper-hi border-b border-rule fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="hover:opacity-90 transition-opacity flex-shrink-0">
-              <h1 className="text-lg sm:text-2xl font-bold">Verwaltung</h1>
+          <div className="flex items-center justify-between gap-3">
+            {/* Brand: favicon + wordmark + Organisator tag */}
+            <Link
+              to="/"
+              className="flex items-center gap-2 sm:gap-3 hover:opacity-90 transition-opacity flex-shrink-0"
+              aria-label="Brettspieltreff – Startseite"
+            >
+              <img
+                src="/favicon.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+              />
+              <span className="font-display italic text-lg sm:text-xl text-plum-deep truncate">
+                Brettspieltreff
+              </span>
+              <span className="hidden sm:inline-flex wg-tag-ocean">Organisator</span>
             </Link>
 
-            <nav className="flex items-center gap-1 sm:gap-4">
+            {/* Nav + logout */}
+            <nav className="flex items-center gap-0.5 sm:gap-1">
               {NAV_ITEMS.filter(item => !item.adminOnly || account?.role === 'admin').map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`text-sm px-2 sm:px-3 py-1 rounded transition-colors ${
+                  className={`text-sm font-bold px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
                     isActive(item.path)
-                      ? 'bg-paper-hi/20 text-paper-hi font-medium'
-                      : 'text-paper-hi/75 hover:text-paper-hi hover:bg-paper-hi/15'
+                      ? 'bg-plum-50 text-plum-deep'
+                      : 'text-ink-soft hover:text-ink hover:bg-paper-lo'
                   }`}
                 >
                   {item.label}
@@ -49,7 +65,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
               ))}
               <button
                 onClick={handleLogout}
-                className="text-paper-hi/75 hover:text-paper-hi text-sm px-2 sm:px-3 py-1 rounded hover:bg-paper-hi/15 transition-colors"
+                className="text-ink-soft hover:text-ink text-sm font-bold px-2 sm:px-3 py-1.5 rounded-md hover:bg-paper-lo transition-colors"
               >
                 Abmelden
               </button>

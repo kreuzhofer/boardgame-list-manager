@@ -164,7 +164,7 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="text-2xl font-bold text-ink">Admin</h2>
+        <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
         <p className="text-sm text-ink-soft">
           Du hast keine Berechtigung für diesen Bereich.
         </p>
@@ -175,7 +175,7 @@ export function AdminPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="text-2xl font-bold text-ink">Admin</h2>
+        <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
         <p className="text-sm text-ink-mute">Lade Konten...</p>
       </div>
     );
@@ -186,7 +186,7 @@ export function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold text-ink">Admin</h2>
+      <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
       {error && (
         <div className="bg-blush-50 border border-blush-50 text-blush-deep text-sm rounded p-3">
           {error}
@@ -214,7 +214,7 @@ export function AdminPage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => handleRoleToggle(entry)}
-                      className="text-xs px-2 py-1 rounded bg-plum-50 text-plum-deep hover:bg-plum-100"
+                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-plum-50 text-plum-deep hover:bg-plum-100"
                     >
                       Rolle wechseln
                     </button>
@@ -222,7 +222,7 @@ export function AdminPage() {
                       onClick={() => handleStatusToggle(entry)}
                       disabled={entry.id === account?.id && entry.status === 'active'}
                       title={entry.id === account?.id && entry.status === 'active' ? 'Eigenes Konto kann nicht deaktiviert werden' : undefined}
-                      className={`text-xs px-2 py-1 rounded ${
+                      className={`text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center ${
                         entry.id === account?.id && entry.status === 'active'
                           ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
                           : 'bg-butter-50 text-butter-deep hover:bg-butter-50'
@@ -232,13 +232,13 @@ export function AdminPage() {
                     </button>
                     <button
                       onClick={() => handlePasswordReset(entry)}
-                      className="text-xs px-2 py-1 rounded bg-plum-50 text-plum-deep hover:bg-plum-100"
+                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-plum-50 text-plum-deep hover:bg-plum-100"
                     >
                       Passwort reset
                     </button>
                     <button
                       onClick={() => handleForceLogout(entry)}
-                      className="text-xs px-2 py-1 rounded bg-paper-lo text-ink-soft hover:bg-rule"
+                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-paper-lo text-ink-soft hover:bg-rule"
                     >
                       Sitzungen beenden
                     </button>
@@ -267,14 +267,14 @@ export function AdminPage() {
             <button
               onClick={handleStartImport}
               disabled={importRunning}
-              className="text-sm px-4 py-2 rounded bg-plum text-white hover:bg-plum-deep disabled:opacity-50 disabled:cursor-not-allowed"
+              className="wg-btn-primary wg-btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {importRunning ? 'Import läuft...' : 'BGG Import starten'}
             </button>
             {importRunning && (
               <button
                 onClick={handleStopImport}
-                className="text-sm px-4 py-2 rounded bg-blush-deep text-white hover:bg-blush-deep"
+                className="wg-btn-danger wg-btn-sm"
               >
                 Stoppen
               </button>
@@ -312,14 +312,14 @@ export function AdminPage() {
             <button
               onClick={handleStartEnrichment}
               disabled={enrichRunning}
-              className="text-sm px-4 py-2 rounded bg-sage text-white hover:bg-sage-deep disabled:opacity-50 disabled:cursor-not-allowed"
+              className="wg-btn-sage wg-btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {enrichRunning ? 'Enrichment läuft...' : 'BGG Enrichment starten'}
             </button>
             {enrichRunning && (
               <button
                 onClick={handleStopEnrichment}
-                className="text-sm px-4 py-2 rounded bg-blush-deep text-white hover:bg-blush-deep"
+                className="wg-btn-danger wg-btn-sm"
               >
                 Stoppen
               </button>

@@ -99,7 +99,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
   if (!isOpen) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-ink/40 flex items-center justify-center p-4 z-50">
       <div className="bg-paper-hi rounded-lg shadow-floating max-w-md w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-rule flex-shrink-0">
@@ -122,13 +122,13 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={handleCancelConfirm}
-                  className="px-4 py-2 text-ink-soft bg-paper-lo rounded-lg hover:bg-rule transition-colors"
+                  className="wg-btn-ghost"
                 >
                   Nein, nochmal zurück
                 </button>
                 <button
                   onClick={handleConfirmParticipant}
-                  className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
+                  className="wg-btn-primary"
                 >
                   Ja
                 </button>
@@ -226,14 +226,14 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                           setNewParticipantName('');
                           setCreateError(null);
                         }}
-                        className="flex-1 px-4 py-2 text-ink-soft bg-paper-lo rounded-lg hover:bg-rule transition-colors"
+                        className="wg-btn-ghost flex-1"
                         disabled={isCreating}
                       >
                         Abbrechen
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep disabled:opacity-50 transition-colors"
+                        className="wg-btn-primary flex-1 disabled:opacity-50"
                         disabled={isCreating || !newParticipantName.trim()}
                       >
                         {isCreating ? 'Erstelle...' : 'Erstellen'}
@@ -251,7 +251,7 @@ export function ParticipantSelectionModal({ isOpen, onParticipantSelected }: Par
                   </p>
                   <button
                     onClick={() => setShowCreateForm(true)}
-                    className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
+                    className="wg-btn-primary"
                   >
                     Ersten Teilnehmer erstellen
                   </button>

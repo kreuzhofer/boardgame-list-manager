@@ -30,7 +30,7 @@ export function SortControls({ sortOrder, onSortOrderChange }: SortControlsProps
       <span className="text-sm text-ink-soft">Sortierung:</span>
       <button
         onClick={handleToggle}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-ink-soft bg-paper-hi border border-rule rounded-md hover:bg-paper-lo focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-1 transition-colors"
+        className="wg-btn-toggle wg-btn-sm focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-1"
         aria-label={sortOrder === 'asc' ? 'Sortierung: A bis Z, klicken für Z bis A' : 'Sortierung: Z bis A, klicken für A bis Z'}
       >
         <span>Name</span>

@@ -86,11 +86,7 @@ export function GameActions({
       <div className="relative">
         <button
           onClick={isBringer ? handleRemoveBringer : handleAddBringer}
-          className={`${baseButtonClasses} ${
-            isBringer
-              ? 'bg-sage text-white hover:bg-sage-deep shadow-sm'
-              : 'bg-paper-lo text-ink-soft hover:bg-rule'
-          }`}
+          className={`${isBringer ? 'wg-btn-toggle-active' : 'wg-btn-toggle'} ${baseButtonClasses}`}
           title={isBringer ? 'Mich als Bringer austragen' : 'Dieses Spiel mitbringen'}
         >
           {isMobile ? (
@@ -111,11 +107,7 @@ export function GameActions({
       <div className="relative">
         <button
           onClick={isPlayer ? handleRemovePlayer : handleAddPlayer}
-          className={`${baseButtonClasses} ${
-            isPlayer
-              ? 'bg-sage text-white hover:bg-sage-deep shadow-sm'
-              : 'bg-paper-lo text-ink-soft hover:bg-rule'
-          }`}
+          className={`${isPlayer ? 'wg-btn-toggle-active' : 'wg-btn-toggle'} ${baseButtonClasses}`}
           title={isPlayer ? 'Mich als Mitspieler austragen' : 'Als Mitspieler eintragen'}
         >
           {isMobile ? (

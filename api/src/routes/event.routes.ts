@@ -29,7 +29,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthenticatedRequest;
-    const { name, slug, password, startsAt, endsAt, location, capacity, notes, fees } = req.body;
+    const { name, slug, password, status, description, welcomeMessage, startsAt, endsAt, location, capacity, notes, fees } = req.body;
 
     if (!name || !password) {
       res.status(400).json({
@@ -40,7 +40,7 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
     }
 
     const event = await eventService.createEvent(authReq.account.id, {
-      name, slug, password, startsAt, endsAt, location, capacity, notes, fees,
+      name, slug, password, status, description, welcomeMessage, startsAt, endsAt, location, capacity, notes, fees,
     });
 
     res.status(201).json({ event });
@@ -121,10 +121,10 @@ router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthenticatedRequest;
     const { id } = req.params;
-    const { name, slug, password, startsAt, endsAt, location, capacity, notes, fees } = req.body;
+    const { name, slug, password, status, description, welcomeMessage, startsAt, endsAt, location, capacity, notes, fees } = req.body;
 
     const event = await eventService.updateEvent(id, authReq.account.id, {
-      name, slug, password, startsAt, endsAt, location, capacity, notes, fees,
+      name, slug, password, status, description, welcomeMessage, startsAt, endsAt, location, capacity, notes, fees,
     });
 
     res.json({ event });

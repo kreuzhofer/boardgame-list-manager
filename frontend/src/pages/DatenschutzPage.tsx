@@ -7,7 +7,7 @@ export function DatenschutzPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-ink">Datenschutzerklärung</h1>
+      <h1 className="font-display italic text-3xl text-plum-deep">Datenschutzerklärung</h1>
 
         <div className="bg-white rounded-lg shadow p-8 space-y-6 text-ink-soft text-sm leading-relaxed">
 

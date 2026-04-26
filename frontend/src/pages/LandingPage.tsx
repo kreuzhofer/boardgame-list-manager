@@ -72,7 +72,7 @@ export function LandingPage() {
       <section className="container mx-auto px-4 pt-12 pb-16 sm:pt-20 sm:pb-24 lg:grid lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:items-center">
         {/* Left column */}
         <div>
-          <p className="text-plum uppercase tracking-widest text-[11px] font-bold">
+          <p className="wg-label text-plum">
             Brettspielabende, ohne Listen-Chaos
           </p>
 
@@ -130,7 +130,7 @@ export function LandingPage() {
               {/* Card header */}
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-sage" />
-                <span className="text-ink-mute text-[11px] font-bold tracking-wide uppercase">
+                <span className="wg-label">
                   Spieleabend April &middot; 23 Spiele
                 </span>
               </div>
@@ -335,16 +335,16 @@ export function LandingPage() {
                 href="https://danielkreuzhofer.de"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-white transition-colors"
+                className="hover:text-paper-hi transition-colors"
               >
                 Daniel Kreuzhofer
               </a>
             </p>
             <nav className="flex items-center gap-4">
-              <Link to="/login" className="hover:text-white transition-colors">Anmelden</Link>
-              <Link to="/register" className="hover:text-white transition-colors">Registrieren</Link>
-              <Link to="/impressum" className="hover:text-white transition-colors">Impressum</Link>
-              <Link to="/datenschutz" className="hover:text-white transition-colors">Datenschutz</Link>
+              <Link to="/login" className="hover:text-paper-hi transition-colors">Anmelden</Link>
+              <Link to="/register" className="hover:text-paper-hi transition-colors">Registrieren</Link>
+              <Link to="/impressum" className="hover:text-paper-hi transition-colors">Impressum</Link>
+              <Link to="/datenschutz" className="hover:text-paper-hi transition-colors">Datenschutz</Link>
             </nav>
           </div>
         </div>

@@ -523,7 +523,7 @@ export function HomePage({ participant }: HomePageProps) {
           {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
           {participant && (
             <div className="bg-paper-hi border-[1.5px] border-rule rounded-2xl p-5 shadow-sm">
-              <div className="font-sans text-[11px] tracking-widest uppercase text-plum font-bold mb-2">
+              <div className="wg-label text-plum mb-2">
                 Spiel suchen oder hinzufügen
               </div>
               <UnifiedSearchBar
@@ -539,7 +539,7 @@ export function HomePage({ participant }: HomePageProps) {
 
           {/* Filter pills */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-sans text-[11px] tracking-widest uppercase text-ink-mute font-bold mr-2">Filter</span>
+            <span className="wg-label mr-2">Filter</span>
             <FilterPill
               label="Alle"
               count={games.length}

@@ -101,7 +101,7 @@ export function ReleaseNotesDialog({ isOpen, content, onDismiss }: ReleaseNotesD
 
   const dialogContent = (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-ink/40 flex items-center justify-center p-4 z-50"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -141,7 +141,7 @@ export function ReleaseNotesDialog({ isOpen, content, onDismiss }: ReleaseNotesD
         <div className="px-6 py-4 border-t border-rule flex justify-end flex-shrink-0">
           <button
             onClick={onDismiss}
-            className="px-4 py-2 text-white bg-plum rounded-lg hover:bg-plum-deep transition-colors"
+            className="wg-btn-primary"
           >
             Gelesen
           </button>

@@ -67,7 +67,7 @@ export function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper px-4">
       <div className="max-w-md w-full bg-paper-hi rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-center text-ink mb-6">
+        <h1 className="font-display italic text-3xl text-center text-plum-deep mb-6">
           Konto erstellen
         </h1>
 
@@ -153,7 +153,7 @@ export function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading || !isPasswordValid}
-            className="w-full py-2 px-4 bg-plum hover:bg-plum-deep disabled:bg-plum-soft text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
+            className="wg-btn-primary wg-btn-lg w-full disabled:bg-plum-soft focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
           >
             {isLoading ? 'Wird erstellt...' : 'Konto erstellen'}
           </button>

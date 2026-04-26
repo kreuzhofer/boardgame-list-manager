@@ -6,12 +6,13 @@ import { Layout } from './Layout';
 import { HomePage } from '../pages/HomePage';
 import { PrintPage } from '../pages/PrintPage';
 import { StatisticsPage } from '../pages/StatisticsPage';
+import { EventWelcomePage } from '../pages/EventWelcomePage';
 import { useParticipant } from '../hooks';
 import type { Participant } from '../types';
 import { useState, useCallback } from 'react';
 
 function EventContent() {
-  const { slug, eventName, loading, error } = useEvent();
+  const { slug, eventName, status, loading, error } = useEvent();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { participant, isLoading, setParticipant, clearParticipant } = useParticipant(slug);
 
@@ -55,6 +56,13 @@ function EventContent() {
         </div>
       </div>
     );
+  }
+
+  // Events in 'planning' status show a public welcome page — no password
+  // gate, no participant selection, no game list. Participants get a peek
+  // before the organizer flips the status to 'active'.
+  if (status === 'planning') {
+    return <EventWelcomePage />;
   }
 
   const showParticipantSelection = isAuthenticated && !isLoading && !participant;

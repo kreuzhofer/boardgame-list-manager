@@ -460,11 +460,7 @@ export function UnifiedSearchBar({
                 type="button"
                 onClick={() => setIsBringing(!isBringing)}
                 disabled={isSubmitting}
-                className={`${toggleButtonBase} ${
-                  isBringing
-                    ? 'bg-sage text-white hover:bg-sage-deep'
-                    : 'bg-paper-lo text-ink-soft hover:bg-rule'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${isBringing ? 'wg-btn-toggle-active' : 'wg-btn-toggle'} ${toggleButtonBase} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <img src="/package.svg?v=2" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> Mitbringen<span className="inline-block w-3 text-left">{isBringing ? ' ✓' : ''}</span>
               </button>
@@ -474,11 +470,7 @@ export function UnifiedSearchBar({
                 type="button"
                 onClick={() => setIsPlaying(!isPlaying)}
                 disabled={isSubmitting}
-                className={`${toggleButtonBase} ${
-                  isPlaying
-                    ? 'bg-sage text-white hover:bg-sage-deep'
-                    : 'bg-paper-lo text-ink-soft hover:bg-rule'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${isPlaying ? 'wg-btn-toggle-active' : 'wg-btn-toggle'} ${toggleButtonBase} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Mitspielen<span className="inline-block w-3 text-left">{isPlaying ? ' ✓' : ''}</span>
               </button>
@@ -503,7 +495,7 @@ export function UnifiedSearchBar({
               <button
                 type="submit"
                 disabled={isSubmitting || addButtonState.state === 'disabled'}
-                className="px-6 py-2 bg-plum text-white rounded-lg hover:bg-plum-deep transition-colors font-medium disabled:bg-plum-soft disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+                className="wg-btn-primary disabled:bg-plum-soft disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>

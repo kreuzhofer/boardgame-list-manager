@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { eventsApi, setActiveEventSlug } from '../api/client';
-import type { EventPublicInfo } from '../types/event';
+import type { EventPublicInfo, EventStatus } from '../types/event';
 
 interface EventContextValue {
   slug: string | undefined;
   eventId: string | undefined;
   eventName: string | undefined;
+  status: EventStatus | undefined;
+  description: string | null;
+  welcomeMessage: string | null;
   startsAt: string | null;
   endsAt: string | null;
   location: string | null;
@@ -17,6 +20,9 @@ const EventContext = createContext<EventContextValue>({
   slug: undefined,
   eventId: undefined,
   eventName: undefined,
+  status: undefined,
+  description: null,
+  welcomeMessage: null,
   startsAt: null,
   endsAt: null,
   location: null,
@@ -78,6 +84,9 @@ export function EventProvider({ slug, children }: EventProviderProps) {
         slug,
         eventId: event?.id,
         eventName: event?.name,
+        status: event?.status,
+        description: event?.description ?? null,
+        welcomeMessage: event?.welcomeMessage ?? null,
         startsAt: event?.startsAt ?? null,
         endsAt: event?.endsAt ?? null,
         location: event?.location ?? null,

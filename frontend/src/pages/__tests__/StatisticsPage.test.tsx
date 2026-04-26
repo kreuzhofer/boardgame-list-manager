@@ -77,7 +77,7 @@ describe('StatisticsPage', () => {
       render(<StatisticsPage />);
 
       const title = screen.getByRole('heading', { level: 2 });
-      expect(title).toHaveClass('text-2xl', 'font-bold', 'text-ink');
+      expect(title).toHaveClass('font-display', 'italic', 'text-3xl', 'text-plum-deep');
     });
   });
 });

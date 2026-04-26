@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { eventsApi, ApiError } from '../api/client';
+import { eventsApi, donationsApi, ApiError, type DonationStats } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import type { Event, EventStatus } from '../types/event';
 import { EVENT_STATUS_LABEL } from '../types/event';
@@ -196,7 +196,17 @@ function ArchiveCard({ events }: { events: Event[] }) {
   );
 }
 
-function OrganizerDonateCard() {
+function formatDonationTotal(total: number, currency: string): string {
+  const numberPart = total.toLocaleString('de-DE', {
+    minimumFractionDigits: total % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  if (currency === 'EUR') return `${numberPart} €`;
+  if (currency === 'USD') return `${numberPart} $`;
+  return `${numberPart} ${currency}`;
+}
+
+function OrganizerDonateCard({ stats }: { stats: DonationStats | null }) {
   return (
     <div
       className="bg-paper-hi border border-rule border-t-[3px] border-t-butter rounded-xl p-6 shadow-raised"
@@ -209,9 +219,20 @@ function OrganizerDonateCard() {
       <h3 className="font-display italic text-xl text-plum-deep mt-2.5 leading-tight">
         Kaffeekasse fürs Hosting
       </h3>
-      <p className="text-sm text-ink-soft mt-2 leading-relaxed">
-        Server, Domain und ein wenig Kaffee — kleine Spenden halten die App am Laufen.
-      </p>
+      {stats && stats.count > 0 ? (
+        <p className="text-sm text-ink-soft mt-2 leading-relaxed">
+          Letzten Monat:{' '}
+          <strong className="text-sage-deep">
+            {stats.count} {stats.count === 1 ? 'Spende' : 'Spenden'},{' '}
+            {formatDonationTotal(stats.total, stats.currency)}
+          </strong>
+          . Danke!
+        </p>
+      ) : (
+        <p className="text-sm text-ink-soft mt-2 leading-relaxed">
+          Server, Domain und ein wenig Kaffee — kleine Spenden halten die App am Laufen.
+        </p>
+      )}
       <a
         href={BMC_URL}
         target="_blank"
@@ -229,6 +250,7 @@ export function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [donationStats, setDonationStats] = useState<DonationStats | null>(null);
 
   useEffect(() => {
     if (!account) return;
@@ -247,7 +269,19 @@ export function EventsPage() {
       }
     };
 
+    // Donation stats are best-effort: silent fail keeps the dashboard
+    // unchanged if the endpoint or DB query fails.
+    const loadStats = async () => {
+      try {
+        const stats = await donationsApi.getStats(30);
+        setDonationStats(stats);
+      } catch {
+        setDonationStats(null);
+      }
+    };
+
     loadEvents();
+    loadStats();
   }, [account]);
 
   const { activeEvents, archivedEvents } = useMemo(() => {
@@ -349,7 +383,7 @@ export function EventsPage() {
       {(archivedEvents.length > 0 || activeEvents.length > 0) && (
         <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
           <ArchiveCard events={archivedEvents} />
-          <OrganizerDonateCard />
+          <OrganizerDonateCard stats={donationStats} />
         </div>
       )}
     </div>

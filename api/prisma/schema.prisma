@@ -224,3 +224,44 @@ model Session {
   @@index([accountId])
   @@map("sessions")
 }
+
+model Donation {
+  id                  String    @id @default(uuid())
+  // BMC payment id — unique per donation event. Used for idempotent upserts
+  // when BMC retries a webhook.
+  bmcPaymentId        Int       @unique @map("bmc_payment_id")
+  // Webhook event type, e.g. "donation.created", "donation.refunded".
+  // Only "donation.created" creates rows here today; refunds update the
+  // existing row's `refunded` flag.
+  type                String
+  // BMC test mode flag — false when this is a real donation.
+  liveMode            Boolean   @default(false) @map("live_mode")
+  // Donation amount in `currency` (numeric to keep cents). e.g. 5.00, 5.45.
+  amount              Decimal   @db.Decimal(10, 2)
+  currency            String    @db.VarChar(8)
+  coffeeCount         Int?      @map("coffee_count")
+  coffeePrice         Decimal?  @db.Decimal(10, 2) @map("coffee_price")
+  // Total charged including fees, as reported by BMC (string field on
+  // payload, parsed to decimal). Null if not provided.
+  totalAmountCharged  Decimal?  @db.Decimal(10, 2) @map("total_amount_charged")
+  applicationFee      Decimal?  @db.Decimal(10, 2) @map("application_fee")
+  // Supporter info — all nullable: BMC supports anonymous coffees.
+  supporterId         Int?      @map("supporter_id")
+  supporterName       String?   @map("supporter_name")
+  supporterEmail      String?   @map("supporter_email")
+  supportNote         String?   @db.Text @map("support_note")
+  message             String?   @db.Text
+  status              String?
+  refunded            Boolean   @default(false)
+  refundedAt          DateTime? @map("refunded_at")
+  transactionId       String?   @map("transaction_id")
+  // Timestamps
+  bmcCreatedAt        DateTime  @map("bmc_created_at")
+  receivedAt          DateTime  @default(now()) @map("received_at")
+  // Full raw webhook body for forensics / replay
+  rawPayload          Json      @map("raw_payload")
+
+  @@index([bmcCreatedAt])
+  @@index([liveMode, refunded])
+  @@map("donations")
+}

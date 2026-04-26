@@ -21,6 +21,7 @@ import { EventSettingsPage } from './pages/EventSettingsPage';
 import { LandingPage } from './pages/LandingPage';
 import { ImpressumPage } from './pages/ImpressumPage';
 import { DatenschutzPage } from './pages/DatenschutzPage';
+import { MagicLinkConsumePage } from './pages/MagicLinkConsumePage';
 import { EventRoutes } from './components/EventRoutes';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/impressum" element={<AccountLayout><ImpressumPage /></AccountLayout>} />
             <Route path="/datenschutz" element={<AccountLayout><DatenschutzPage /></AccountLayout>} />
+            <Route path="/auth/magic" element={<MagicLinkConsumePage />} />
 
             {/* Account management */}
             <Route

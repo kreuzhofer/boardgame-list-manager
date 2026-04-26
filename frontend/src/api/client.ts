@@ -170,6 +170,24 @@ export const authApi = {
       body: JSON.stringify(body),
     });
   },
+
+  /** Request a magic-link email. Always resolves (server returns 200 even
+   *  for unknown emails) — never reveal whether the address exists. */
+  requestMagicLink: (email: string): Promise<{ ok: true }> =>
+    fetchApi<{ ok: true }>('/api/auth/magic-link/request', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  /** Consume a magic-link token. Returns the same shape as password login. */
+  consumeMagicLink: (
+    token: string,
+  ): Promise<{
+    token: string;
+    account: { id: string; email: string; role: string; status: string; createdAt: string };
+    targetPath: string;
+  }> =>
+    fetchApi(`/api/auth/magic-link/consume?token=${encodeURIComponent(token)}`),
 };
 
 // Participants API

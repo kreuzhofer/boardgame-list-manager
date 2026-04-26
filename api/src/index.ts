@@ -14,11 +14,13 @@ import participantRoutes from './routes/participant.routes';
 import eventRoutes from './routes/event.routes';
 import webhookRoutes from './routes/webhook.routes';
 import donationRoutes from './routes/donation.routes';
+import magicLinkRoutes from './routes/magicLink.routes';
 import { bggCache } from './services';
 import { config } from './config';
 import { prisma } from './db/prisma';
 import { AccountService } from './services/account.service';
 import { eventService } from './services/event.service';
+import { initEmailService, isSmtpReady } from './services/email.service';
 
 const app = express();
 const PORT = config.server.port;
@@ -48,6 +50,7 @@ app.use((req, _res, next) => {
 // Routes
 app.use('/api/accounts', accountRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', magicLinkRoutes);
 app.use('/api/bgg', bggRoutes);
 app.use('/api/sse/admin', adminSseRoutes);
 app.use('/api/sse', sseRoutes);
@@ -71,6 +74,7 @@ app.get('/api/health', (_req, res) => {
       dataSource: bggCache.getDataSource(),
       gameCount: bggCache.getCount(),
     },
+    smtpReady: isSmtpReady(),
   });
 });
 
@@ -135,7 +139,7 @@ const initializeSystem = async () => {
 };
 
 // Start server
-Promise.all([initializeSystem(), initializeBggCache()])
+Promise.all([initializeSystem(), initializeBggCache(), initEmailService()])
   .then(() => {
     app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}`);

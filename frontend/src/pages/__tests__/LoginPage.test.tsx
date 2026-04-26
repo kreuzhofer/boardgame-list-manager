@@ -49,15 +49,17 @@ describe('LoginPage', () => {
   it('renders login form', () => {
     renderLoginPage();
 
-    expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/passwort/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
+    expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /anmelden/i })).toBeInTheDocument();
   });
 
   it('shows link to registration', () => {
     renderLoginPage();
 
-    expect(screen.getByText(/jetzt registrieren/i)).toBeInTheDocument();
+    // Magic-link redesign: "Noch kein Konto? Jetzt erstellen" inline link
+    // below the magic-link CTA.
+    expect(screen.getByRole('link', { name: /jetzt erstellen/i })).toBeInTheDocument();
   });
 
   it('shows error when fields are empty', async () => {
@@ -86,10 +88,10 @@ describe('LoginPage', () => {
 
     renderLoginPage();
 
-    fireEvent.change(screen.getByLabelText(/e-mail/i), {
+    fireEvent.change(screen.getByLabelText('E-Mail'), {
       target: { value: 'test@example.com' },
     });
-    fireEvent.change(screen.getByLabelText(/passwort/i), {
+    fireEvent.change(screen.getByLabelText('Passwort'), {
       target: { value: 'password123' },
     });
     fireEvent.click(screen.getByRole('button', { name: /anmelden/i }));
@@ -106,10 +108,10 @@ describe('LoginPage', () => {
 
     renderLoginPage();
 
-    fireEvent.change(screen.getByLabelText(/e-mail/i), {
+    fireEvent.change(screen.getByLabelText('E-Mail'), {
       target: { value: 'test@example.com' },
     });
-    fireEvent.change(screen.getByLabelText(/passwort/i), {
+    fireEvent.change(screen.getByLabelText('Passwort'), {
       target: { value: 'wrongpassword' },
     });
     fireEvent.click(screen.getByRole('button', { name: /anmelden/i }));

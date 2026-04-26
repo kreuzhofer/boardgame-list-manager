@@ -8,6 +8,42 @@ Full-stack board game event management app (TypeScript). Organizers create event
 
 **Current transition:** Moving from single default event to multi-event support with slug-based routing. The default event and existing data must remain fully functional throughout this migration. Never delete or orphan existing event-scoped data.
 
+## Design System
+
+This project has a design system. **Read these before touching any UI code:**
+
+- [`docs/design-system.md`](docs/design-system.md) — palette, typography, components, hard rules, "before you ship a screen" checklist
+- [`docs/brand/MARK.md`](docs/brand/MARK.md) — the logo / brand mark (single source of truth)
+
+The system is enforced at the Tailwind token level. The pre-system colours
+(`bg-blue-*`, `bg-gray-*`, `bg-red-*`, `bg-yellow-*`, `bg-green-*`) **do not exist**
+in `tailwind.config.js` — using one is a build error. Use the Würfelglück tokens:
+
+- **`plum` / `plum-deep`** — primary brand
+- **`sage`** — verfügbar / success
+- **`butter`** — wunsch / donate
+- **`ocean`** — prototyp / organizer chrome
+- **`blush`** — destructive / error
+- **`paper` / `paper-hi` / `paper-lo`** — surfaces (parchment scale)
+- **`ink` / `ink-soft` / `ink-mute`** — text
+- **`rule` / `rule-soft`** — borders
+
+### Non-negotiable rules
+
+1. **No raw colour utilities.** Use tokens, not `bg-blue-500` etc.
+2. **No `text-white` / `bg-white/*` on the plum header chrome.** Use `text-paper-hi`
+   (warm cream) and `paper-hi/N` opacities. Pure white reads cold against plum.
+3. **Use the layer classes** (`wg-btn-*`, `wg-card`, `wg-tag-*`, `wg-input`, `wg-label`)
+   — don't hand-roll button or card styling.
+4. **The brand mark is `frontend/public/favicon.svg`.** Never render a `<div>` with a
+   literal `W` character as a logo tile. See `docs/brand/MARK.md`.
+5. **German copy** for participant-facing strings; participant errors are friendly
+   ("Bitte einen Spielnamen eingeben.").
+6. **44 px minimum tap targets** on touch surfaces. The `.wg-btn` family enforces this.
+
+When in doubt, open `docs/design-system.md` and run the "Before you ship a screen"
+checklist.
+
 ## Architecture
 
 Four Docker services orchestrated via `docker-compose.yml`:

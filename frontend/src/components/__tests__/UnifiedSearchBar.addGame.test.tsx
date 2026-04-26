@@ -105,7 +105,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
       render(<UnifiedSearchBar {...defaultProps} />);
 
       // Type in search
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'ringkrieg' } });
 
       // Wait for dropdown and click BGG result
@@ -157,7 +157,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
 
       render(<UnifiedSearchBar {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'ark nova' } });
 
       await waitFor(() => {
@@ -207,7 +207,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
 
       render(<UnifiedSearchBar {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'gloomhaven' } });
 
       await waitFor(() => {
@@ -246,7 +246,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
 
       render(<UnifiedSearchBar {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'My Custom Game' } });
 
       // Wait for add button to appear
@@ -296,7 +296,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
 
       render(<UnifiedSearchBar {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'ringkrieg' } });
 
       await waitFor(() => {
@@ -331,7 +331,7 @@ describe('UnifiedSearchBar Add Game Flow', () => {
 
       render(<UnifiedSearchBar {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Spiel suchen oder hinzufügen...');
+      const input = screen.getByPlaceholderText('Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…');
       fireEvent.change(input, { target: { value: 'gloomhaven' } });
 
       await waitFor(() => {

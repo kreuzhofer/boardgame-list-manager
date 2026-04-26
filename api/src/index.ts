@@ -12,6 +12,7 @@ import statisticsRoutes from './routes/statistics.routes';
 import thumbnailRoutes from './routes/thumbnail.routes';
 import participantRoutes from './routes/participant.routes';
 import eventRoutes from './routes/event.routes';
+import webhookRoutes from './routes/webhook.routes';
 import { bggCache } from './services';
 import { config } from './config';
 import { prisma } from './db/prisma';
@@ -29,7 +30,13 @@ app.use(cors({
   origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
   credentials: true,
 }));
-app.use(express.json());
+// Capture the raw request body alongside parsed JSON so webhook handlers
+// can verify HMAC signatures over the unmodified bytes.
+app.use(express.json({
+  verify: (req, _res, buf) => {
+    (req as unknown as { rawBody?: Buffer }).rawBody = buf;
+  },
+}));
 
 // Request logging for debugging
 app.use((req, _res, next) => {
@@ -50,6 +57,7 @@ app.use('/api/thumbnails', thumbnailRoutes);
 app.use('/api/participants', participantRoutes);
 app.use('/api/users', participantRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Health check endpoint - includes BGG cache status for debugging
 app.get('/api/health', (_req, res) => {

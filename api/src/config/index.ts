@@ -37,6 +37,13 @@ export const config = {
     cacheDir: process.env.BGG_IMAGE_CACHE_DIR || '/app/cache/bgg-images',
     crawlerUrl: process.env.CRAWLER_URL || '',
   },
+  webhooks: {
+    // Buy Me a Coffee webhook secret. When set, incoming /api/webhooks/bmc
+    // requests are checked for a matching HMAC-SHA256 signature; mismatches
+    // are logged but currently still accepted (discovery mode). Once we know
+    // the exact header BMC uses, the handler will start rejecting bad sigs.
+    bmcSecret: process.env.BMC_WEBHOOK_SECRET || '',
+  },
   customThumbnails: {
     cacheDir: process.env.CUSTOM_THUMBNAIL_DIR || '/app/cache/custom-thumbnails',
     maxFileSize: 5 * 1024 * 1024, // 5 MB

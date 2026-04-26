@@ -32,6 +32,7 @@ services:
       - BGG_SCRAPE_ENABLED=${BGG_SCRAPE_ENABLED:-true}
       - BGG_IMAGE_CACHE_DIR=/app/cache/bgg-images
       - CRAWLER_URL=${CRAWLER_URL:-http://crawler:3001}
+      - BMC_WEBHOOK_SECRET=${BMC_WEBHOOK_SECRET:-}
     volumes:
       - bgg_image_cache:/app/cache/bgg-images
     depends_on:

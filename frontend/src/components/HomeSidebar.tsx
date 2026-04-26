@@ -65,9 +65,9 @@ function DonateCard() {
           href={href}
           target="_blank"
           rel="noreferrer"
-          className="bg-paper-hi text-plum border border-plum text-sm px-4 py-2 rounded-lg hover:bg-plum-50"
+          className="bg-butter text-plum-deep font-bold text-sm px-4 py-2 rounded-lg hover:bg-butter-hi"
         >
-          &hellip;
+          10 &euro;
         </a>
       </div>
     </div>

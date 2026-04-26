@@ -76,7 +76,7 @@ export function ClickNotification({
           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in-up"
           role="alert"
         >
-          <div className="bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-lg w-48 text-center">
+          <div className="bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-floating w-48 text-center">
             {message}
             {/* Arrow pointing down */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">

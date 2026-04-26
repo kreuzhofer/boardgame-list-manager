@@ -134,7 +134,7 @@ export function MobileActionsMenu({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed bg-paper-hi rounded-lg shadow-lg border border-rule py-1 z-50 min-w-[200px]"
+            className="fixed bg-paper-hi rounded-lg shadow-floating border border-rule py-1 z-50 min-w-[200px]"
             style={{
               top: menuPosition.top,
               left: menuPosition.left,

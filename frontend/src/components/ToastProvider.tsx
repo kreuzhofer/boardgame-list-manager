@@ -157,7 +157,7 @@ function ToastItem({ toast, isExiting, onDismiss }: ToastItemProps) {
   
   return (
     <div
-      className={`pointer-events-auto bg-ink text-white px-4 py-3 rounded-lg shadow-lg max-w-sm ${animationClass} flex items-center gap-3`}
+      className={`pointer-events-auto bg-ink text-white px-4 py-3 rounded-lg shadow-floating max-w-sm ${animationClass} flex items-center gap-3`}
       role="alert"
     >
       <span className="flex-1 text-sm">{toast.message}</span>

@@ -95,7 +95,7 @@ export function NamePrompt({
       aria-modal="true"
       aria-labelledby="name-prompt-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div className="bg-paper-hi rounded-lg shadow-floating max-w-md w-full">
         {/* Header */}
         <div className="px-6 py-4 border-b border-rule">
           <h2

@@ -48,7 +48,7 @@ export function ParticipantOptionsDialog({
       aria-modal="true"
       aria-labelledby="participant-options-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[90vh] flex flex-col">
+      <div className="bg-paper-hi rounded-lg shadow-floating max-w-sm w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-rule flex items-center justify-between flex-shrink-0">
           <h2 id="participant-options-title" className="text-xl font-semibold text-ink">

@@ -26,7 +26,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">
-      <header className="bg-plum-deep text-white shadow-lg fixed top-0 left-0 right-0 z-50">
+      <header className="bg-plum-deep text-paper-hi shadow-raised fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="hover:opacity-90 transition-opacity flex-shrink-0">
@@ -40,8 +40,8 @@ export function AccountLayout({ children }: AccountLayoutProps) {
                   to={item.path}
                   className={`text-sm px-2 sm:px-3 py-1 rounded transition-colors ${
                     isActive(item.path)
-                      ? 'bg-white/20 text-white font-medium'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                      ? 'bg-paper-hi/20 text-paper-hi font-medium'
+                      : 'text-paper-hi/75 hover:text-paper-hi hover:bg-paper-hi/15'
                   }`}
                 >
                   {item.label}
@@ -49,7 +49,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
               ))}
               <button
                 onClick={handleLogout}
-                className="text-white/80 hover:text-white text-sm px-2 sm:px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                className="text-paper-hi/75 hover:text-paper-hi text-sm px-2 sm:px-3 py-1 rounded hover:bg-paper-hi/15 transition-colors"
               >
                 Abmelden
               </button>

@@ -98,7 +98,7 @@ export function UnifiedDropdown({
 
   const dropdownContent = (
     <div
-      className="absolute z-50 w-full mt-1 bg-paper-hi border border-rule rounded-lg shadow-lg overflow-hidden"
+      className="absolute z-50 w-full mt-1 bg-paper-hi border border-rule rounded-lg shadow-floating overflow-hidden"
       role="listbox"
     >
       {/* Schon eingetragen section */}

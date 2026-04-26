@@ -20,6 +20,9 @@ export interface EventPublicInfo {
   id: string;
   name: string;
   slug: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
 }
 
 export interface CreateEventRequest {

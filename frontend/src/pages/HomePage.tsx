@@ -25,6 +25,7 @@ import { FilterPill } from '../components/FilterPill';
 import { useToast } from '../components/ToastProvider';
 import { useGameFilters, useSSE } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
+import { useEvent } from '../contexts/EventContext';
 import { getHighlightedGameIds, DEFAULT_SORT_ORDER, DEFAULT_SORT_KEY } from '../utils';
 import type { Game, Participant, SSEEvent, GameCreatedEvent, ThumbnailUploadedEvent } from '../types';
 import type { SortOrder, SortKey } from '../utils';
@@ -66,6 +67,8 @@ export function HomePage({ participant }: HomePageProps) {
 
   // Account auth (organizer/admin)
   const { account } = useAuth();
+  const { eventName: ctxEventName, startsAt, location } = useEvent();
+  const eventName = ctxEventName || 'Spieleabend';
   const canManageGames = account?.role === 'admin' || account?.role === 'account_owner';
   
   // Filter state from hook
@@ -419,7 +422,9 @@ export function HomePage({ participant }: HomePageProps) {
     return (
       <>
         <EventBar
-          eventName="Spieleabend"
+          eventName={eventName}
+          startsAt={startsAt}
+          location={location}
           gamesCount={0}
           bringersCount={0}
           wishesCount={0}
@@ -461,7 +466,9 @@ export function HomePage({ participant }: HomePageProps) {
     return (
       <>
         <EventBar
-          eventName="Spieleabend"
+          eventName={eventName}
+          startsAt={startsAt}
+          location={location}
           gamesCount={0}
           bringersCount={0}
           wishesCount={0}
@@ -503,7 +510,9 @@ export function HomePage({ participant }: HomePageProps) {
   return (
     <>
       <EventBar
-        eventName="Spieleabend"
+        eventName={eventName}
+        startsAt={startsAt}
+        location={location}
         gamesCount={games.length}
         bringersCount={bringersCount}
         wishesCount={wishesCount}

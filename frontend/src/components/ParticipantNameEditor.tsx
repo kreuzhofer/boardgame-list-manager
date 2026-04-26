@@ -69,10 +69,10 @@ export function ParticipantNameEditor({ participant, onParticipantUpdated }: Par
   if (!isEditing) {
     return (
       <div className="flex items-center gap-2">
-        <span className="font-medium text-white">{participant.name}</span>
+        <span className="font-medium text-paper-hi">{participant.name}</span>
         <button
           onClick={handleStartEdit}
-          className="text-white/80 hover:text-white text-sm"
+          className="text-paper-hi/75 hover:text-paper-hi text-sm"
           aria-label="Namen bearbeiten"
         >
           ✏️
@@ -90,14 +90,14 @@ export function ParticipantNameEditor({ participant, onParticipantUpdated }: Par
           setNewName(e.target.value);
           setError(null);
         }}
-        className="px-2 py-1 border border-white/30 bg-white/20 text-white rounded text-base focus:ring-2 focus:ring-white/50 focus:border-white/50 placeholder-white/50 caret-white"
+        className="px-2 py-1 border border-paper-hi/30 bg-paper-hi/20 text-paper-hi rounded text-base focus:ring-2 focus:ring-paper-hi/50 focus:border-paper-hi/50 placeholder-paper-hi/50 caret-paper-hi"
         style={{ fontSize: '16px' }} // Prevent iOS Safari auto-zoom
         autoFocus
         disabled={isSubmitting}
       />
       <button
         type="submit"
-        className="px-2 py-1 text-plum bg-white rounded text-sm hover:bg-white/90 disabled:opacity-50"
+        className="px-2 py-1 text-plum bg-paper-hi rounded text-sm hover:bg-paper-hi/90 disabled:opacity-50"
         disabled={isSubmitting || !newName.trim()}
       >
         {isSubmitting ? '...' : '✓'}
@@ -105,7 +105,7 @@ export function ParticipantNameEditor({ participant, onParticipantUpdated }: Par
       <button
         type="button"
         onClick={handleCancel}
-        className="px-2 py-1 text-white bg-white/20 rounded text-sm hover:bg-white/30"
+        className="px-2 py-1 text-paper-hi bg-paper-hi/20 rounded text-sm hover:bg-paper-hi/30"
         disabled={isSubmitting}
       >
         ✕

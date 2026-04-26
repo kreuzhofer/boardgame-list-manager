@@ -140,15 +140,15 @@ describe('Header Property Tests', () => {
           if (activeTabConfig) {
             const activeTab = screen.getByTestId(activeTabConfig.testId);
             
-            // Active tab should have white text and border
-            expect(activeTab).toHaveClass('text-white');
+            // Active tab should have paper-hi text and butter border
+            expect(activeTab).toHaveClass('text-paper-hi');
             expect(activeTab).toHaveClass('border-b-2');
-            expect(activeTab).toHaveClass('border-white');
-            
+            expect(activeTab).toHaveClass('border-butter');
+
             // Other tabs should have muted text
             DESKTOP_TABS.filter(tab => tab.path !== route).forEach(tab => {
               const inactiveTab = screen.getByTestId(tab.testId);
-              expect(inactiveTab).toHaveClass('text-white/80');
+              expect(inactiveTab).toHaveClass('text-paper-hi/75');
               expect(inactiveTab).not.toHaveClass('border-b-2');
             });
           }

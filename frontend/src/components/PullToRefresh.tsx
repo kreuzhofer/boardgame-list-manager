@@ -40,7 +40,7 @@ export function PullToRefresh({ children, onRefresh, disabled = false }: PullToR
             opacity: Math.min(progress * 2, 1),
           }}
         >
-          <div className="bg-plum rounded-full p-2 shadow-lg">
+          <div className="bg-plum rounded-full p-2 shadow-raised">
             <svg
               className={`w-6 h-6 text-white ${isRefreshing ? 'animate-spin' : ''}`}
               style={{ transform: isRefreshing ? undefined : `rotate(${rotation}deg)` }}

@@ -25,9 +25,12 @@ export function LandingPage() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="w-9 h-9 rounded-lg bg-butter text-plum-deep font-display italic font-bold text-[22px] flex items-center justify-center leading-none">
-            W
-          </span>
+          <img
+            src="/favicon.svg"
+            alt=""
+            aria-hidden="true"
+            className="w-9 h-9"
+          />
           <span className="font-display italic text-[22px] text-plum-deep">
             Brettspieltreff
           </span>
@@ -123,7 +126,7 @@ export function LandingPage() {
               kostenlos &middot; f&uuml;r alle
             </span>
 
-            <div className="bg-paper-hi border-[1.5px] border-rule rounded-[18px] shadow-lg p-5">
+            <div className="bg-paper-hi border-[1.5px] border-rule rounded-[18px] shadow-raised p-5">
               {/* Card header */}
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-sage" />

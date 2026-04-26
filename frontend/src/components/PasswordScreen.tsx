@@ -69,7 +69,7 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-plum to-plum-deep flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+      <div className="bg-paper-hi rounded-lg shadow-floating max-w-md w-full p-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-ink mb-2">

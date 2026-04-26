@@ -1,16 +1,10 @@
 /**
- * Header component with event name and participant info
- * All UI text in German (Requirement 9.1)
- * Requirement 6.1, 6.4: Responsive design with mobile-friendly navigation
- * Requirement 6.3, 7.1: Display participant name with edit option
- * 
- * Updated for Spec 007:
- * - Added "Statistiken" as third tab in desktop navigation
- * - Removed burger menu (replaced by MobileBottomTabs)
- * - Simplified mobile header display
- * 
- * Updated for Spec 016:
- * - Added account management link (Profil)
+ * Header — Würfelglück design system.
+ * - Header chrome: plum-deep.
+ * - Body type: Nunito (font-sans). App name: Playfair Display italic.
+ * - Active nav underline: butter (warm accent on plum chrome).
+ *
+ * Updated for Spec 016: account management link (Verwaltung → /events).
  */
 
 import { Link, useLocation } from 'react-router-dom';
@@ -26,19 +20,22 @@ interface HeaderProps {
   onParticipantSwitch?: () => void;
 }
 
-// Get event name from environment variable
-const getEventName = (): string => {
-  return import.meta.env.VITE_EVENT_NAME || 'Brettspieltreff';
-};
+const getEventName = (): string =>
+  import.meta.env.VITE_EVENT_NAME || 'Brettspieltreff';
 
-// Desktop navigation tabs configuration
 const DESKTOP_TABS = [
   { path: '/', label: 'Spieleliste' },
   { path: '/print', label: 'Druckansicht' },
   { path: '/statistics', label: 'Statistiken' },
 ];
 
-export function Header({ basePath = '', eventName: eventNameProp, participant, onParticipantUpdated, onParticipantSwitch }: HeaderProps) {
+export function Header({
+  basePath = '',
+  eventName: eventNameProp,
+  participant,
+  onParticipantUpdated,
+  onParticipantSwitch,
+}: HeaderProps) {
   const eventName = eventNameProp || getEventName();
   const location = useLocation();
   const { isAuthenticated: isAccountAuthenticated, account } = useAuth();
@@ -47,36 +44,43 @@ export function Header({ basePath = '', eventName: eventNameProp, participant, o
   const isActive = (path: string) => location.pathname === resolvePath(path);
 
   return (
-    <header className="bg-plum-deep text-white shadow-lg fixed top-0 left-0 right-0 z-50">
+    <header className="bg-plum-deep text-paper-hi shadow-raised fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          {/* Brand: logo mark + event title */}
+          {/* Brand: meeple-stack mark + wordmark + event subline */}
           <Link
             to={resolvePath('/')}
-            className="hover:opacity-90 transition-opacity flex-shrink-0 flex items-center gap-2 sm:gap-3"
+            className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink hover:opacity-90 transition-opacity"
             aria-label={`${eventName} – Startseite`}
           >
+            {/* Mark — favicon.svg already includes the butter chip */}
             <img
-              src="/logo.svg"
+              src="/favicon.svg"
               alt=""
               aria-hidden="true"
-              className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+              className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
             />
-            <h1 className="font-display italic text-xl sm:text-3xl font-medium tracking-tight truncate max-w-[180px] sm:max-w-none text-paper-hi">
-              {eventName}
-            </h1>
+            {/* Eyebrow + event name */}
+            <div className="flex flex-col min-w-0 leading-tight">
+              <span className="font-sans text-paper-hi/70 text-[10px] sm:text-xs tracking-wider uppercase truncate">
+                Aktueller Treff
+              </span>
+              <span className="font-display italic text-paper-hi text-lg sm:text-xl truncate">
+                {eventName}
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Navigation - hidden on mobile */}
-          <nav className="hidden md:flex items-center gap-6" data-testid="desktop-nav">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-7" data-testid="desktop-nav">
             {DESKTOP_TABS.map((tab) => (
               <Link
                 key={tab.path}
                 to={resolvePath(tab.path)}
-                className={`transition-colors text-sm font-medium ${
-                  isActive(tab.path) 
-                    ? 'text-white border-b-2 border-white pb-1' 
-                    : 'text-white/80 hover:text-white'
+                className={`transition-colors text-sm font-bold tracking-wide ${
+                  isActive(tab.path)
+                    ? 'text-paper-hi border-b-2 border-butter pb-1'
+                    : 'text-paper-hi/75 hover:text-paper-hi'
                 }`}
                 data-testid={`desktop-nav-${tab.path.replace('/', '') || 'home'}`}
               >
@@ -85,26 +89,22 @@ export function Header({ basePath = '', eventName: eventNameProp, participant, o
             ))}
           </nav>
 
-          {/* Desktop participant info - hidden on mobile */}
+          {/* Desktop participant info */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Account management link */}
             {isAccountAuthenticated && account ? (
               <Link
                 to="/events"
-                className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                className="text-paper-hi/80 hover:text-paper-hi text-sm font-bold px-3 py-1 rounded hover:bg-paper-hi/10 transition-colors"
               >
                 Verwaltung
               </Link>
             ) : null}
 
-            {/* Event participant info */}
             {participant && onParticipantUpdated && (
               <>
-                <span className="text-white/50">|</span>
-                <span className="text-white/90 text-sm">
-                  Teilnehmer:
-                </span>
-                <div className="bg-white/10 px-3 py-1 rounded">
+                <span className="text-paper-hi/40">|</span>
+                <span className="text-paper-hi/85 text-sm">Teilnehmer:</span>
+                <div className="bg-paper-hi/10 px-3 py-1 rounded">
                   <ParticipantNameEditor
                     participant={participant}
                     onParticipantUpdated={onParticipantUpdated}
@@ -113,7 +113,7 @@ export function Header({ basePath = '', eventName: eventNameProp, participant, o
                 {onParticipantSwitch && (
                   <button
                     onClick={onParticipantSwitch}
-                    className="text-white/80 hover:text-white text-sm px-3 py-1 rounded hover:bg-white/10 transition-colors"
+                    className="text-paper-hi/80 hover:text-paper-hi text-sm font-bold px-3 py-1 rounded hover:bg-paper-hi/10 transition-colors"
                     aria-label="Teilnehmer wechseln"
                   >
                     Wechseln

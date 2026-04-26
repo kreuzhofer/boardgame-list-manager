@@ -339,17 +339,13 @@ export function UnifiedSearchBar({
   const isPrototypeDisabled = Boolean(selectedBggItem);
 
   return (
-    <div className="bg-paper-hi rounded-lg shadow p-4">
-      <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-4">
-          {/* Search input with dropdown */}
-          <div ref={containerRef} className="relative max-w-xl">
-            <label
-              htmlFor="unified-search-input"
-              className="block text-sm font-medium text-ink-soft mb-1"
-            >
-              Spiel suchen oder hinzufügen
-            </label>
+    <form onSubmit={handleSubmit}>
+      <div className="flex flex-col gap-4">
+        {/* Search input with dropdown */}
+        <div ref={containerRef} className="relative max-w-xl">
+          <label htmlFor="unified-search-input" className="sr-only">
+            Spiel suchen oder hinzufügen
+          </label>
             
             {/* Show either the selected game tag OR the search input */}
             {selectedBggItem ? (
@@ -401,7 +397,7 @@ export function UnifiedSearchBar({
                       setIsDropdownOpen(true);
                     }
                   }}
-                  placeholder="Spiel suchen oder hinzufügen..."
+                  placeholder="Tippe einen Spielnamen — wir suchen in der Liste & bei BoardGameGeek…"
                   disabled={isSubmitting}
                   autoComplete="off"
                   role="combobox"
@@ -539,8 +535,7 @@ export function UnifiedSearchBar({
             {error}
           </p>
         )}
-      </form>
-    </div>
+    </form>
   );
 }
 

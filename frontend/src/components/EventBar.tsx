@@ -15,7 +15,15 @@ function formatDate(startsAt: string): string {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   });
+}
+
+function formatTime(startsAt: string): string {
+  return new Date(startsAt).toLocaleTimeString('de-DE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }) + ' Uhr';
 }
 
 export function EventBar({
@@ -41,25 +49,44 @@ export function EventBar({
           {(startsAt || location) && (
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-ink-soft text-sm">
               {startsAt && (
-                <span className="inline-flex items-center gap-1.5">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-plum flex-shrink-0"
-                  >
-                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" />
-                    <path d="M1.5 5.5h11" />
-                    <path d="M4.5 1v2" />
-                    <path d="M9.5 1v2" />
-                  </svg>
-                  {formatDate(startsAt)}
-                </span>
+                <>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-plum flex-shrink-0"
+                    >
+                      <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" />
+                      <path d="M1.5 5.5h11" />
+                      <path d="M4.5 1v2" />
+                      <path d="M9.5 1v2" />
+                    </svg>
+                    {formatDate(startsAt)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-plum flex-shrink-0"
+                    >
+                      <circle cx="7" cy="7" r="5.5" />
+                      <path d="M7 4v3l2 1.5" />
+                    </svg>
+                    {formatTime(startsAt)}
+                  </span>
+                </>
               )}
               {location && (
                 <span className="inline-flex items-center gap-1.5">

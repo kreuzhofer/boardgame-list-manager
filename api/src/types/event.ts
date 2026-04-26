@@ -35,11 +35,14 @@ export interface EventResponse {
   updatedAt: string;
 }
 
-/** Minimal info returned for slug lookup (no auth required) */
+/** Public info returned for slug lookup (no auth required) — safe for landing/header */
 export interface EventPublicInfo {
   id: string;
   name: string;
   slug: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
 }
 
 export interface CreateEventInput {
@@ -91,5 +94,8 @@ export function toEventPublicInfo(entity: EventEntity): EventPublicInfo {
     id: entity.id,
     name: entity.name,
     slug: entity.slug!,
+    startsAt: entity.startsAt?.toISOString() ?? null,
+    endsAt: entity.endsAt?.toISOString() ?? null,
+    location: entity.location,
   };
 }

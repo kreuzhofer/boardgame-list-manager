@@ -6,6 +6,9 @@ interface EventContextValue {
   slug: string | undefined;
   eventId: string | undefined;
   eventName: string | undefined;
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -14,6 +17,9 @@ const EventContext = createContext<EventContextValue>({
   slug: undefined,
   eventId: undefined,
   eventName: undefined,
+  startsAt: null,
+  endsAt: null,
+  location: null,
   loading: false,
   error: null,
 });
@@ -72,6 +78,9 @@ export function EventProvider({ slug, children }: EventProviderProps) {
         slug,
         eventId: event?.id,
         eventName: event?.name,
+        startsAt: event?.startsAt ?? null,
+        endsAt: event?.endsAt ?? null,
+        location: event?.location ?? null,
         loading,
         error,
       }}

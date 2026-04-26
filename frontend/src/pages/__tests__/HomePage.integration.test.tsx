@@ -140,7 +140,7 @@ describe('HomePage Integration Tests', () => {
       render(<HomePage participant={mockParticipant} />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/tippe einen spielnamen/i)).toBeInTheDocument();
       });
     });
 
@@ -153,7 +153,7 @@ describe('HomePage Integration Tests', () => {
       });
 
       // Type in search bar
-      const searchInput = screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i);
+      const searchInput = screen.getByPlaceholderText(/tippe einen spielnamen/i);
       fireEvent.change(searchInput, { target: { value: 'Catan' } });
 
       // Should filter to show only Catan
@@ -166,11 +166,11 @@ describe('HomePage Integration Tests', () => {
       render(<HomePage participant={mockParticipant} />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/tippe einen spielnamen/i)).toBeInTheDocument();
       });
 
       // Type in search bar
-      const searchInput = screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i);
+      const searchInput = screen.getByPlaceholderText(/tippe einen spielnamen/i);
       fireEvent.change(searchInput, { target: { value: 'Catan' } });
 
       // Should show dropdown with "Schon eingetragen" section
@@ -250,7 +250,7 @@ describe('HomePage Integration Tests', () => {
       });
 
       // Type in search bar
-      const searchInput = screen.getByPlaceholderText(/spiel suchen oder hinzufügen/i);
+      const searchInput = screen.getByPlaceholderText(/tippe einen spielnamen/i);
       fireEvent.change(searchInput, { target: { value: 'Catan' } });
 
       // The game row/card should have highlight class

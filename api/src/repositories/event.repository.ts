@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma';
-import type { EventEntity } from '../types/event';
+import type { EventEntity, EventStatus } from '../types/event';
 
 export class EventRepository {
   async findAll(ownerAccountId: string): Promise<EventEntity[]> {
@@ -27,6 +27,9 @@ export class EventRepository {
     slug: string;
     password: string;
     ownerAccountId: string;
+    status?: EventStatus;
+    description?: string | null;
+    welcomeMessage?: string | null;
     startsAt?: Date | null;
     endsAt?: Date | null;
     location?: string | null;
@@ -41,6 +44,9 @@ export class EventRepository {
     name?: string;
     slug?: string;
     password?: string;
+    status?: EventStatus;
+    description?: string | null;
+    welcomeMessage?: string | null;
     startsAt?: Date | null;
     endsAt?: Date | null;
     location?: string | null;

@@ -1,8 +1,15 @@
+export type EventStatus = 'planning' | 'active' | 'archived';
+
+export const EVENT_STATUSES: EventStatus[] = ['planning', 'active', 'archived'];
+
 export interface EventEntity {
   id: string;
   name: string;
   slug: string | null;
   password: string | null;
+  status: EventStatus;
+  description: string | null;
+  welcomeMessage: string | null;
   startsAt: Date | null;
   endsAt: Date | null;
   location: string | null;
@@ -22,6 +29,9 @@ export interface EventResponse {
   name: string;
   slug: string;
   password: string | null;
+  status: EventStatus;
+  description: string | null;
+  welcomeMessage: string | null;
   startsAt: string | null;
   endsAt: string | null;
   location: string | null;
@@ -40,6 +50,9 @@ export interface EventPublicInfo {
   id: string;
   name: string;
   slug: string;
+  status: EventStatus;
+  description: string | null;
+  welcomeMessage: string | null;
   startsAt: string | null;
   endsAt: string | null;
   location: string | null;
@@ -49,6 +62,9 @@ export interface CreateEventInput {
   name: string;
   slug?: string;
   password: string;
+  status?: EventStatus;
+  description?: string;
+  welcomeMessage?: string;
   startsAt?: string;
   endsAt?: string;
   location?: string;
@@ -61,6 +77,9 @@ export interface UpdateEventInput {
   name?: string;
   slug?: string;
   password?: string;
+  status?: EventStatus;
+  description?: string | null;
+  welcomeMessage?: string | null;
   startsAt?: string | null;
   endsAt?: string | null;
   location?: string | null;
@@ -75,6 +94,9 @@ export function toEventResponse(entity: EventEntity): EventResponse {
     name: entity.name,
     slug: entity.slug!,
     password: entity.password,
+    status: entity.status,
+    description: entity.description,
+    welcomeMessage: entity.welcomeMessage,
     startsAt: entity.startsAt?.toISOString() ?? null,
     endsAt: entity.endsAt?.toISOString() ?? null,
     location: entity.location,
@@ -94,6 +116,9 @@ export function toEventPublicInfo(entity: EventEntity): EventPublicInfo {
     id: entity.id,
     name: entity.name,
     slug: entity.slug!,
+    status: entity.status,
+    description: entity.description,
+    welcomeMessage: entity.welcomeMessage,
     startsAt: entity.startsAt?.toISOString() ?? null,
     endsAt: entity.endsAt?.toISOString() ?? null,
     location: entity.location,

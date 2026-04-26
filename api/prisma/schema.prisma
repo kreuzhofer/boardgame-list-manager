@@ -99,6 +99,9 @@ model Event {
   name           String
   slug           String?  @unique
   password       String?
+  status         String   @default("planning") // planning | active | archived
+  description    String?  @db.Text
+  welcomeMessage String?  @db.Text @map("welcome_message")
   startsAt       DateTime? @map("starts_at")
   endsAt         DateTime? @map("ends_at")
   location       String?  @db.VarChar(255)

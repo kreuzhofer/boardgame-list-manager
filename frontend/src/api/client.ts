@@ -560,6 +560,7 @@ export interface DonationStats {
   count: number;
   total: number;
   currency: string;
+  activeSubscribers: number;
   since: string;
 }
 

@@ -219,14 +219,28 @@ function OrganizerDonateCard({ stats }: { stats: DonationStats | null }) {
       <h3 className="font-display italic text-xl text-plum-deep mt-2.5 leading-tight">
         Kaffeekasse fürs Hosting
       </h3>
-      {stats && stats.count > 0 ? (
+      {stats && (stats.count > 0 || stats.activeSubscribers > 0) ? (
         <p className="text-sm text-ink-soft mt-2 leading-relaxed">
-          Letzten Monat:{' '}
-          <strong className="text-sage-deep">
-            {stats.count} {stats.count === 1 ? 'Spende' : 'Spenden'},{' '}
-            {formatDonationTotal(stats.total, stats.currency)}
-          </strong>
-          . Danke!
+          {stats.count > 0 && (
+            <>
+              Letzten Monat:{' '}
+              <strong className="text-sage-deep">
+                {stats.count} {stats.count === 1 ? 'Spende' : 'Spenden'},{' '}
+                {formatDonationTotal(stats.total, stats.currency)}
+              </strong>
+              .{' '}
+            </>
+          )}
+          {stats.activeSubscribers > 0 && (
+            <>
+              {stats.activeSubscribers}{' '}
+              {stats.activeSubscribers === 1
+                ? 'aktiver Förderer'
+                : 'aktive Förderer'}
+              .{' '}
+            </>
+          )}
+          Danke!
         </p>
       ) : (
         <p className="text-sm text-ink-soft mt-2 leading-relaxed">

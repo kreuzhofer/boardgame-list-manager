@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { AuthLayout } from '../components/AuthLayout';
+import { AuthEmailField, AuthPasswordField } from '../components/AuthInputs';
 
 export function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -9,6 +11,10 @@ export function RegisterPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const { register, isAuthenticated, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Konto erstellen — Brettspieltreff';
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -28,10 +34,10 @@ export function RegisterPage() {
     hasLetter: /[a-zA-Z]/.test(password),
     hasNumber: /[0-9]/.test(password),
   };
-
-  const isPasswordValid = passwordRequirements.minLength && 
-                          passwordRequirements.hasLetter && 
-                          passwordRequirements.hasNumber;
+  const isPasswordValid =
+    passwordRequirements.minLength &&
+    passwordRequirements.hasLetter &&
+    passwordRequirements.hasNumber;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +47,10 @@ export function RegisterPage() {
       setLocalError('Bitte alle Felder ausfüllen.');
       return;
     }
-
     if (!isPasswordValid) {
       setLocalError('Das Passwort erfüllt nicht die Anforderungen.');
       return;
     }
-
     if (password !== confirmPassword) {
       setLocalError('Die Passwörter stimmen nicht überein.');
       return;
@@ -54,8 +58,8 @@ export function RegisterPage() {
 
     try {
       await register(email, password);
-      navigate('/login', { 
-        state: { message: 'Konto erfolgreich erstellt. Bitte melden Sie sich an.' } 
+      navigate('/login', {
+        state: { message: 'Konto erfolgreich erstellt. Bitte melden Sie sich an.' },
       });
     } catch {
       // Error is handled by AuthContext
@@ -64,109 +68,100 @@ export function RegisterPage() {
 
   const displayError = localError || error;
 
+  const Requirement = ({ met, label }: { met: boolean; label: string }) => (
+    <li className={`flex items-center gap-2 ${met ? 'text-sage-deep' : 'text-ink-mute'}`}>
+      <span aria-hidden="true">{met ? '✓' : '○'}</span>
+      {label}
+    </li>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
-      <div className="max-w-md w-full bg-paper-hi rounded-lg shadow-md p-8">
-        <h1 className="font-display italic text-3xl text-center text-plum-deep mb-6">
-          Konto erstellen
-        </h1>
+    <AuthLayout
+      marketingEyebrow="Für Organisatoren"
+      marketingTitle={'Werde\nGastgeber.'}
+      marketingBody="Erstelle dein Konto und in zwei Minuten den ersten Treff. Teile den Link, lass die Gruppe Spiele eintragen — fertig."
+      marketingFootnote="Teilnehmer brauchen kein Konto — nur den Link und das Kennwort des Treffs."
+    >
+      <div className="wg-label text-plum">Registrieren</div>
+      <h1 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-2">
+        Konto erstellen
+      </h1>
 
-        {displayError && (
-          <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded">
-            {displayError}
-          </div>
-        )}
+      {displayError && (
+        <div className="mt-6 p-3 bg-blush-50 border border-blush text-blush-deep rounded-lg text-sm">
+          {displayError}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-1">
-              E-Mail
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
-              placeholder="ihre@email.de"
-              autoComplete="email"
-              disabled={isLoading}
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <AuthEmailField
+          id="email"
+          label="E-Mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="ihre@email.de"
+          autoComplete="email"
+          disabled={isLoading}
+          required
+        />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-ink-soft mb-1">
-              Passwort
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              disabled={isLoading}
-            />
+        <div>
+          <AuthPasswordField
+            id="password"
+            label="Passwort"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            disabled={isLoading}
+            required
+          />
+          {/* Requirements */}
+          <ul className="mt-2 ml-1 text-xs space-y-1">
+            <Requirement met={passwordRequirements.minLength} label="Mindestens 8 Zeichen" />
+            <Requirement met={passwordRequirements.hasLetter} label="Mindestens ein Buchstabe" />
+            <Requirement met={passwordRequirements.hasNumber} label="Mindestens eine Zahl" />
+          </ul>
+        </div>
 
-            {/* Password requirements */}
-            <div className="mt-2 text-sm space-y-1">
-              <p className="text-ink-soft font-medium">Passwort-Anforderungen:</p>
-              <ul className="space-y-1">
-                <li className={`flex items-center ${passwordRequirements.minLength ? 'text-sage-deep' : 'text-ink-mute'}`}>
-                  <span className="mr-2">{passwordRequirements.minLength ? '✓' : '○'}</span>
-                  Mindestens 8 Zeichen
-                </li>
-                <li className={`flex items-center ${passwordRequirements.hasLetter ? 'text-sage-deep' : 'text-ink-mute'}`}>
-                  <span className="mr-2">{passwordRequirements.hasLetter ? '✓' : '○'}</span>
-                  Mindestens ein Buchstabe
-                </li>
-                <li className={`flex items-center ${passwordRequirements.hasNumber ? 'text-sage-deep' : 'text-ink-mute'}`}>
-                  <span className="mr-2">{passwordRequirements.hasNumber ? '✓' : '○'}</span>
-                  Mindestens eine Zahl
-                </li>
-              </ul>
-            </div>
-          </div>
+        <div>
+          <AuthPasswordField
+            id="confirmPassword"
+            label="Passwort bestätigen"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            disabled={isLoading}
+            required
+          />
+          {confirmPassword && password !== confirmPassword && (
+            <p className="mt-2 text-xs text-blush-deep">
+              Die Passwörter stimmen nicht überein.
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-ink-soft mb-1">
-              Passwort bestätigen
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-rule rounded-md focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              disabled={isLoading}
-            />
-            {confirmPassword && password !== confirmPassword && (
-              <p className="mt-1 text-sm text-blush-deep">
-                Die Passwörter stimmen nicht überein.
-              </p>
-            )}
-          </div>
+        <button
+          type="submit"
+          disabled={isLoading || !isPasswordValid}
+          className="wg-btn-primary wg-btn-lg w-full disabled:bg-plum-soft"
+        >
+          {isLoading ? 'Wird erstellt…' : 'Konto erstellen →'}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={isLoading || !isPasswordValid}
-            className="wg-btn-primary wg-btn-lg w-full disabled:bg-plum-soft focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
-          >
-            {isLoading ? 'Wird erstellt...' : 'Konto erstellen'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-ink-soft">
-          Bereits ein Konto?{' '}
-          <Link to="/login" className="text-plum hover:text-plum-deep font-medium">
-            Jetzt anmelden
-          </Link>
-        </p>
+      {/* Dotted divider */}
+      <div className="my-7 flex items-center gap-3">
+        <span className="flex-1 wg-divider-dotted" />
+        <span className="text-xs text-ink-mute">oder</span>
+        <span className="flex-1 wg-divider-dotted" />
       </div>
-    </div>
+
+      <Link to="/login" className="wg-btn-secondary wg-btn-lg w-full">
+        Anmelden
+      </Link>
+    </AuthLayout>
   );
 }
 

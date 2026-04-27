@@ -66,7 +66,8 @@ describe('RegisterPage', () => {
   it('shows link to login', () => {
     renderRegisterPage();
 
-    expect(screen.getByText(/jetzt anmelden/i)).toBeInTheDocument();
+    // Mockup-aligned redesign: secondary CTA at the bottom links back to login
+    expect(screen.getByRole('link', { name: /^anmelden$/i })).toBeInTheDocument();
   });
 
   it('validates password requirements visually', async () => {

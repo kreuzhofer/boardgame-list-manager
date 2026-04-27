@@ -23,12 +23,33 @@ interface TemplateBundle {
   footerTxt: HandlebarsTemplateDelegate;
 }
 
-const layoutHtml: HandlebarsTemplateDelegate = Handlebars.compile(
-  fs.readFileSync(path.join(TEMPLATES_ROOT, '_shared/layout.html.hbs'), 'utf8'),
-);
-const layoutTxt: HandlebarsTemplateDelegate = Handlebars.compile(
-  fs.readFileSync(path.join(TEMPLATES_ROOT, '_shared/layout.txt.hbs'), 'utf8'),
-);
+// Layouts are loaded lazily on first use. Module-level `fs.readFileSync`
+// would crash the entire API on import if the templates folder is
+// missing — we want a graceful fallback that keeps the server alive.
+let layoutsLoaded = false;
+let layoutsAvailable = false;
+let layoutHtml: HandlebarsTemplateDelegate | null = null;
+let layoutTxt: HandlebarsTemplateDelegate | null = null;
+
+function ensureLayoutsLoaded(): void {
+  if (layoutsLoaded) return;
+  layoutsLoaded = true;
+  try {
+    layoutHtml = Handlebars.compile(
+      fs.readFileSync(path.join(TEMPLATES_ROOT, '_shared/layout.html.hbs'), 'utf8'),
+    );
+    layoutTxt = Handlebars.compile(
+      fs.readFileSync(path.join(TEMPLATES_ROOT, '_shared/layout.txt.hbs'), 'utf8'),
+    );
+    layoutsAvailable = true;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[email] Email layout templates not found at ${TEMPLATES_ROOT}: ${msg}. ` +
+        `Email sends will be logged to stdout only (no real delivery).`,
+    );
+  }
+}
 
 function loadTemplate(name: string, locale: Locale): TemplateBundle {
   const dir = path.join(TEMPLATES_ROOT, name, locale);
@@ -42,10 +63,10 @@ function loadTemplate(name: string, locale: Locale): TemplateBundle {
   };
 }
 
-const templateCache = new Map<string, TemplateBundle>();
-function getTemplate(name: string, locale: Locale): TemplateBundle {
+const templateCache = new Map<string, TemplateBundle | null>();
+function getTemplate(name: string, locale: Locale): TemplateBundle | null {
   const key = `${name}/${locale}`;
-  if (templateCache.has(key)) return templateCache.get(key)!;
+  if (templateCache.has(key)) return templateCache.get(key) ?? null;
   try {
     const bundle = loadTemplate(name, locale);
     templateCache.set(key, bundle);
@@ -57,7 +78,10 @@ function getTemplate(name: string, locale: Locale): TemplateBundle {
       );
       return getTemplate(name, DEFAULT_LOCALE);
     }
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[email] Template "${name}/${locale}" missing: ${msg}`);
+    templateCache.set(key, null);
+    return null;
   }
 }
 
@@ -93,6 +117,13 @@ function describeHost(): string {
  */
 export async function initEmailService(): Promise<void> {
   console.log('=== SMTP Initialization ===');
+
+  // Load layouts up-front so a missing-templates failure is reported at
+  // boot (with a clear log line) rather than at first email send.
+  ensureLayoutsLoaded();
+  if (!layoutsAvailable) {
+    console.log('Email layouts: <not available> — sends will degrade to stdout-only');
+  }
 
   if (!config.smtp.host) {
     console.log('SMTP host: <not configured>');
@@ -150,8 +181,21 @@ export interface SendTemplatedEmailArgs {
  * via nodemailer (or logs to stdout if SMTP isn't configured).
  */
 export async function sendTemplatedEmail(args: SendTemplatedEmailArgs): Promise<void> {
+  ensureLayoutsLoaded();
   const locale = resolveLocale(args.locale);
   const tpl = getTemplate(args.template, locale);
+
+  // Templates missing — degrade to a stdout-only fallback so callers never
+  // see a hard error. The link / variables are still logged so devs can
+  // trace what would have been sent.
+  if (!tpl || !layoutsAvailable || !layoutHtml || !layoutTxt) {
+    console.warn(
+      `[email/fallback] templates unavailable — printing instead of sending. ` +
+        `to=${args.to} template=${args.template}/${locale} ` +
+        `vars=${JSON.stringify(args.variables)}`,
+    );
+    return;
+  }
 
   // Variables shared across every template
   const ctx = {

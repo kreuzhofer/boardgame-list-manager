@@ -3,6 +3,7 @@ import { EventProvider, useEvent } from '../contexts/EventContext';
 import { AuthGuard } from './AuthGuard';
 import { ParticipantSelectionModal } from './ParticipantSelectionModal';
 import { Layout } from './Layout';
+import { ViewAsToggle } from './ViewAsToggle';
 import { HomePage } from '../pages/HomePage';
 import { PrintPage } from '../pages/PrintPage';
 import { StatisticsPage } from '../pages/StatisticsPage';
@@ -12,7 +13,7 @@ import type { Participant } from '../types';
 import { useState, useCallback } from 'react';
 
 function EventContent() {
-  const { slug, eventName, status, loading, error } = useEvent();
+  const { slug, eventName, effectiveStatus, loading, error } = useEvent();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { participant, isLoading, setParticipant, clearParticipant } = useParticipant(slug);
 
@@ -60,33 +61,42 @@ function EventContent() {
 
   // Events in 'planning' status show a public welcome page — no password
   // gate, no participant selection, no game list. Participants get a peek
-  // before the organizer flips the status to 'active'.
-  if (status === 'planning') {
-    return <EventWelcomePage />;
+  // before the organizer flips the status to 'active'. effectiveStatus
+  // honours the owner's "view as" preview override.
+  if (effectiveStatus === 'planning') {
+    return (
+      <>
+        <ViewAsToggle />
+        <EventWelcomePage />
+      </>
+    );
   }
 
   const showParticipantSelection = isAuthenticated && !isLoading && !participant;
 
   return (
-    <AuthGuard slug={slug} eventName={eventName} onAuthChange={handleAuthChange}>
-      <ParticipantSelectionModal
-        isOpen={showParticipantSelection}
-        onParticipantSelected={handleParticipantSelected}
-      />
-      <Layout
-        basePath={`/${slug}`}
-        eventName={eventName}
-        participant={participant ?? undefined}
-        onParticipantUpdated={handleParticipantUpdated}
-        onParticipantSwitch={handleParticipantSwitch}
-      >
-        <Routes>
-          <Route path="/" element={<HomePage participant={participant} />} />
-          <Route path="/print" element={<PrintPage participant={participant} />} />
-          <Route path="/statistics" element={<StatisticsPage />} />
-        </Routes>
-      </Layout>
-    </AuthGuard>
+    <>
+      <ViewAsToggle />
+      <AuthGuard slug={slug} eventName={eventName} onAuthChange={handleAuthChange}>
+        <ParticipantSelectionModal
+          isOpen={showParticipantSelection}
+          onParticipantSelected={handleParticipantSelected}
+        />
+        <Layout
+          basePath={`/${slug}`}
+          eventName={eventName}
+          participant={participant ?? undefined}
+          onParticipantUpdated={handleParticipantUpdated}
+          onParticipantSwitch={handleParticipantSwitch}
+        >
+          <Routes>
+            <Route path="/" element={<HomePage participant={participant} />} />
+            <Route path="/print" element={<PrintPage participant={participant} />} />
+            <Route path="/statistics" element={<StatisticsPage />} />
+          </Routes>
+        </Layout>
+      </AuthGuard>
+    </>
   );
 }
 

@@ -44,7 +44,10 @@ export function Header({
   const isActive = (path: string) => location.pathname === resolvePath(path);
 
   return (
-    <header className="bg-plum-deep text-paper-hi shadow-raised fixed top-0 left-0 right-0 z-50">
+    <header
+      className="bg-plum-deep text-paper-hi shadow-raised fixed left-0 right-0 z-50"
+      style={{ top: 'var(--admin-bar-h, 0px)' }}
+    >
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Brand: meeple-stack mark + wordmark + event subline */}

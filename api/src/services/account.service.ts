@@ -105,7 +105,7 @@ export class AccountService {
       id: account.id,
       email: account.email,
       role: account.role as 'account_owner' | 'admin',
-      status: account.status as 'active' | 'deactivated',
+      status: account.status as 'active' | 'deactivated' | 'unverified',
       createdAt: account.createdAt,
     };
   }

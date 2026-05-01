@@ -51,6 +51,7 @@ export interface EventPublicInfo {
   name: string;
   slug: string;
   status: EventStatus;
+  ownerAccountId: string;
   description: string | null;
   welcomeMessage: string | null;
   startsAt: string | null;
@@ -117,6 +118,7 @@ export function toEventPublicInfo(entity: EventEntity): EventPublicInfo {
     name: entity.name,
     slug: entity.slug!,
     status: entity.status,
+    ownerAccountId: entity.ownerAccountId,
     description: entity.description,
     welcomeMessage: entity.welcomeMessage,
     startsAt: entity.startsAt?.toISOString() ?? null,

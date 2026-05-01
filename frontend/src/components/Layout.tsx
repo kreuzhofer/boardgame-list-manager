@@ -42,7 +42,7 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
       />
       {/* Add top padding to account for fixed header, bottom padding for mobile tabs */}
       <PullToRefresh onRefresh={handleRefresh}>
-        <main className="flex-1 container mx-auto px-4 py-6 pt-20 sm:pt-24 pb-20 md:pb-6">
+        <main className="flex-1 container mx-auto px-4 py-6 pt-[calc(5rem+var(--admin-bar-h,0px))] sm:pt-[calc(6rem+var(--admin-bar-h,0px))] pb-20 md:pb-6">
           {children}
         </main>
         <footer className="no-print bg-paper-lo text-ink-soft py-4 text-sm mb-16 md:mb-0">

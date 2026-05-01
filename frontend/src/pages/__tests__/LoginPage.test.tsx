@@ -14,6 +14,10 @@ vi.mock('../../api/client', async () => {
       login: vi.fn(),
       getMe: vi.fn(),
     },
+    authApi: {
+      verify: vi.fn(),
+      requestMagicLink: vi.fn(),
+    },
     getToken: vi.fn(),
     setToken: vi.fn(),
     removeToken: vi.fn(),
@@ -46,33 +50,63 @@ describe('LoginPage', () => {
     );
   };
 
-  it('renders login form', () => {
+  it('renders magic-link form by default with no password field', () => {
     renderLoginPage();
 
     expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
-    expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /anmelden/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /anmelde-link per e-mail senden/i })
+    ).toBeInTheDocument();
+    // Password field is hidden until disclosure is clicked
+    expect(screen.queryByLabelText('Passwort')).not.toBeInTheDocument();
   });
 
   it('shows link to registration', () => {
     renderLoginPage();
-
-    // Magic-link redesign: "Noch kein Konto? Jetzt erstellen" inline link
-    // below the magic-link CTA.
     expect(screen.getByRole('link', { name: /jetzt erstellen/i })).toBeInTheDocument();
   });
 
-  it('shows error when fields are empty', async () => {
+  it('sends magic link via primary CTA', async () => {
+    vi.mocked(client.authApi.requestMagicLink).mockResolvedValue({ ok: true });
     renderLoginPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /anmelden/i }));
+    fireEvent.change(screen.getByLabelText('E-Mail'), {
+      target: { value: 'someone@example.com' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: /anmelde-link per e-mail senden/i })
+    );
+
+    await waitFor(() => {
+      expect(client.authApi.requestMagicLink).toHaveBeenCalledWith('someone@example.com');
+    });
+    expect(
+      await screen.findByText(/wir haben dir einen anmelde-link an someone@example\.com geschickt/i)
+    ).toBeInTheDocument();
+  });
+
+  it('reveals password login form when disclosure is clicked', () => {
+    renderLoginPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /lieber mit passwort anmelden/i }));
+
+    expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^mit passwort anmelden$/i })
+    ).toBeInTheDocument();
+  });
+
+  it('shows error when password login fields are empty', async () => {
+    renderLoginPage();
+    fireEvent.click(screen.getByRole('button', { name: /lieber mit passwort anmelden/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^mit passwort anmelden$/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/bitte e-mail und passwort eingeben/i)).toBeInTheDocument();
     });
   });
 
-  it('calls login API with credentials', async () => {
+  it('calls login API with credentials via password disclosure', async () => {
     const mockAccount = {
       id: '123',
       email: 'test@example.com',
@@ -87,6 +121,7 @@ describe('LoginPage', () => {
     });
 
     renderLoginPage();
+    fireEvent.click(screen.getByRole('button', { name: /lieber mit passwort anmelden/i }));
 
     fireEvent.change(screen.getByLabelText('E-Mail'), {
       target: { value: 'test@example.com' },
@@ -94,19 +129,20 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('Passwort'), {
       target: { value: 'password123' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /anmelden/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^mit passwort anmelden$/i }));
 
     await waitFor(() => {
       expect(client.accountsApi.login).toHaveBeenCalledWith('test@example.com', 'password123');
     });
   });
 
-  it('shows error message on failed login', async () => {
+  it('shows error message on failed password login', async () => {
     vi.mocked(client.accountsApi.login).mockRejectedValue(
       new client.ApiError('E-Mail oder Passwort ist falsch.', 'INVALID_CREDENTIALS')
     );
 
     renderLoginPage();
+    fireEvent.click(screen.getByRole('button', { name: /lieber mit passwort anmelden/i }));
 
     fireEvent.change(screen.getByLabelText('E-Mail'), {
       target: { value: 'test@example.com' },
@@ -114,7 +150,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('Passwort'), {
       target: { value: 'wrongpassword' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /anmelden/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^mit passwort anmelden$/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/e-mail oder passwort ist falsch/i)).toBeInTheDocument();

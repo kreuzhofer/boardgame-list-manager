@@ -34,6 +34,7 @@ export interface EventPublicInfo {
   name: string;
   slug: string;
   status: EventStatus;
+  ownerAccountId: string;
   description: string | null;
   welcomeMessage: string | null;
   startsAt: string | null;

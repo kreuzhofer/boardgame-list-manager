@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db/prisma';
 import { SessionService } from '../services/session.service';
@@ -11,6 +12,20 @@ import { config } from '../config';
 
 const router = Router();
 const sessionService = new SessionService(prisma);
+
+/**
+ * Build a non-loginable bcrypt-shaped placeholder for accounts that are
+ * created via the magic-link signup flow and have no password yet. The
+ * value is random so it cannot match any real password; the column is
+ * NOT NULL in the schema so we have to put *something* here. Users who
+ * want to set a real password can do so later via the change-password
+ * flow once we ship "set initial password".
+ */
+function placeholderPasswordHash(): string {
+  // bcrypt hashes start with `$2`; we don't use $2 to make it obvious
+  // these are not real bcrypt outputs and to fail-fast in `bcrypt.compare`.
+  return `!magic-link-only!${crypto.randomBytes(24).toString('hex')}`;
+}
 
 const MAX_REQUESTS_PER_HOUR = 3;
 const TOKEN_TTL_MINUTES = 15;
@@ -41,21 +56,28 @@ router.post('/magic-link/request', async (req: Request, res: Response) => {
       return;
     }
 
-    const account = await prisma.account.findUnique({
+    // Magic-link is the unified login + signup path: an unknown email
+    // creates an `unverified` account on the fly. The first successful
+    // consume of the link flips the account to `active` and creates the
+    // session. Doing this on request (rather than on consume) keeps the
+    // token model simple — every token still binds to a real account.
+    const account = await prisma.account.upsert({
       where: { email: rawEmail },
+      create: {
+        email: rawEmail,
+        passwordHash: placeholderPasswordHash(),
+        status: 'unverified',
+      },
+      update: {},
       select: { id: true, email: true, status: true, locale: true },
     });
 
-    if (!account) {
-      // Unknown email — silent success.
-      console.log(`[magic-link] request for unknown email=${rawEmail} — silent 200`);
-      res.json({ ok: true });
-      return;
-    }
-
-    if (account.status !== 'active') {
+    // `deactivated` accounts get the same silent 200 as before — admins
+    // disabled them and they shouldn't be able to bounce back via a
+    // magic-link. `active` and `unverified` both proceed.
+    if (account.status === 'deactivated') {
       console.log(
-        `[magic-link] request blocked — account=${account.id} status=${account.status}`,
+        `[magic-link] request blocked — account=${account.id} status=deactivated`,
       );
       res.json({ ok: true });
       return;
@@ -145,7 +167,7 @@ router.get('/magic-link/consume', async (req: Request, res: Response) => {
       return;
     }
 
-    const account = await prisma.account.findUnique({
+    let account = await prisma.account.findUnique({
       where: { id: result.accountId },
       select: {
         id: true,
@@ -155,12 +177,29 @@ router.get('/magic-link/consume', async (req: Request, res: Response) => {
         createdAt: true,
       },
     });
-    if (!account || account.status !== 'active') {
+    if (!account || account.status === 'deactivated') {
       res.status(401).json({
         error: 'ACCOUNT_INACTIVE',
         message: 'Konto ist nicht aktiv.',
       });
       return;
+    }
+
+    // First click on the magic link doubles as email verification for
+    // accounts created via magic-link signup.
+    if (account.status === 'unverified') {
+      account = await prisma.account.update({
+        where: { id: account.id },
+        data: { status: 'active' },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+      console.log(`[magic-link] activated unverified account=${account.id}`);
     }
 
     const jwt = await sessionService.createSession(

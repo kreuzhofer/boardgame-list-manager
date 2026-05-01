@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { authApi } from '../api/client';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthEmailField, AuthPasswordField } from '../components/AuthInputs';
 
@@ -8,6 +9,9 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswordRegister, setShowPasswordRegister] = useState(false);
+  const [magicLinkSending, setMagicLinkSending] = useState(false);
+  const [magicLinkSentTo, setMagicLinkSentTo] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const { register, isAuthenticated, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
@@ -39,7 +43,27 @@ export function RegisterPage() {
     passwordRequirements.hasLetter &&
     passwordRequirements.hasNumber;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleMagicLinkRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError(null);
+
+    if (!email) {
+      setLocalError('Bitte zuerst eine E-Mail-Adresse eingeben.');
+      return;
+    }
+
+    setMagicLinkSending(true);
+    try {
+      await authApi.requestMagicLink(email);
+      setMagicLinkSentTo(email);
+    } catch {
+      setLocalError('E-Mail konnte nicht gesendet werden. Bitte später erneut versuchen.');
+    } finally {
+      setMagicLinkSending(false);
+    }
+  };
+
+  const handlePasswordRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
 
@@ -86,6 +110,11 @@ export function RegisterPage() {
       <h1 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-2">
         Konto erstellen
       </h1>
+      <p className="mt-3 text-ink-soft text-sm">
+        Gib einfach deine E-Mail-Adresse ein — wir schicken dir einen
+        Bestätigungs- und Anmelde-Link. Mit dem ersten Klick wird dein Konto
+        erstellt.
+      </p>
 
       {displayError && (
         <div className="mt-6 p-3 bg-blush-50 border border-blush text-blush-deep rounded-lg text-sm">
@@ -93,7 +122,8 @@ export function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+      {/* Primary path: magic-link signup (same flow as login) */}
+      <form onSubmit={handleMagicLinkRequest} className="mt-8 space-y-5">
         <AuthEmailField
           id="email"
           label="E-Mail"
@@ -101,66 +131,111 @@ export function RegisterPage() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="ihre@email.de"
           autoComplete="email"
-          disabled={isLoading}
-          required
+          disabled={magicLinkSending || isLoading}
         />
 
-        <div>
-          <AuthPasswordField
-            id="password"
-            label="Passwort"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="new-password"
-            disabled={isLoading}
-            required
-          />
-          {/* Requirements */}
-          <ul className="mt-2 ml-1 text-xs space-y-1">
-            <Requirement met={passwordRequirements.minLength} label="Mindestens 8 Zeichen" />
-            <Requirement met={passwordRequirements.hasLetter} label="Mindestens ein Buchstabe" />
-            <Requirement met={passwordRequirements.hasNumber} label="Mindestens eine Zahl" />
-          </ul>
-        </div>
-
-        <div>
-          <AuthPasswordField
-            id="confirmPassword"
-            label="Passwort bestätigen"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="new-password"
-            disabled={isLoading}
-            required
-          />
-          {confirmPassword && password !== confirmPassword && (
-            <p className="mt-2 text-xs text-blush-deep">
-              Die Passwörter stimmen nicht überein.
-            </p>
-          )}
-        </div>
+        {magicLinkSentTo && (
+          <div className="bg-sage-50 border border-sage-100 text-sage-deep rounded-lg p-4 text-sm">
+            <strong>Wir haben dir einen Bestätigungs- und Anmelde-Link an {magicLinkSentTo} geschickt.</strong>
+            <br />
+            Mit dem ersten Klick wird dein Konto angelegt und du bist
+            angemeldet. Falls die Mail nicht ankommt, prüfe deinen
+            Spam-Ordner oder fordere unten einen neuen Link an.
+          </div>
+        )}
 
         <button
           type="submit"
-          disabled={isLoading || !isPasswordValid}
+          disabled={magicLinkSending || isLoading}
           className="wg-btn-primary wg-btn-lg w-full disabled:bg-plum-soft"
         >
-          {isLoading ? 'Wird erstellt…' : 'Konto erstellen →'}
+          {magicLinkSending
+            ? 'Wird gesendet…'
+            : magicLinkSentTo
+              ? 'Anmelde-Link erneut senden →'
+              : 'Konto per E-Mail erstellen →'}
         </button>
       </form>
 
-      {/* Dotted divider */}
-      <div className="my-7 flex items-center gap-3">
-        <span className="flex-1 wg-divider-dotted" />
-        <span className="text-xs text-ink-mute">oder</span>
-        <span className="flex-1 wg-divider-dotted" />
+      {/* Disclosure: classic email + password registration */}
+      <div className="mt-6 text-center">
+        {!showPasswordRegister ? (
+          <button
+            type="button"
+            onClick={() => setShowPasswordRegister(true)}
+            className="text-sm text-plum hover:text-plum-deep underline underline-offset-2"
+          >
+            Lieber Konto mit Passwort anlegen
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setShowPasswordRegister(false);
+              setPassword('');
+              setConfirmPassword('');
+            }}
+            className="text-sm text-ink-mute hover:text-ink-soft underline underline-offset-2"
+          >
+            Passwort-Registrierung ausblenden
+          </button>
+        )}
       </div>
 
-      <Link to="/login" className="wg-btn-secondary wg-btn-lg w-full">
-        Anmelden
-      </Link>
+      {showPasswordRegister && (
+        <form onSubmit={handlePasswordRegister} className="mt-5 space-y-5">
+          <div>
+            <AuthPasswordField
+              id="password"
+              label="Passwort"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              disabled={isLoading}
+              required
+            />
+            <ul className="mt-2 ml-1 text-xs space-y-1">
+              <Requirement met={passwordRequirements.minLength} label="Mindestens 8 Zeichen" />
+              <Requirement met={passwordRequirements.hasLetter} label="Mindestens ein Buchstabe" />
+              <Requirement met={passwordRequirements.hasNumber} label="Mindestens eine Zahl" />
+            </ul>
+          </div>
+
+          <div>
+            <AuthPasswordField
+              id="confirmPassword"
+              label="Passwort bestätigen"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              disabled={isLoading}
+              required
+            />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-2 text-xs text-blush-deep">
+                Die Passwörter stimmen nicht überein.
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading || !isPasswordValid}
+            className="wg-btn-secondary wg-btn-lg w-full disabled:opacity-60"
+          >
+            {isLoading ? 'Wird erstellt…' : 'Konto mit Passwort erstellen'}
+          </button>
+        </form>
+      )}
+
+      <div className="mt-7 text-center text-sm text-ink-soft">
+        Schon ein Konto?{' '}
+        <Link to="/login" className="text-plum hover:text-plum-deep font-bold">
+          Anmelden
+        </Link>
+      </div>
     </AuthLayout>
   );
 }

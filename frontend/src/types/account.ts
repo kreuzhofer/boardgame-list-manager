@@ -2,7 +2,7 @@ export interface Account {
   id: string;
   email: string;
   role: 'account_owner' | 'admin';
-  status: 'active' | 'deactivated';
+  status: 'active' | 'deactivated' | 'unverified';
   createdAt: string;
 }
 

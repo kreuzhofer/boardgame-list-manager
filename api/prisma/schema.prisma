@@ -196,6 +196,7 @@ enum AccountRole {
 enum AccountStatus {
   active
   deactivated
+  unverified
 }
 
 model Account {

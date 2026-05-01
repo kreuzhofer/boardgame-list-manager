@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { eventsApi, setActiveEventSlug } from '../api/client';
 import type { EventPublicInfo, EventStatus } from '../types/event';
 
@@ -7,6 +7,7 @@ interface EventContextValue {
   eventId: string | undefined;
   eventName: string | undefined;
   status: EventStatus | undefined;
+  ownerAccountId: string | undefined;
   description: string | null;
   welcomeMessage: string | null;
   startsAt: string | null;
@@ -14,6 +15,11 @@ interface EventContextValue {
   location: string | null;
   loading: boolean;
   error: string | null;
+  /** Status the UI should render with — equals previewStatus if set, otherwise actual status. */
+  effectiveStatus: EventStatus | undefined;
+  /** Owner-only "view as" preview override. Null when not previewing. */
+  previewStatus: EventStatus | null;
+  setPreviewStatus: (status: EventStatus | null) => void;
 }
 
 const EventContext = createContext<EventContextValue>({
@@ -21,6 +27,7 @@ const EventContext = createContext<EventContextValue>({
   eventId: undefined,
   eventName: undefined,
   status: undefined,
+  ownerAccountId: undefined,
   description: null,
   welcomeMessage: null,
   startsAt: null,
@@ -28,6 +35,9 @@ const EventContext = createContext<EventContextValue>({
   location: null,
   loading: false,
   error: null,
+  effectiveStatus: undefined,
+  previewStatus: null,
+  setPreviewStatus: () => {},
 });
 
 export function useEvent() {
@@ -43,6 +53,7 @@ export function EventProvider({ slug, children }: EventProviderProps) {
   const [event, setEvent] = useState<EventPublicInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [previewStatus, setPreviewStatusState] = useState<EventStatus | null>(null);
 
   // Set active slug synchronously during render so child effects
   // (e.g. useParticipant validation) use the correct event token.
@@ -78,13 +89,26 @@ export function EventProvider({ slug, children }: EventProviderProps) {
     };
   }, [slug]);
 
+  // Reset preview when slug changes — preview is per-event.
+  useEffect(() => {
+    setPreviewStatusState(null);
+  }, [slug]);
+
+  const setPreviewStatus = useCallback((status: EventStatus | null) => {
+    setPreviewStatusState(status);
+  }, []);
+
+  const actualStatus = event?.status;
+  const effectiveStatus = previewStatus ?? actualStatus;
+
   return (
     <EventContext.Provider
       value={{
         slug,
         eventId: event?.id,
         eventName: event?.name,
-        status: event?.status,
+        status: actualStatus,
+        ownerAccountId: event?.ownerAccountId,
         description: event?.description ?? null,
         welcomeMessage: event?.welcomeMessage ?? null,
         startsAt: event?.startsAt ?? null,
@@ -92,6 +116,9 @@ export function EventProvider({ slug, children }: EventProviderProps) {
         location: event?.location ?? null,
         loading,
         error,
+        effectiveStatus,
+        previewStatus,
+        setPreviewStatus,
       }}
     >
       {children}

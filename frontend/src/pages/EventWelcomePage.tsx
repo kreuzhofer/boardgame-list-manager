@@ -59,7 +59,7 @@ export function EventWelcomePage() {
   }, [eventName]);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper pt-[var(--admin-bar-h,0px)]">
       {/* Plum-deep header strip */}
       <header className="bg-plum-deep text-paper-hi shadow-raised">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">

@@ -1,5 +1,5 @@
 export type AccountRole = 'account_owner' | 'admin';
-export type AccountStatus = 'active' | 'deactivated';
+export type AccountStatus = 'active' | 'deactivated' | 'unverified';
 
 export interface Account {
   id: string;

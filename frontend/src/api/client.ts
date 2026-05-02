@@ -428,6 +428,20 @@ export const accountsApi = {
     }, true);
   },
 
+  requestEmailChange: (newEmail: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/email', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail }),
+    }, true);
+  },
+
+  confirmEmailChange: (token: string): Promise<{ success: boolean; account: Account }> => {
+    return fetchApi<{ success: boolean; account: Account }>('/api/accounts/email-change/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  },
+
   promoteToAdmin: (accountId: string): Promise<{ account: Account }> => {
     return fetchApi<{ account: Account }>(`/api/accounts/${accountId}/promote`, {
       method: 'POST',

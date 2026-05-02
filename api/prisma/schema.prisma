@@ -226,10 +226,14 @@ model LoginToken {
   accountId   String    @map("account_id")
   account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   /// What the token is for. Lets us route on consume + log usage.
-  purpose     String    /// 'login' | 'invite-claim' | 'legacy-claim' | 'reset-password'
+  purpose     String    /// 'login' | 'invite-claim' | 'legacy-claim' | 'reset-password' | 'email-change'
   /// Optional URL to land on after consumption (e.g. the event slug the
   /// invite was sent for). Null falls back to /events.
   targetPath  String?   @map("target_path")
+  /// For purpose='email-change': the new email address the user wants
+  /// to switch to. Null for any other purpose. Stored alongside the
+  /// token so the consume step has everything it needs.
+  newEmail    String?   @map("new_email")
   createdAt   DateTime  @default(now()) @map("created_at")
   expiresAt   DateTime  @map("expires_at")
   consumedAt  DateTime? @map("consumed_at")

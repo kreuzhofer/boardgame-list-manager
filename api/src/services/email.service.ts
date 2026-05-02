@@ -182,7 +182,13 @@ export function isSmtpReady(): boolean {
 
 export interface SendTemplatedEmailArgs {
   to: string;
-  template: 'magic-link';                  // extend as templates land
+  template:
+    | 'magic-link'
+    | 'welcome'
+    | 'password-changed'
+    | 'account-deactivated'
+    | 'email-change-confirm'
+    | 'email-change-notice';
   locale?: string | null;
   variables: Record<string, unknown>;
 }

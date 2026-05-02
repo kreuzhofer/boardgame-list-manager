@@ -22,6 +22,7 @@ import { LandingPage } from './pages/LandingPage';
 import { ImpressumPage } from './pages/ImpressumPage';
 import { DatenschutzPage } from './pages/DatenschutzPage';
 import { MagicLinkConsumePage } from './pages/MagicLinkConsumePage';
+import { EmailChangeConfirmPage } from './pages/EmailChangeConfirmPage';
 import { EventRoutes } from './components/EventRoutes';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
             <Route path="/impressum" element={<AccountLayout><ImpressumPage /></AccountLayout>} />
             <Route path="/datenschutz" element={<AccountLayout><DatenschutzPage /></AccountLayout>} />
             <Route path="/auth/magic" element={<MagicLinkConsumePage />} />
+            <Route path="/auth/email-change/confirm" element={<EmailChangeConfirmPage />} />
 
             {/* Account management */}
             <Route

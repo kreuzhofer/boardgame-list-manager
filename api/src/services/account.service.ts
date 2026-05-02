@@ -6,8 +6,27 @@ import {
   AccountErrorCodes,
   AccountErrorMessages,
 } from '../types/account';
+import { sendTemplatedEmail, type SendTemplatedEmailArgs } from './email.service';
+import { createLoginToken, consumeLoginToken } from './loginToken.service';
+import { config } from '../config';
+
+const EMAIL_CHANGE_TTL_MINUTES = 60;
+const EMAIL_CHANGE_MAX_REQUESTS_PER_HOUR = 3;
 
 const BCRYPT_COST_FACTOR = 12;
+
+/**
+ * Fire-and-forget transactional email. Notification mails (password
+ * changed, account deactivated) must never block or fail the underlying
+ * mutation — if SMTP is down the user still expects their password
+ * change to land. We log the error and move on.
+ */
+function notify(args: SendTemplatedEmailArgs, context: string): void {
+  sendTemplatedEmail(args).catch((err) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[notify] ${context} email failed to=${args.to}: ${msg}`);
+  });
+}
 
 export class AccountError extends Error {
   constructor(
@@ -242,6 +261,16 @@ export class AccountService {
       where: { id: accountId },
       data: { passwordHash: newPasswordHash },
     });
+
+    notify(
+      {
+        to: account.email,
+        template: 'password-changed',
+        locale: account.locale,
+        variables: {},
+      },
+      'password-changed',
+    );
   }
 
   /**
@@ -282,6 +311,16 @@ export class AccountService {
       where: { id: accountId },
       data: { status: 'deactivated' },
     });
+
+    notify(
+      {
+        to: account.email,
+        template: 'account-deactivated',
+        locale: account.locale,
+        variables: {},
+      },
+      'account-deactivated',
+    );
   }
 
   /**
@@ -384,6 +423,21 @@ export class AccountService {
       data: { status },
     });
 
+    // Notify the account holder when an admin deactivates them. The
+    // self-deactivation path (`deactivate()` above) sends its own
+    // notification — both call-sites converge on the same template.
+    if (status === 'deactivated' && account.status !== 'deactivated') {
+      notify(
+        {
+          to: account.email,
+          template: 'account-deactivated',
+          locale: account.locale,
+          variables: {},
+        },
+        'account-deactivated',
+      );
+    }
+
     return this.toAccountResponse(updated);
   }
 
@@ -410,5 +464,178 @@ export class AccountService {
       where: { id: accountId },
       data: { passwordHash },
     });
+
+    notify(
+      {
+        to: account.email,
+        template: 'password-changed',
+        locale: account.locale,
+        variables: {},
+      },
+      'password-changed',
+    );
+  }
+
+  /**
+   * Request a change of the account's email address.
+   *
+   * Two-step verification:
+   * 1. Validate the new address (format + uniqueness).
+   * 2. Create a single-use token bound to (accountId, newEmail).
+   * 3. Send a confirm link to the NEW address.
+   * 4. Send a notice to the OLD address so the legitimate owner can react
+   *    if their session was compromised.
+   *
+   * The actual email swap happens in `confirmEmailChange()` once the user
+   * clicks the link — proving they control the new address.
+   */
+  async requestEmailChange(accountId: string, newEmailRaw: string): Promise<void> {
+    const newEmail = newEmailRaw.trim().toLowerCase();
+    this.validateEmail(newEmail);
+
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404,
+      );
+    }
+    if (account.status === 'deactivated') {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_DEACTIVATED,
+        AccountErrorMessages.ACCOUNT_DEACTIVATED,
+        403,
+      );
+    }
+    if (newEmail === account.email) {
+      throw new AccountError(
+        'EMAIL_UNCHANGED',
+        'Diese E-Mail-Adresse ist bereits hinterlegt.',
+        400,
+      );
+    }
+
+    const taken = await this.prisma.account.findUnique({ where: { email: newEmail } });
+    if (taken) {
+      throw new AccountError(
+        AccountErrorCodes.EMAIL_EXISTS,
+        AccountErrorMessages.EMAIL_EXISTS,
+        409,
+      );
+    }
+
+    // Soft rate limit — same envelope as the magic-link flow.
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const recent = await this.prisma.loginToken.count({
+      where: {
+        accountId,
+        purpose: 'email-change',
+        createdAt: { gte: since },
+      },
+    });
+    if (recent >= EMAIL_CHANGE_MAX_REQUESTS_PER_HOUR) {
+      throw new AccountError(
+        'EMAIL_CHANGE_RATE_LIMITED',
+        'Zu viele Anfragen. Bitte in einer Stunde erneut versuchen.',
+        429,
+      );
+    }
+
+    const { token } = await createLoginToken({
+      accountId,
+      purpose: 'email-change',
+      newEmail,
+      ttlMinutes: EMAIL_CHANGE_TTL_MINUTES,
+    });
+    const link = `${config.app.publicUrl}/auth/email-change/confirm?token=${encodeURIComponent(token)}`;
+
+    notify(
+      {
+        to: newEmail,
+        template: 'email-change-confirm',
+        locale: account.locale,
+        variables: { link, newEmail, expiresInMinutes: EMAIL_CHANGE_TTL_MINUTES },
+      },
+      'email-change-confirm',
+    );
+    notify(
+      {
+        to: account.email,
+        template: 'email-change-notice',
+        locale: account.locale,
+        variables: { newEmail },
+      },
+      'email-change-notice',
+    );
+  }
+
+  /**
+   * Consume an email-change token.
+   *
+   * Validates the token, ensures the new email is still available
+   * (someone else might have grabbed it between request and click),
+   * swaps `account.email`, and notifies the new address that the swap
+   * has completed.
+   */
+  async confirmEmailChange(
+    rawToken: string,
+    ip: string | null,
+  ): Promise<AccountResponse> {
+    const result = await consumeLoginToken({ token: rawToken, ip });
+    if (!result.ok) {
+      const messages: Record<string, string> = {
+        not_found: 'Ungültiger Bestätigungs-Link.',
+        expired: 'Der Bestätigungs-Link ist abgelaufen. Bitte die Änderung erneut anfordern.',
+        already_consumed: 'Dieser Bestätigungs-Link wurde bereits verwendet.',
+      };
+      throw new AccountError(
+        result.reason.toUpperCase(),
+        messages[result.reason] ?? 'Ungültiger Bestätigungs-Link.',
+        400,
+      );
+    }
+    if (result.purpose !== 'email-change' || !result.newEmail) {
+      throw new AccountError('INVALID_TOKEN', 'Ungültiger Bestätigungs-Link.', 400);
+    }
+
+    const newEmail = result.newEmail;
+
+    const account = await this.prisma.account.findUnique({
+      where: { id: result.accountId },
+    });
+    if (!account || account.status === 'deactivated') {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404,
+      );
+    }
+
+    // Race: another account may have claimed the address between the
+    // request and the click. Fail clearly so the user can retry with a
+    // different address.
+    const taken = await this.prisma.account.findUnique({ where: { email: newEmail } });
+    if (taken && taken.id !== account.id) {
+      throw new AccountError(
+        AccountErrorCodes.EMAIL_EXISTS,
+        AccountErrorMessages.EMAIL_EXISTS,
+        409,
+      );
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: account.id },
+      data: { email: newEmail },
+    });
+
+    // No post-completion email: the OLD address was already notified at
+    // request time (`email-change-notice`), and the user who just clicked
+    // the link sees the success page in their browser — another email
+    // would be redundant.
+
+    return this.toAccountResponse(updated);
   }
 }

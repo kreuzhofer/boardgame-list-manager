@@ -3,6 +3,7 @@ import path from 'path';
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import Handlebars from 'handlebars';
+import juice from 'juice';
 import { config } from '../config';
 
 // ───────────────────────────────────────────────────────────────────
@@ -30,6 +31,10 @@ let layoutsLoaded = false;
 let layoutsAvailable = false;
 let layoutHtml: HandlebarsTemplateDelegate | null = null;
 let layoutTxt: HandlebarsTemplateDelegate | null = null;
+// Shared CSS (see api/templates/emails/_shared/email.css). Inlined into
+// every rendered HTML mail by `juice` so style attributes survive clients
+// that strip <style> blocks. Templates stay clean — no inline styles.
+let sharedCss = '';
 
 function ensureLayoutsLoaded(): void {
   if (layoutsLoaded) return;
@@ -41,6 +46,15 @@ function ensureLayoutsLoaded(): void {
     layoutTxt = Handlebars.compile(
       fs.readFileSync(path.join(TEMPLATES_ROOT, '_shared/layout.txt.hbs'), 'utf8'),
     );
+    try {
+      sharedCss = fs.readFileSync(
+        path.join(TEMPLATES_ROOT, '_shared/email.css'),
+        'utf8',
+      );
+    } catch {
+      sharedCss = '';
+      console.warn('[email] _shared/email.css not found — emails will render unstyled');
+    }
     layoutsAvailable = true;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -211,7 +225,17 @@ export async function sendTemplatedEmail(args: SendTemplatedEmailArgs): Promise<
   const footerHtml = tpl.footerHtml(ctx);
   const footerTxt = tpl.footerTxt(ctx);
 
-  const html = layoutHtml({ ...ctx, subject, body: bodyHtml, footer: footerHtml });
+  const rawHtml = layoutHtml({ ...ctx, subject, body: bodyHtml, footer: footerHtml });
+  // Inline the shared CSS so style attributes survive clients that strip
+  // <style> blocks (Outlook desktop, some mobile webmail). The templates
+  // stay class-only; final delivered HTML carries the styles inline.
+  const html = sharedCss
+    ? juice.inlineContent(rawHtml, sharedCss, {
+        preserveImportant: true,
+        preserveMediaQueries: true,
+        preserveFontFaces: true,
+      })
+    : rawHtml;
   const text = layoutTxt({ ...ctx, subject, body: bodyTxt, footer: footerTxt });
 
   if (!transporter) {
@@ -230,6 +254,17 @@ export async function sendTemplatedEmail(args: SendTemplatedEmailArgs): Promise<
       subject,
       text,
       html,
+      // Attach the brand mark inline so the layout's <img src="cid:wg-logo" />
+      // resolves regardless of where the mail is opened — works in clients
+      // that block remote images (Outlook, locked-down corporate setups) and
+      // in dev where the public URL isn't reachable from the recipient.
+      attachments: [
+        {
+          filename: 'brettspieltreff.png',
+          path: path.join(TEMPLATES_ROOT, '_shared/logo.png'),
+          cid: 'wg-logo',
+        },
+      ],
     });
     console.log(
       `[email] sent to=${args.to} template=${args.template}/${locale} messageId=${info.messageId}`,

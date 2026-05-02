@@ -1,0 +1,141 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Würfelglück — email styles
+   See docs/design-system.md (Email section).
+
+   Philosophy: don't paint the surface, don't compete with the client.
+   The email sets *no* background colours and *only* black text. Light-mode
+   clients render their default near-white surface, dark-mode clients
+   invert to a sensible dark surface and lighten the black text — both
+   cases look intentional without us fighting the client's renderer.
+
+   Brand expression comes from:
+   - The mark (cid:wg-logo, self-contained butter+plum SVG/PNG)
+   - Playfair Display italic for the wordmark and title
+   - Composition (rhythm, hierarchy, italic accents) — not colour
+
+   Authoring rules:
+   1. Templates use semantic classes only. No inline `style=""` in .hbs.
+   2. Don't add background-color anywhere. Don't introduce non-black text
+      colour tokens. The brand mark is the only coloured element.
+   3. `juice` inlines this file at render time so the *sent* HTML still
+      has style attributes (some clients strip <style>); templates stay
+      clean.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Field — outer wrapper. No background; the client paints its own. */
+.email-field {
+  padding: 32px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #000000;
+}
+
+.email-card {
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.email-header { padding: 4px 28px 18px; }
+
+.email-wordmark {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #000000;
+  vertical-align: middle;
+}
+
+.email-mark {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  outline: none;
+  text-decoration: none;
+}
+
+.email-mark-cell { vertical-align: middle; padding-right: 14px; }
+
+/* Hairline below the header. 1 px solid black — clients in dark mode
+   invert to a light hairline. No coloured accent. */
+.email-rule {
+  height: 1px;
+  background: #000000;
+  font-size: 0;
+  line-height: 1px;
+}
+
+.email-body {
+  padding: 26px 28px 28px;
+  color: #000000;
+}
+
+.email-title {
+  margin: 0 0 14px;
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #000000;
+}
+
+.email-prose {
+  margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #000000;
+}
+
+.email-prose strong { color: #000000; font-weight: 700; }
+
+.email-mute {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #000000;
+}
+
+.email-cta-row { margin: 4px 0 22px; }
+
+/* The one coloured element besides the brand mark. Mirrors the web
+   app's `wg-btn-primary` (plum + paper-hi text) so the CTA the
+   recipient clicks looks identical to the buttons they'll see once
+   logged in. White text on plum survives dark-mode inversion cleanly:
+   plum is already dark enough that clients leave it alone. */
+.email-cta {
+  display: inline-block;
+  background: #6b3a5c;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+  padding: 13px 26px;
+  border: 1px solid #6b3a5c;
+  border-radius: 10px;
+}
+
+.email-link, .email-link:visited, .email-link:active {
+  color: #000000;
+  word-break: break-all;
+}
+
+.email-footer {
+  padding: 18px 28px 20px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #000000;
+}
+
+.email-attribution {
+  margin: 18px 0 0;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.4;
+  color: #000000;
+}
+
+.email-attribution a { color: #000000; }

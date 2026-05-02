@@ -211,9 +211,112 @@ Not real reasons:
 If the design feels flat, the answer is usually **better composition** (rhythm,
 hierarchy, italic accents, dotted dividers, more generous spacing) — not more colour.
 
+## Email
+
+Email lives in a different rendering reality than the web app — clients
+strip `<style>`, ignore most CSS, and dark-mode clients apply their own
+colour mapping. The email design system answers with a deliberately
+narrow rule: **don't paint the surface, don't pick non-monochrome text
+colours, let the client decide.**
+
+### No surface backgrounds, black text
+
+We do **not** set any `background-color` on the email surface (field,
+card, header, body, footer). Light-mode clients render their default
+near-white surface; dark-mode clients render their own dark surface and
+cleanly invert the black text. We don't carry the parchment palette or
+any other brand colour into email surfaces — the brand expression comes
+from typography, the mark, and composition, not from coloured fills.
+
+All text is `#000000`. Dark-mode clients invert it to a readable light
+colour using their own heuristics — better than any colour we could
+choose, because the inversion is consistent with the surface they paint.
+No coloured "muted" or "accent" text either; differentiation uses font
+size and weight only.
+
+### Brand expression
+
+| Element | Treatment |
+|---|---|
+| Mark | `cid:wg-logo` — self-contained butter-chip + plum-meeple SVG/PNG. The only coloured element on the page. |
+| Wordmark | Playfair Display italic, weight 600, 22 px, black. |
+| Title | Playfair Display italic, weight 600, 30 px, black. |
+| Body copy | System sans, 15 px, black. `<strong>` is black + weight 700. |
+| Hairlines | 1 px solid black (above and below the body). Dark-mode clients invert to a light hairline. |
+| CTA | `plum` `#6b3a5c` background, white bold text — mirrors `wg-btn-primary`. The single coloured surface in the email; visual continuity with the web app. Plum is already dark enough that dark-mode clients leave it alone. |
+| Links | Black, with default underline. |
+
+The result is a typewriter-clean, restrained email that looks intentional
+in every client and either OS theme — closer in feel to a printed
+invitation than a marketing template.
+
+### Typography
+
+Same display family as the web app: Playfair Display italic for the
+wordmark (`.email-wordmark`) and the title (`.email-title`), Georgia /
+Times fallback for clients that strip web fonts. Body copy stays in the
+system sans-serif stack.
+
+### Components — use the email classes
+
+Templates author against semantic classes only. **No inline `style=""`
+in `.hbs`.** Tokens come from `api/templates/emails/_shared/email.css`.
+
+```html
+<h1 class="email-title">Schön, dich zu sehen</h1>
+<p class="email-prose">Klicke auf den Link …</p>
+<p class="email-cta-row"><a href="…" class="email-cta">Jetzt anmelden →</a></p>
+<p class="email-mute">Der Link ist 15 Minuten gültig.</p>
+<p><a href="…" class="email-link">…</a></p>
+```
+
+The shared layout (`api/templates/emails/_shared/layout.html.hbs`)
+provides `.email-field`, `.email-card`, `.email-header`,
+`.email-accent-rule`, `.email-body`, `.email-footer`,
+`.email-attribution` — bodies fill the `{{{body}}}` slot and never
+touch the chrome.
+
+### Render pipeline
+
+`api/src/services/email.service.ts` runs every mail through this chain:
+
+1. Handlebars renders `body.html.hbs` + `footer.html.hbs` into the
+   shared layout.
+2. **`juice.inlineContent(html, sharedCss)`** inlines every `class="…"`
+   match into a `style="…"` attribute. Clients that strip `<style>`
+   (Outlook desktop, some mobile webmail) still receive the styles.
+3. The brand mark is attached as `cid:wg-logo` from
+   `api/templates/emails/_shared/logo.png` so it renders without
+   depending on a public URL — works in dev too.
+4. Nodemailer sends multipart `text/html` + `text/plain`.
+
+### Hard rules
+
+1. **No raw hex literals in `.hbs` templates.** Define everything in
+   `email.css`, reference by class.
+2. **No inline `style=""` in `.hbs` templates.** Juice handles inlining.
+3. **No `background-color` on email surfaces.** Field, card, header,
+   body, footer — all transparent. Don't paint what the client should.
+   The CTA button is the single, deliberate exception: plum bg, white
+   text, mirroring `wg-btn-primary`.
+4. **Body text is `#000000`. CTA text is `#ffffff`.** No other colour
+   tokens for text. Differentiate body copy with font size, weight,
+   italics, spacing — not colour.
+5. **The brand mark is `cid:wg-logo`** — the only coloured element.
+   Don't render a literal "W" or any other glyph as a logo tile.
+6. **German copy** for transactional mail, with the same friendly tone
+   as the participant-facing UI.
+
+### When the email design needs a new token
+
+Don't introduce one in `email.css` alone. First check if a web token
+fits; if not, propose the addition in both `tailwind.config.js` and
+`email.css` and document its email role here.
+
 ## Reference materials
 
 - **Token source** — `frontend/tailwind.config.js`
 - **Component layer** — `frontend/src/index.css` (`@layer components`)
+- **Email styles** — `api/templates/emails/_shared/email.css`
 - **Brand mark** — [`docs/brand/MARK.md`](./brand/MARK.md)
 - **Product context** — [`PRODUCT_VISION.md`](../PRODUCT_VISION.md)

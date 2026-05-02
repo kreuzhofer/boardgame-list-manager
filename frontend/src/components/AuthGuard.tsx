@@ -14,6 +14,13 @@ interface AuthGuardProps {
   slug?: string;
   eventName?: string;
   onAuthChange?: (isAuthenticated: boolean) => void;
+  /**
+   * Phase 2: notified when verify returns an auto-resolved participant
+   * (i.e. an account-authed verify created or reused the per-event
+   * User row). The parent uses this to skip the participant-pick modal.
+   * Not called for already-cached event tokens — only on fresh verify.
+   */
+  onParticipantResolved?: (participant: { id: string; name: string }) => void;
 }
 
 /**
@@ -61,7 +68,7 @@ function checkAuthentication(slug?: string): boolean {
   }
 }
 
-export function AuthGuard({ children, slug, eventName, onAuthChange }: AuthGuardProps) {
+export function AuthGuard({ children, slug, eventName, onAuthChange, onParticipantResolved }: AuthGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return checkAuthentication(slug);
   });
@@ -76,9 +83,15 @@ export function AuthGuard({ children, slug, eventName, onAuthChange }: AuthGuard
     onAuthChange?.(isAuthenticated);
   }, [isAuthenticated, onAuthChange]);
 
-  const handleAuthenticated = (token: string) => {
+  const handleAuthenticated = (
+    token: string,
+    participant?: { id: string; name: string } | null,
+  ) => {
     setEventToken(token, slug);
     setIsAuthenticated(true);
+    if (participant) {
+      onParticipantResolved?.(participant);
+    }
   };
 
   // Show password screen if not authenticated

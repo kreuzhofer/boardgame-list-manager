@@ -51,15 +51,28 @@ router.post('/verify', async (req: Request, res: Response) => {
     const token = eventTokenService.sign(eventId);
 
     // Phase 2: if the request also carries a valid Account JWT, upsert
-    // an EventParticipation so the account-mode flow gets a "Meine
-    // Treffs" entry on first password verification. Failures here must
-    // not block the verify response — log and continue.
+    // an EventParticipation AND a per-event User row keyed on
+    // accountId. The frontend uses the returned `participant` to skip
+    // the participant-pick modal and use the auto-resolved identity.
+    // Failures here must not block the verify response — log and
+    // continue with `participant: null` so the modal still appears.
+    let participant: { id: string; name: string } | null = null;
     const account = await resolveOptionalAccount(req);
     if (account) {
       try {
         await participationService.ensureParticipation({
           eventId,
           accountId: account.id,
+        });
+        const accountDetail = await prisma.account.findUnique({
+          where: { id: account.id },
+          select: { displayName: true },
+        });
+        participant = await participationService.ensureUserForAccount({
+          eventId,
+          accountId: account.id,
+          displayName: accountDetail?.displayName ?? null,
+          email: account.email,
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -69,7 +82,7 @@ router.post('/verify', async (req: Request, res: Response) => {
       }
     }
 
-    return res.json({ success: true, token });
+    return res.json({ success: true, token, participant });
   }
 
   return res.status(401).json({

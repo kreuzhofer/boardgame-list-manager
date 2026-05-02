@@ -10,7 +10,16 @@ import { authApi, ApiError } from '../api/client';
 interface PasswordScreenProps {
   slug?: string;
   eventName?: string;
-  onAuthenticated: (token: string) => void;
+  /**
+   * Called on successful verify. The optional `participant` is the
+   * per-event User the backend auto-resolved when an account JWT was
+   * present — when set, the parent should skip the participant-pick
+   * modal.
+   */
+  onAuthenticated: (
+    token: string,
+    participant?: { id: string; name: string } | null,
+  ) => void;
 }
 
 // Get event name from environment variable
@@ -46,7 +55,7 @@ export function PasswordScreen({ slug, eventName: eventNameProp, onAuthenticated
       const response = await authApi.verify(password, slug);
       
       if (response.success) {
-        onAuthenticated(response.token || '');
+        onAuthenticated(response.token || '', response.participant ?? null);
       } else {
         setError('Falsches Passwort. Bitte erneut versuchen.');
       }

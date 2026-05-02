@@ -5,7 +5,7 @@ import { accountsApi, sessionsApi, ApiError } from '../api/client';
 import type { Session } from '../types/account';
 
 export function ProfilePage() {
-  const { account, logout } = useAuth();
+  const { account, logout, refreshAccount } = useAuth();
   const navigate = useNavigate();
 
   // Password change state
@@ -26,6 +26,38 @@ export function ProfilePage() {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deactivateError, setDeactivateError] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
+
+  // Display name edit state
+  const [displayNameDraft, setDisplayNameDraft] = useState(account?.displayName ?? '');
+  const [isSavingDisplayName, setIsSavingDisplayName] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNameSuccess, setDisplayNameSuccess] = useState<string | null>(null);
+
+  // Sync draft when the account context refreshes (e.g. after a save).
+  useEffect(() => {
+    setDisplayNameDraft(account?.displayName ?? '');
+  }, [account?.displayName]);
+
+  const handleSaveDisplayName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDisplayNameError(null);
+    setDisplayNameSuccess(null);
+
+    setIsSavingDisplayName(true);
+    try {
+      await accountsApi.updateProfile({ displayName: displayNameDraft });
+      await refreshAccount();
+      setDisplayNameSuccess('Anzeigename gespeichert.');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setDisplayNameError(err.message);
+      } else {
+        setDisplayNameError('Speichern fehlgeschlagen. Bitte später erneut versuchen.');
+      }
+    } finally {
+      setIsSavingDisplayName(false);
+    }
+  };
 
   // Email change state
   const [showEmailChange, setShowEmailChange] = useState(false);
@@ -225,6 +257,57 @@ export function ProfilePage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Display Name */}
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
+          <h2 className="text-xl font-bold text-ink mb-4">Anzeigename</h2>
+          <p className="text-sm text-ink-soft mb-4">
+            Wird als Standardname verwendet, wenn du einem neuen Treff beitrittst.
+            Bestehende Treffs behalten ihren aktuellen Namen.
+          </p>
+
+          {displayNameError && (
+            <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded text-sm">
+              {displayNameError}
+            </div>
+          )}
+          {displayNameSuccess && (
+            <div className="mb-4 p-3 bg-sage-50 border border-sage-100 text-sage-deep rounded text-sm">
+              {displayNameSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveDisplayName} className="space-y-4">
+            <div>
+              <label htmlFor="displayName" className="block text-sm font-medium text-ink-soft mb-2">
+                Anzeigename
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayNameDraft}
+                onChange={(e) => setDisplayNameDraft(e.target.value)}
+                maxLength={60}
+                placeholder={account.email.split('@')[0]}
+                className="wg-input w-full"
+                disabled={isSavingDisplayName}
+              />
+              <p className="mt-2 text-xs text-ink-mute">
+                Leer lassen, um den Teil vor dem @ deiner E-Mail-Adresse zu verwenden.
+              </p>
+            </div>
+            <button
+              type="submit"
+              disabled={
+                isSavingDisplayName ||
+                displayNameDraft.trim() === (account.displayName ?? '').trim()
+              }
+              className="wg-btn-primary disabled:bg-plum-soft"
+            >
+              {isSavingDisplayName ? 'Wird gespeichert…' : 'Speichern'}
+            </button>
+          </form>
         </div>
 
         {/* Email Change */}

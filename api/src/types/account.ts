@@ -33,6 +33,8 @@ export interface AccountResponse {
   email: string;
   role: AccountRole;
   status: AccountStatus;
+  /** Phase 2 default per-event display name. Null = use email local-part. */
+  displayName: string | null;
   createdAt: Date;
 }
 

@@ -424,6 +424,13 @@ export const accountsApi = {
     }, true);
   },
 
+  updateProfile: (data: { displayName?: string | null }): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>('/api/accounts/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }, true);
+  },
+
   deactivate: (password: string): Promise<{ success: boolean; message: string }> => {
     return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/deactivate', {
       method: 'POST',

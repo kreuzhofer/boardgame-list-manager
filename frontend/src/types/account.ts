@@ -3,6 +3,8 @@ export interface Account {
   email: string;
   role: 'account_owner' | 'admin';
   status: 'active' | 'deactivated' | 'unverified';
+  /** Phase 2: default per-event display name. Null = use email local-part. */
+  displayName: string | null;
   createdAt: string;
 }
 

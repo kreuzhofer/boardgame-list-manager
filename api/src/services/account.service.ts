@@ -118,6 +118,7 @@ export class AccountService {
     email: string;
     role: string;
     status: string;
+    displayName?: string | null;
     createdAt: Date;
   }): AccountResponse {
     return {
@@ -125,6 +126,7 @@ export class AccountService {
       email: account.email,
       role: account.role as 'account_owner' | 'admin',
       status: account.status as 'active' | 'deactivated' | 'unverified',
+      displayName: account.displayName ?? null,
       createdAt: account.createdAt,
     };
   }
@@ -197,6 +199,47 @@ export class AccountService {
     }
 
     return this.toAccountResponse(account);
+  }
+
+  /**
+   * Update the account's default per-event display name. Empty / blank
+   * input clears the field (falls back to email local-part at use-site).
+   *
+   * Existing per-event User rows keep their name — this is the default
+   * for *new* events the account joins, not a cascade.
+   */
+  async updateDisplayName(
+    accountId: string,
+    rawDisplayName: string | null | undefined,
+  ): Promise<AccountResponse> {
+    const account = await this.prisma.account.findUnique({ where: { id: accountId } });
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404,
+      );
+    }
+
+    let next: string | null = null;
+    if (typeof rawDisplayName === 'string') {
+      const trimmed = rawDisplayName.trim();
+      if (trimmed.length > 60) {
+        throw new AccountError(
+          'DISPLAY_NAME_TOO_LONG',
+          'Der Anzeigename darf höchstens 60 Zeichen lang sein.',
+          400,
+        );
+      }
+      next = trimmed.length === 0 ? null : trimmed;
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: accountId },
+      data: { displayName: next },
+    });
+
+    return this.toAccountResponse(updated);
   }
 
   /**

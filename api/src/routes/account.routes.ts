@@ -123,6 +123,34 @@ router.get('/', requireAuth, requireAdmin, async (_req: Request, res: Response) 
 });
 
 /**
+ * PATCH /api/accounts/me
+ * Body: { displayName?: string | null }
+ *
+ * Update the authenticated account's profile fields. Today the only
+ * editable field is `displayName` (default per-event display name).
+ * Empty / blank string clears the value.
+ */
+router.patch('/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { displayName } = req.body ?? {};
+
+    const account = await accountService.updateDisplayName(authReq.account.id, displayName);
+    res.json({ account });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({ error: error.code, message: error.message });
+      return;
+    }
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
  * PATCH /api/accounts/me/password
  * Changes password (requires auth, invalidates other sessions)
  */

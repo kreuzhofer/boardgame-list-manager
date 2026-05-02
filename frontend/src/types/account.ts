@@ -33,3 +33,21 @@ export interface ApiError {
   error: string;
   message: string;
 }
+
+export interface Participation {
+  id: string;
+  eventId: string;
+  displayName: string | null;
+  role: 'attendee' | 'co-host';
+  status: 'going' | 'interested' | 'declined' | 'waitlist';
+  joinedAt: string;
+  event: {
+    id: string;
+    name: string;
+    slug: string | null;
+    status: 'planning' | 'active' | 'archived';
+    startsAt: string | null;
+    endsAt: string | null;
+    location: string | null;
+  } | null;
+}

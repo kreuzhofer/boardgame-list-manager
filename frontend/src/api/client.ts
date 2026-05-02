@@ -20,7 +20,7 @@ import type {
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
-import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse } from '../types/account';
+import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, Participation } from '../types/account';
 import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
 
 // Get API URL from environment variable
@@ -165,10 +165,13 @@ export const authApi = {
   verify: (password: string, slug?: string): Promise<AuthVerifyResponse> => {
     const body: AuthVerifyRequest & { slug?: string } = { password };
     if (slug) body.slug = slug;
+    // Include the account JWT when present so the backend can also
+    // upsert an EventParticipation row alongside issuing the event
+    // token. Anonymous verifies still work — no account token, no row.
     return fetchApi<AuthVerifyResponse>('/api/auth/verify', {
       method: 'POST',
       body: JSON.stringify(body),
-    });
+    }, true);
   },
 
   /** Request a magic-link email. Always resolves (server returns 200 even
@@ -440,6 +443,10 @@ export const accountsApi = {
       method: 'POST',
       body: JSON.stringify({ token }),
     });
+  },
+
+  getMyParticipations: (): Promise<{ participations: Participation[] }> => {
+    return fetchApi<{ participations: Participation[] }>('/api/accounts/me/participations', {}, true);
   },
 
   promoteToAdmin: (accountId: string): Promise<{ account: Account }> => {

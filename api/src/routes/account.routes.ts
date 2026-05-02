@@ -2,12 +2,14 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AccountService, AccountError } from '../services/account.service';
 import { SessionService } from '../services/session.service';
+import { ParticipationService } from '../services/participation.service';
 import { requireAuth, requireAdmin, AuthenticatedRequest } from '../middleware/auth.middleware';
 
 const router = Router();
 const prisma = new PrismaClient();
 const accountService = new AccountService(prisma);
 const sessionService = new SessionService(prisma);
+const participationService = new ParticipationService(prisma);
 
 /**
  * POST /api/accounts/register
@@ -162,6 +164,46 @@ router.patch('/me/password', requireAuth, async (req: Request, res: Response) =>
       return;
     }
     console.error('Password change error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * GET /api/accounts/me/participations
+ *
+ * Phase 2 of the identity migration: lists every event the
+ * authenticated account has joined as an EventParticipation. Backs the
+ * "Meine Treffs" page.
+ */
+router.get('/me/participations', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const rows = await participationService.listForAccount(authReq.account.id);
+
+    res.json({
+      participations: rows.map((p) => ({
+        id: p.id,
+        eventId: p.eventId,
+        displayName: p.displayName,
+        role: p.role,
+        status: p.status,
+        joinedAt: p.joinedAt.toISOString(),
+        event: p.event && {
+          id: p.event.id,
+          name: p.event.name,
+          slug: p.event.slug,
+          status: p.event.status,
+          startsAt: p.event.startsAt?.toISOString() ?? null,
+          endsAt: p.event.endsAt?.toISOString() ?? null,
+          location: p.event.location,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error('List participations error:', error);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',

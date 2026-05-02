@@ -2,8 +2,12 @@ import { Router, Request, Response } from 'express';
 import { eventService } from '../services/event.service';
 import { eventTokenService } from '../services/event-token.service';
 import { resolveEventId } from '../middleware/event.middleware';
+import { resolveOptionalAccount } from '../middleware/auth.middleware';
+import { ParticipationService } from '../services/participation.service';
+import { prisma } from '../db/prisma';
 
 const router = Router();
+const participationService = new ParticipationService(prisma);
 
 /**
  * POST /api/auth/verify
@@ -45,6 +49,26 @@ router.post('/verify', async (req: Request, res: Response) => {
 
   if (isValid) {
     const token = eventTokenService.sign(eventId);
+
+    // Phase 2: if the request also carries a valid Account JWT, upsert
+    // an EventParticipation so the account-mode flow gets a "Meine
+    // Treffs" entry on first password verification. Failures here must
+    // not block the verify response — log and continue.
+    const account = await resolveOptionalAccount(req);
+    if (account) {
+      try {
+        await participationService.ensureParticipation({
+          eventId,
+          accountId: account.id,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(
+          `[participation] ensure failed event=${eventId} account=${account.id}: ${msg}`,
+        );
+      }
+    }
+
     return res.json({ success: true, token });
   }
 

@@ -37,8 +37,12 @@ export class ClaimService {
    *   - at least one unclaimed User row (account_id IS NULL),
    *   - no existing User AND no EventParticipation for this account
    *     (the account isn't already attending),
-   *   - status `active` or `archived`. Planning events haven't
-   *     happened yet — there's nothing to claim.
+   *   - status `active` or `archived`,
+   *   - `startsAt` already in the past — future events haven't
+   *     happened, so any unclaimed Users in them are leftover test
+   *     data, not real attendees. Events with a null `startsAt` are
+   *     also excluded for the same reason (Postgres NULL semantics
+   *     drop them from the `<= now()` comparison naturally).
    *
    * The returned shape includes only counts, not names — full names
    * are gated behind the event-password verify step.
@@ -48,6 +52,7 @@ export class ClaimService {
       where: {
         participants: { some: { accountId: null } },
         status: { in: ['active', 'archived'] },
+        startsAt: { lte: new Date() },
       },
       select: {
         id: true,

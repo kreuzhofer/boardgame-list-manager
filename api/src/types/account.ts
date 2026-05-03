@@ -1,4 +1,4 @@
-export type AccountRole = 'account_owner' | 'admin';
+export type AccountRole = 'account_owner' | 'admin' | 'player';
 export type AccountStatus = 'active' | 'deactivated' | 'unverified';
 
 export interface Account {

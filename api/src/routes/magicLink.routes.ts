@@ -67,6 +67,9 @@ router.post('/magic-link/request', async (req: Request, res: Response) => {
         email: rawEmail,
         passwordHash: placeholderPasswordHash(),
         status: 'unverified',
+        // New signups default to `player`. Creating their first event
+        // auto-promotes to `account_owner` in eventService.createEvent.
+        role: 'player',
       },
       update: {},
       select: { id: true, email: true, status: true, locale: true },
@@ -232,13 +235,17 @@ router.get('/magic-link/consume', async (req: Request, res: Response) => {
       req.ip || req.socket.remoteAddress,
     );
 
+    // Role-aware default landing: players (the new default for fresh
+    // signups) only see Meine Treffs by default. Organizers + admins
+    // continue to land on /events. Explicit invite targets always win.
+    const defaultTarget = account.role === 'player' ? '/meine-treffs' : '/events';
     res.json({
       token: jwt,
       account: {
         ...account,
         createdAt: account.createdAt.toISOString(),
       },
-      targetPath: result.targetPath ?? '/events',
+      targetPath: result.targetPath ?? defaultTarget,
     });
   } catch (err) {
     console.error('magic-link/consume error:', err);

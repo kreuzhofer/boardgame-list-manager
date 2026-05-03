@@ -22,9 +22,11 @@ interface LayoutProps {
 }
 
 export function Layout({ children, basePath, eventName, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
-  // Default handlers for when props are not provided
+  // Default handler for when prop is not provided. onParticipantSwitch
+  // is intentionally NOT defaulted — account-bound users omit it, and
+  // children check its presence to decide whether to show "Wechseln" /
+  // "Abmelden" affordances.
   const handleParticipantUpdated = onParticipantUpdated || (() => {});
-  const handleParticipantSwitch = onParticipantSwitch || (() => {});
 
   // Handle pull-to-refresh - reload the page
   const handleRefresh = useCallback(async () => {
@@ -70,7 +72,7 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
         basePath={basePath}
         participant={participant ?? null}
         onParticipantUpdated={handleParticipantUpdated}
-        onParticipantSwitch={handleParticipantSwitch}
+        onParticipantSwitch={onParticipantSwitch}
       />
     </div>
   );

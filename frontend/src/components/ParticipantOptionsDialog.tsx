@@ -16,7 +16,14 @@ interface ParticipantOptionsDialogProps {
   onClose: () => void;
   participant: Participant | null;
   onParticipantUpdated: (participant: Participant) => void;
-  onParticipantSwitch: () => void;
+  /**
+   * Optional. When provided, the dialog renders an "Abmelden" button
+   * that clears the stored event participant. Account-authed users
+   * have a 1:1 binding between Account and per-event User, so the
+   * concept of "switching" doesn't apply and the parent omits this
+   * prop. Account logout itself lives on /profile.
+   */
+  onParticipantSwitch?: () => void;
 }
 
 export function ParticipantOptionsDialog({
@@ -31,7 +38,7 @@ export function ParticipantOptionsDialog({
   }
 
   const handleLogout = () => {
-    onParticipantSwitch();
+    onParticipantSwitch?.();
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -94,16 +101,20 @@ export function ParticipantOptionsDialog({
                 </div>
               </div>
 
-              {/* Logout Section */}
-              <div className="pt-4 border-t border-rule">
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-3 bg-blush-50 text-blush-deep rounded-lg hover:bg-blush-50 transition-colors font-medium text-sm"
-                  data-testid="logout-button"
-                >
-                  Abmelden
-                </button>
-              </div>
+              {/* Switch Participant — only for the anon flow. Account-bound
+                  users have a fixed per-event User and use /profile for
+                  account logout. */}
+              {onParticipantSwitch && (
+                <div className="pt-4 border-t border-rule">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 bg-blush-50 text-blush-deep rounded-lg hover:bg-blush-50 transition-colors font-medium text-sm"
+                    data-testid="logout-button"
+                  >
+                    Abmelden
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">

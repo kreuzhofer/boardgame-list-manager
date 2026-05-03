@@ -16,7 +16,8 @@ interface MobileBottomTabsProps {
   basePath?: string;
   participant: Participant | null;
   onParticipantUpdated: (participant: Participant) => void;
-  onParticipantSwitch: () => void;
+  /** Omit when the user is account-bound — see ParticipantOptionsDialog. */
+  onParticipantSwitch?: () => void;
 }
 
 // SVG Icon Components
@@ -105,10 +106,12 @@ export function MobileBottomTabs({ basePath = '', participant, onParticipantUpda
     setIsDialogOpen(false);
   };
 
-  const handleParticipantSwitch = () => {
-    setIsDialogOpen(false);
-    onParticipantSwitch();
-  };
+  const handleParticipantSwitch = onParticipantSwitch
+    ? () => {
+        setIsDialogOpen(false);
+        onParticipantSwitch();
+      }
+    : undefined;
 
   return (
     <>

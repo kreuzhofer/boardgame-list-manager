@@ -33,12 +33,12 @@ export class ClaimService {
 
   /**
    * Events the account *could* claim a legacy User in. A candidate
-   * event has:
-   *   - at least one unclaimed User row (account_id IS NULL), and
-   *   - no existing User row for this account (so we avoid the merge
-   *     edge-case for now — if the account has joined the event in
-   *     account-mode, the unique (event_id, account_id) constraint
-   *     would also reject the claim).
+   * event has all of:
+   *   - at least one unclaimed User row (account_id IS NULL),
+   *   - no existing User AND no EventParticipation for this account
+   *     (the account isn't already attending),
+   *   - status `active` or `archived`. Planning events haven't
+   *     happened yet — there's nothing to claim.
    *
    * The returned shape includes only counts, not names — full names
    * are gated behind the event-password verify step.
@@ -47,6 +47,7 @@ export class ClaimService {
     const eventsWithUnclaimed = await this.prisma.event.findMany({
       where: {
         participants: { some: { accountId: null } },
+        status: { in: ['active', 'archived'] },
       },
       select: {
         id: true,
@@ -63,19 +64,29 @@ export class ClaimService {
       orderBy: [{ startsAt: 'desc' }, { createdAt: 'desc' }],
     });
 
-    const myUserEventIds = new Set(
-      (
-        await this.prisma.user.findMany({
-          where: { accountId },
-          select: { eventId: true },
-        })
-      )
-        .map((u) => u.eventId)
-        .filter((id): id is string => !!id),
-    );
+    // Exclude events where the account is already a participant —
+    // either via the new EventParticipation row, or via a per-event
+    // User linked to this account. Defensive: in healthy data those
+    // two sets always coincide, but we don't want a half-broken row
+    // to leak the event back into the "claim?" UI.
+    const [participations, users] = await Promise.all([
+      this.prisma.eventParticipation.findMany({
+        where: { accountId },
+        select: { eventId: true },
+      }),
+      this.prisma.user.findMany({
+        where: { accountId },
+        select: { eventId: true },
+      }),
+    ]);
+    const excludeEventIds = new Set<string>();
+    for (const p of participations) excludeEventIds.add(p.eventId);
+    for (const u of users) {
+      if (u.eventId) excludeEventIds.add(u.eventId);
+    }
 
     return eventsWithUnclaimed
-      .filter((e) => !myUserEventIds.has(e.id))
+      .filter((e) => !excludeEventIds.has(e.id))
       .map((e) => ({
         id: e.id,
         name: e.name,

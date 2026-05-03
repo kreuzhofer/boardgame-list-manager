@@ -101,12 +101,11 @@ export function MyParticipationsPage() {
       {!loading && !error && candidates.length > 0 && (
         <section className="mt-10">
           <h2 className="font-display italic text-2xl text-plum-deep">
-            Vergangene Treffs zum Anspruch
+            Möglicherweise warst du dabei?
           </h2>
           <p className="mt-2 text-sm text-ink-soft">
-            Diese Treffs haben Identitäten ohne Konto. Wenn du an einem von
-            ihnen teilgenommen hast, kannst du deine damalige Spieleliste
-            an dein Konto übernehmen.
+            Wenn ja, kannst du deine damalige Spieleliste an dein Konto
+            übernehmen.
           </p>
           <ul className="mt-4 space-y-4">
             {candidates.map((c) => (
@@ -143,7 +142,7 @@ export function MyParticipationsPage() {
                     onClick={() => setClaimingFor(c)}
                     className="wg-btn-secondary flex-shrink-0"
                   >
-                    Hast du teilgenommen?
+                    Ich war dabei
                   </button>
                 </div>
               </li>

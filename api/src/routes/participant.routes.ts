@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { participantService } from '../services/participant.service';
-import { resolveEventId } from '../middleware/event.middleware';
+import { resolveEventId, requireEditableEvent } from '../middleware/event.middleware';
 
 const router = Router();
 
@@ -80,7 +80,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  *
  * Requirements: 3.4, 3.5, 3.6
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
     const eventId = await resolveEventId(req);
@@ -151,7 +151,7 @@ router.post('/', async (req: Request, res: Response) => {
  *
  * Requirements: 3.7, 3.8, 3.9
  */
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
@@ -229,7 +229,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
  *
  * Requirements: 3.10
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = await resolveEventId(req);

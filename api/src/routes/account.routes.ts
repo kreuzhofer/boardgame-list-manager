@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { AccountService, AccountError } from '../services/account.service';
 import { SessionService } from '../services/session.service';
 import { ParticipationService } from '../services/participation.service';
+import { ClaimService, ClaimAuthError } from '../services/claim.service';
 import { requireAuth, requireAdmin, AuthenticatedRequest } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -10,6 +11,7 @@ const prisma = new PrismaClient();
 const accountService = new AccountService(prisma);
 const sessionService = new SessionService(prisma);
 const participationService = new ParticipationService(prisma);
+const claimService = new ClaimService(prisma);
 
 /**
  * POST /api/accounts/register
@@ -238,6 +240,148 @@ router.get('/me/participations', requireAuth, async (req: Request, res: Response
     });
   }
 });
+
+/**
+ * GET /api/accounts/me/claim-candidates
+ *
+ * Legacy claim flow, step 1 (discovery): events with at least one
+ * unclaimed legacy User row, that this account doesn't already
+ * participate in. Returns counts only — full names are gated behind
+ * the event-password verify in step 2.
+ */
+router.get('/me/claim-candidates', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const candidates = await claimService.listClaimCandidates(authReq.account.id);
+    res.json({
+      candidates: candidates.map((c) => ({
+        ...c,
+        startsAt: c.startsAt?.toISOString() ?? null,
+        endsAt: c.endsAt?.toISOString() ?? null,
+      })),
+    });
+  } catch (error) {
+    console.error('Claim candidates error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * POST /api/accounts/me/claim-candidates/:eventId/users
+ * Body: { password: string }
+ *
+ * Legacy claim flow, step 2 (unlock + preview). The password proves
+ * the requesting account actually attended this event; only on a
+ * correct password do we reveal the unclaimed names + game previews.
+ */
+router.post(
+  '/me/claim-candidates/:eventId/users',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const { eventId } = req.params;
+      const { password } = req.body ?? {};
+      if (typeof password !== 'string' || password.length === 0) {
+        res.status(400).json({
+          error: 'MISSING_PASSWORD',
+          message: 'Bitte das Kennwort des Treffs eingeben.',
+        });
+        return;
+      }
+
+      const users = await claimService.listUnclaimedWithPreviews({
+        accountId: authReq.account.id,
+        eventId,
+        eventPassword: password,
+      });
+      res.json({
+        users: users.map((u) => ({
+          ...u,
+          lastActivityAt: u.lastActivityAt?.toISOString() ?? null,
+        })),
+      });
+    } catch (error) {
+      if (error instanceof ClaimAuthError) {
+        const status = error.code === 'INVALID_PASSWORD' ? 401 : 403;
+        res.status(status).json({ error: error.code, message: error.message });
+        return;
+      }
+      console.error('Claim unlock error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/accounts/me/claim/:userId
+ * Body: { password: string }
+ *
+ * Legacy claim flow, step 3 (commit). Atomically links the legacy
+ * User to the requesting account if (a) the password is correct, (b)
+ * the User is still unclaimed, and (c) the account doesn't already
+ * have a User in the same event. Also upserts an EventParticipation
+ * row so the event surfaces immediately in "Meine Treffs".
+ */
+router.post(
+  '/me/claim/:userId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const { userId } = req.params;
+      const { password } = req.body ?? {};
+      if (typeof password !== 'string' || password.length === 0) {
+        res.status(400).json({
+          error: 'MISSING_PASSWORD',
+          message: 'Bitte das Kennwort des Treffs eingeben.',
+        });
+        return;
+      }
+
+      const result = await claimService.claim({
+        accountId: authReq.account.id,
+        userId,
+        eventPassword: password,
+      });
+      if (!result.ok) {
+        const messages: Record<string, string> = {
+          not_found: 'Diese Identität existiert nicht (mehr).',
+          already_claimed:
+            'Diese Identität wurde gerade von jemand anderem übernommen. Bitte einen anderen Namen wählen.',
+          conflict:
+            'Du hast bereits eine Identität in diesem Treff. Bitte einen Admin kontaktieren.',
+        };
+        const status =
+          result.reason === 'not_found' ? 404 :
+          result.reason === 'conflict' ? 409 : 410;
+        res.status(status).json({
+          error: result.reason.toUpperCase(),
+          message: messages[result.reason],
+        });
+        return;
+      }
+
+      res.json({ success: true, eventId: result.eventId, userName: result.userName });
+    } catch (error) {
+      if (error instanceof ClaimAuthError) {
+        res.status(401).json({ error: error.code, message: error.message });
+        return;
+      }
+      console.error('Claim commit error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
 
 /**
  * POST /api/accounts/me/email

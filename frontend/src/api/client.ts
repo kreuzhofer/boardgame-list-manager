@@ -20,7 +20,7 @@ import type {
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
-import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, Participation } from '../types/account';
+import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, Participation, ClaimCandidate, ClaimableUser } from '../types/account';
 import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
 
 // Get API URL from environment variable
@@ -454,6 +454,30 @@ export const accountsApi = {
 
   getMyParticipations: (): Promise<{ participations: Participation[] }> => {
     return fetchApi<{ participations: Participation[] }>('/api/accounts/me/participations', {}, true);
+  },
+
+  // ── Legacy claim flow ─────────────────────────────────────────
+  getClaimCandidates: (): Promise<{ candidates: ClaimCandidate[] }> => {
+    return fetchApi<{ candidates: ClaimCandidate[] }>('/api/accounts/me/claim-candidates', {}, true);
+  },
+
+  /** Returns the unclaimed users + previews for an event after the
+   *  caller proves they know the event password. */
+  unlockClaimCandidate: (eventId: string, password: string): Promise<{ users: ClaimableUser[] }> => {
+    return fetchApi<{ users: ClaimableUser[] }>(
+      `/api/accounts/me/claim-candidates/${eventId}/users`,
+      { method: 'POST', body: JSON.stringify({ password }) },
+      true,
+    );
+  },
+
+  /** Atomic claim. Re-sends the password (server re-verifies). */
+  claimUser: (userId: string, password: string): Promise<{ success: true; eventId: string; userName: string }> => {
+    return fetchApi<{ success: true; eventId: string; userName: string }>(
+      `/api/accounts/me/claim/${userId}`,
+      { method: 'POST', body: JSON.stringify({ password }) },
+      true,
+    );
   },
 
   promoteToAdmin: (accountId: string): Promise<{ account: Account }> => {

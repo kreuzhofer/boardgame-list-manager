@@ -53,3 +53,22 @@ export interface Participation {
     location: string | null;
   } | null;
 }
+
+export interface ClaimCandidate {
+  id: string;
+  name: string;
+  slug: string | null;
+  status: 'planning' | 'active' | 'archived';
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
+  unclaimedCount: number;
+}
+
+export interface ClaimableUser {
+  userId: string;
+  displayName: string;
+  brought: { id: string; name: string }[];
+  played: { id: string; name: string }[];
+  lastActivityAt: string | null;
+}

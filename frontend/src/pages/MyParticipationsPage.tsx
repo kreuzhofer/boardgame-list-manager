@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { accountsApi, ApiError } from '../api/client';
-import type { Participation } from '../types/account';
+import type { Participation, ClaimCandidate } from '../types/account';
 import { EVENT_STATUS_LABEL } from '../types/event';
+import { LegacyClaimModal } from '../components/LegacyClaimModal';
 
 function formatGermanDate(iso: string): string {
   return new Date(iso).toLocaleDateString('de-DE', {
@@ -35,35 +36,37 @@ function PinIcon() {
 
 export function MyParticipationsPage() {
   const [participations, setParticipations] = useState<Participation[]>([]);
+  const [candidates, setCandidates] = useState<ClaimCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [claimingFor, setClaimingFor] = useState<ClaimCandidate | null>(null);
 
   useEffect(() => {
     document.title = 'Meine Treffs — Brettspieltreff';
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await accountsApi.getMyParticipations();
-        if (!cancelled) setParticipations(res.participations);
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : 'Treffs konnten nicht geladen werden. Bitte später erneut versuchen.',
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const reload = useCallback(async () => {
+    try {
+      const [participationsRes, candidatesRes] = await Promise.all([
+        accountsApi.getMyParticipations(),
+        accountsApi.getClaimCandidates(),
+      ]);
+      setParticipations(participationsRes.participations);
+      setCandidates(candidatesRes.candidates);
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Treffs konnten nicht geladen werden. Bitte später erneut versuchen.',
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -95,8 +98,62 @@ export function MyParticipationsPage() {
         </div>
       )}
 
+      {!loading && !error && candidates.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display italic text-2xl text-plum-deep">
+            Vergangene Treffs zum Anspruch
+          </h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            Diese Treffs haben Identitäten ohne Konto. Wenn du an einem von
+            ihnen teilgenommen hast, kannst du deine damalige Spieleliste
+            an dein Konto übernehmen.
+          </p>
+          <ul className="mt-4 space-y-4">
+            {candidates.map((c) => (
+              <li key={c.id}>
+                <div className="wg-card-raised flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="wg-label text-plum">
+                      {EVENT_STATUS_LABEL[c.status]}
+                    </div>
+                    <h3 className="font-display italic text-xl text-plum-deep mt-1 truncate">
+                      {c.name}
+                    </h3>
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-soft">
+                      {c.startsAt && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarIcon />
+                          <span>{formatGermanDate(c.startsAt)}</span>
+                        </span>
+                      )}
+                      {c.location && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <PinIcon />
+                          <span className="truncate">{c.location}</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-xs text-ink-mute">
+                      {c.unclaimedCount} unbeanspruchte{' '}
+                      {c.unclaimedCount === 1 ? 'Identität' : 'Identitäten'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClaimingFor(c)}
+                    className="wg-btn-secondary flex-shrink-0"
+                  >
+                    Hast du teilgenommen?
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {!loading && !error && participations.length > 0 && (
-        <ul className="mt-8 space-y-4">
+        <ul className="mt-10 space-y-4">
           {participations.map((p) => {
             const ev = p.event;
             if (!ev) return null;
@@ -136,6 +193,20 @@ export function MyParticipationsPage() {
             );
           })}
         </ul>
+      )}
+
+      {claimingFor && (
+        <LegacyClaimModal
+          candidate={claimingFor}
+          isOpen={!!claimingFor}
+          onClose={() => setClaimingFor(null)}
+          onClaimed={() => {
+            setClaimingFor(null);
+            // Refresh the list — claimed event moves from candidates
+            // into participations.
+            reload();
+          }}
+        />
       )}
     </div>
   );

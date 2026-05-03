@@ -417,8 +417,18 @@ export const bggApi = {
     return fetchApi<import('../types/adminSse').ImportStatus>('/api/bgg/import/status', {}, true);
   },
 
-  startEnrichment: (): Promise<{ message: string }> => {
-    return fetchApi<{ message: string }>('/api/bgg/enrich', { method: 'POST' }, true);
+  startEnrichment: (
+    options: {
+      force?: boolean;
+      onlyReferenced?: boolean;
+      source?: 'bgg' | 'cache';
+    } = {},
+  ): Promise<{ message: string }> => {
+    return fetchApi<{ message: string }>(
+      '/api/bgg/enrich',
+      { method: 'POST', body: JSON.stringify(options) },
+      true,
+    );
   },
 
   getEnrichmentStatus: (): Promise<import('../types/adminSse').BulkEnrichmentStatus> => {

@@ -44,6 +44,12 @@ export interface Game {
   players: Player[];
   bringers: Bringer[];
   status: GameStatus;
+  /** Read-time merge from BggGame.enrichmentData JSONB. Null when the
+   *  game isn't enriched yet or BGG doesn't provide the value. */
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
   createdAt: Date;
 }
 

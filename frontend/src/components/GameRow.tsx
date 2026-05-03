@@ -15,6 +15,7 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
+import { GameMeta } from './GameMeta';
 import { DesktopActionsMenu } from './DesktopActionsMenu';
 import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 import { useToast } from './ToastProvider';
@@ -224,25 +225,41 @@ export function GameRow({
       <td className="w-20 p-0">
         <div className="px-2 py-2" style={collapseStyle}>
           <div className="relative w-[72px] h-16">
-            {game.bggId ? (
-              <LazyBggImage
-                bggId={game.bggId}
-                size="micro"
-                alt={game.name}
-                className="rounded"
-                enableZoom={true}
-              />
-            ) : (
-              /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
-              <LazyBggImage
-                customThumbnailGameId={game.id}
-                size="micro"
-                alt={game.name}
-                className="rounded"
-                enableZoom={true}
-                thumbnailTimestamp={thumbnailTimestamp}
-              />
-            )}
+            {/* Inner clip is sized to the image's intrinsic micro
+                dimensions (64×64) so the "Gesucht" banner matches the
+                image edges instead of the wider outer container.
+                Neuheit sticker stays outside so it can hang over the
+                corner with negative offsets. */}
+            <div className="relative w-16 h-16 overflow-hidden rounded">
+              {game.bggId ? (
+                <LazyBggImage
+                  bggId={game.bggId}
+                  size="micro"
+                  alt={game.name}
+                  className="rounded"
+                  enableZoom={true}
+                />
+              ) : (
+                /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
+                <LazyBggImage
+                  customThumbnailGameId={game.id}
+                  size="micro"
+                  alt={game.name}
+                  className="rounded"
+                  enableZoom={true}
+                  thumbnailTimestamp={thumbnailTimestamp}
+                />
+              )}
+              {/* "Gesucht" banner — replaces the inline pill for wunsch
+                  games. Same butter palette as the pill, lower third
+                  of the thumbnail, rounded bottom corners inherited
+                  from the clip container. */}
+              {isWunsch && (
+                <div className="absolute bottom-0 inset-x-0 h-[34%] bg-butter text-butter-deep flex items-center justify-center text-[10px] font-bold uppercase tracking-wide">
+                  Gesucht
+                </div>
+              )}
+            </div>
             {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
             {game.yearPublished && (
               <div className="absolute -top-2 -right-2">
@@ -264,22 +281,13 @@ export function GameRow({
                 {game.addedAsAlternateName}
               </span>
             )}
-            <div className="flex items-center gap-2">
-              {/* Status Badge - Requirement 4.1, 4.2 */}
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium min-w-[4.5rem] text-center ${
-                  isWunsch
-                    ? 'bg-butter text-butter-deep'
-                    : 'bg-sage-100 text-sage-deep'
-                }`}
-              >
-                {isWunsch ? 'Gesucht' : 'Verfügbar'}
-              </span>
-              {isPrototype && (
-                <span className="wg-tag-ocean">
-                  Prototyp
-                </span>
-              )}
+            {/* Metadata line (player range · play time · BGG rating).
+                "Gesucht" lives on the thumbnail banner; "Verfügbar"
+                pill is retired — the bringer column already carries
+                that signal. Prototyp tag stays. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <GameMeta game={game} />
+              {isPrototype && <span className="wg-tag-ocean">Prototyp</span>}
             </div>
           </div>
         </div>

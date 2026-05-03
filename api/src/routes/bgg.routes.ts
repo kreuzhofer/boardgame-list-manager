@@ -229,10 +229,20 @@ router.delete('/import', requireAuth, requireAdmin, async (_req: Request, res: R
  * 
  * Requirements: 6a.1, 6a.2
  */
-router.post('/enrich', requireAuth, requireAdmin, async (_req: Request, res: Response) => {
+router.post('/enrich', requireAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const result = bggEnrichmentService.startBulkEnrichment();
-    
+    const body = (req.body ?? {}) as {
+      force?: boolean;
+      onlyReferenced?: boolean;
+      source?: 'bgg' | 'cache';
+    };
+    const source = body.source === 'cache' ? 'cache' : 'bgg';
+    const result = await bggEnrichmentService.startBulkEnrichment({
+      force: body.force === true,
+      onlyReferenced: body.onlyReferenced === true,
+      source,
+    });
+
     if (result.started) {
       return res.status(202).json({ message: result.message });
     } else {

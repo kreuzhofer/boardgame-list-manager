@@ -94,6 +94,12 @@ export interface Game {
   players: Player[];
   bringers: Bringer[];
   status: 'wunsch' | 'verfuegbar';
+  /** From BggGame.enrichmentData (read-time merge). Null when the
+   *  game isn't enriched yet or the field is missing on BGG. */
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
   createdAt: Date;
 }
 

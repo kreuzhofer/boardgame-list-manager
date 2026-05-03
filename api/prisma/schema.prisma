@@ -187,6 +187,10 @@ model BggGame {
   scrapingDone   Boolean   @default(false) @map("scraping_done")
   enrichedAt     DateTime? @map("enriched_at")
   enrichmentData Json?     @map("enrichment_data") @db.JsonB
+  /// Full GEEK.geekitemPreload.item blob, untouched. Used by the
+  /// "re-extract from cache" admin button: future schema bumps run
+  /// the extractor against this without re-fetching from BGG.
+  rawPreload     Json?     @map("raw_preload") @db.JsonB
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")

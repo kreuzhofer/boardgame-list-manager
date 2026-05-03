@@ -16,6 +16,7 @@ import { openBggPage } from './BggModal';
 import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
+import { GameMeta } from './GameMeta';
 import { MobileActionsMenu } from './MobileActionsMenu';
 import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 
@@ -584,25 +585,39 @@ export function GameCard({
           <div className="flex gap-3 mb-1">
             {/* Thumbnail with Neuheit overlay - micro size for mobile, fixed outer size for consistency */}
             <div className="flex-shrink-0 relative w-[72px] h-20">
-              {game.bggId ? (
-                <LazyBggImage
-                  bggId={game.bggId}
-                  size="micro"
-                  alt={game.name}
-                  className="rounded"
-                  enableZoom={true}
-                />
-              ) : (
-                /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
-                <LazyBggImage
-                  customThumbnailGameId={game.id}
-                  size="micro"
-                  alt={game.name}
-                  className="rounded"
-                  enableZoom={true}
-                  thumbnailTimestamp={thumbnailTimestamp}
-                />
-              )}
+              {/* Inner clip is sized to the image's intrinsic micro
+                  dimensions (64×64) so the "Gesucht" banner matches
+                  the image edges instead of the wider outer container.
+                  Neuheit sticker stays outside so it can hang over with
+                  negative offsets. */}
+              <div className="relative w-16 h-16 overflow-hidden rounded">
+                {game.bggId ? (
+                  <LazyBggImage
+                    bggId={game.bggId}
+                    size="micro"
+                    alt={game.name}
+                    className="rounded"
+                    enableZoom={true}
+                  />
+                ) : (
+                  /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
+                  <LazyBggImage
+                    customThumbnailGameId={game.id}
+                    size="micro"
+                    alt={game.name}
+                    className="rounded"
+                    enableZoom={true}
+                    thumbnailTimestamp={thumbnailTimestamp}
+                  />
+                )}
+                {/* "Gesucht" banner — replaces the butter dot in the
+                    status column for wunsch games. */}
+                {isWunsch && (
+                  <div className="absolute bottom-0 inset-x-0 h-[34%] bg-butter text-butter-deep flex items-center justify-center text-[10px] font-bold uppercase tracking-wide">
+                    Gesucht
+                  </div>
+                )}
+              </div>
               {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
               {game.yearPublished && (
                 <div className="absolute -top-2 -right-2">
@@ -630,6 +645,7 @@ export function GameCard({
                     )}
                   </h3>
                 </div>
+                <GameMeta game={game} className="mt-0.5" />
                 {/* Actions row - Requirement 3.5, 3.6, 4.4, 4.5, 6.4 (touch-friendly) */}
                 <div className="flex gap-2 items-center mt-1 flex-wrap">
                   <GameActions
@@ -670,21 +686,11 @@ export function GameCard({
                   />
                 </div>
               </div>
-              {/* Status indicator column */}
+              {/* Status indicator column. "Gesucht" lives on the
+                  thumbnail banner; the Verfügbar dot is retired (the
+                  bringer column already carries that signal). Only
+                  the Prototyp marker remains. */}
               <div className="flex flex-col items-center gap-2 flex-shrink-0 self-stretch">
-                <div className="relative">
-                  <div
-                    className={`w-6 h-6 rounded-full ${
-                      isWunsch ? 'bg-butter' : 'bg-sage'
-                    }`}
-                    aria-label={isWunsch ? 'Gesucht' : 'Verfügbar'}
-                  />
-                  <HelpBubble
-                    text={isWunsch ? 'Gesucht' : 'Verfügbar'}
-                    position="top-right"
-                    showIndicator={false}
-                  />
-                </div>
                 {isPrototype && (
                   <div className="relative">
                     <div

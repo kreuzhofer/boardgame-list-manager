@@ -33,6 +33,12 @@ export function AdminPage() {
 
   const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
   const [enrichStatus, setEnrichStatus] = useState<BulkEnrichmentStatus | null>(null);
+  // Bulk-enrich options. `force` clears scraping_done on the target set
+  // first, so a server crash mid-run is resumable by clicking the
+  // normal (no-force) button — the DB carries which rows are still
+  // pending. `onlyReferenced` cuts the target to games used in events.
+  const [enrichForce, setEnrichForce] = useState(false);
+  const [enrichOnlyReferenced, setEnrichOnlyReferenced] = useState(false);
 
   const isAdmin = account?.role === 'admin';
 
@@ -103,9 +109,11 @@ export function AdminPage() {
     }
   };
 
-  const handleStartEnrichment = async () => {
+  const handleStartEnrichment = async (
+    options: { force?: boolean; onlyReferenced?: boolean; source?: 'bgg' | 'cache' } = {},
+  ) => {
     try {
-      await bggApi.startEnrichment();
+      await bggApi.startEnrichment(options);
       setEnrichStatus({ running: true, processed: 0, total: 0, skipped: 0, errors: 0, bytesTransferred: 0, etaSeconds: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.';
@@ -164,7 +172,7 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
+        <h2 className="font-display text-3xl text-plum-deep">Admin</h2>
         <p className="text-sm text-ink-soft">
           Du hast keine Berechtigung für diesen Bereich.
         </p>
@@ -175,7 +183,7 @@ export function AdminPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
+        <h2 className="font-display text-3xl text-plum-deep">Admin</h2>
         <p className="text-sm text-ink-mute">Lade Konten...</p>
       </div>
     );
@@ -186,7 +194,7 @@ export function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <h2 className="font-display italic text-3xl text-plum-deep">Admin</h2>
+      <h2 className="font-display text-3xl text-plum-deep">Admin</h2>
       {error && (
         <div className="bg-blush-50 border border-blush-50 text-blush-deep text-sm rounded p-3">
           {error}
@@ -308,13 +316,32 @@ export function AdminPage() {
 
         {/* Enrichment Section */}
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={handleStartEnrichment}
+              onClick={() =>
+                handleStartEnrichment({
+                  source: 'bgg',
+                  force: enrichForce,
+                  onlyReferenced: enrichOnlyReferenced,
+                })
+              }
               disabled={enrichRunning}
               className="wg-btn-sage wg-btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {enrichRunning ? 'Enrichment läuft...' : 'BGG Enrichment starten'}
+            </button>
+            <button
+              onClick={() =>
+                handleStartEnrichment({
+                  source: 'cache',
+                  onlyReferenced: enrichOnlyReferenced,
+                })
+              }
+              disabled={enrichRunning}
+              className="wg-btn-soft wg-btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Re-extracts enrichment fields from the stored raw_preload blobs without hitting BGG. Use after the extractor learns a new field."
+            >
+              Aus Cache neu extrahieren
             </button>
             {enrichRunning && (
               <button
@@ -323,6 +350,28 @@ export function AdminPage() {
               >
                 Stoppen
               </button>
+            )}
+            {!enrichRunning && (
+              <div className="flex flex-wrap items-center gap-3 text-xs text-ink-soft">
+                <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={enrichForce}
+                    onChange={(e) => setEnrichForce(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-rule"
+                  />
+                  Auch bereits angereicherte neu laden (force)
+                </label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={enrichOnlyReferenced}
+                    onChange={(e) => setEnrichOnlyReferenced(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-rule"
+                  />
+                  Nur Spiele in Treffs
+                </label>
+              </div>
             )}
             {enrichStatus && !enrichRunning && (enrichStatus.stopReason || enrichStatus.processed > 0) && (
               <span className="text-xs text-ink-mute">

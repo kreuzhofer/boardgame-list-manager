@@ -3,6 +3,8 @@ export interface Account {
   email: string;
   role: 'account_owner' | 'admin';
   status: 'active' | 'deactivated' | 'unverified';
+  /** Phase 2: default per-event display name. Null = use email local-part. */
+  displayName: string | null;
   createdAt: string;
 }
 
@@ -32,4 +34,41 @@ export interface AccountsResponse {
 export interface ApiError {
   error: string;
   message: string;
+}
+
+export interface Participation {
+  id: string;
+  eventId: string;
+  displayName: string | null;
+  role: 'attendee' | 'co-host';
+  status: 'going' | 'interested' | 'declined' | 'waitlist';
+  joinedAt: string;
+  event: {
+    id: string;
+    name: string;
+    slug: string | null;
+    status: 'planning' | 'active' | 'archived';
+    startsAt: string | null;
+    endsAt: string | null;
+    location: string | null;
+  } | null;
+}
+
+export interface ClaimCandidate {
+  id: string;
+  name: string;
+  slug: string | null;
+  status: 'planning' | 'active' | 'archived';
+  startsAt: string | null;
+  endsAt: string | null;
+  location: string | null;
+  unclaimedCount: number;
+}
+
+export interface ClaimableUser {
+  userId: string;
+  displayName: string;
+  brought: { id: string; name: string }[];
+  played: { id: string; name: string }[];
+  lastActivityAt: string | null;
 }

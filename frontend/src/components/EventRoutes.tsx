@@ -21,6 +21,13 @@ function EventContent() {
     setIsAuthenticated(authenticated);
   }, []);
 
+  const handleParticipantResolved = useCallback(
+    (resolved: { id: string; name: string }) => {
+      setParticipant({ id: resolved.id, name: resolved.name });
+    },
+    [setParticipant],
+  );
+
   const handleParticipantSelected = useCallback((selectedParticipant: Participant) => {
     setParticipant(selectedParticipant);
   }, [setParticipant]);
@@ -77,7 +84,12 @@ function EventContent() {
   return (
     <>
       <ViewAsToggle />
-      <AuthGuard slug={slug} eventName={eventName} onAuthChange={handleAuthChange}>
+      <AuthGuard
+        slug={slug}
+        eventName={eventName}
+        onAuthChange={handleAuthChange}
+        onParticipantResolved={handleParticipantResolved}
+      >
         <ParticipantSelectionModal
           isOpen={showParticipantSelection}
           onParticipantSelected={handleParticipantSelected}

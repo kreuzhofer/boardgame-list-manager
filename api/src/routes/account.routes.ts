@@ -2,12 +2,16 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AccountService, AccountError } from '../services/account.service';
 import { SessionService } from '../services/session.service';
+import { ParticipationService } from '../services/participation.service';
+import { ClaimService, ClaimAuthError } from '../services/claim.service';
 import { requireAuth, requireAdmin, AuthenticatedRequest } from '../middleware/auth.middleware';
 
 const router = Router();
 const prisma = new PrismaClient();
 const accountService = new AccountService(prisma);
 const sessionService = new SessionService(prisma);
+const participationService = new ParticipationService(prisma);
+const claimService = new ClaimService(prisma);
 
 /**
  * POST /api/accounts/register
@@ -121,6 +125,34 @@ router.get('/', requireAuth, requireAdmin, async (_req: Request, res: Response) 
 });
 
 /**
+ * PATCH /api/accounts/me
+ * Body: { displayName?: string | null }
+ *
+ * Update the authenticated account's profile fields. Today the only
+ * editable field is `displayName` (default per-event display name).
+ * Empty / blank string clears the value.
+ */
+router.patch('/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { displayName } = req.body ?? {};
+
+    const account = await accountService.updateDisplayName(authReq.account.id, displayName);
+    res.json({ account });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({ error: error.code, message: error.message });
+      return;
+    }
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
  * PATCH /api/accounts/me/password
  * Changes password (requires auth, invalidates other sessions)
  */
@@ -162,6 +194,266 @@ router.patch('/me/password', requireAuth, async (req: Request, res: Response) =>
       return;
     }
     console.error('Password change error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * GET /api/accounts/me/participations
+ *
+ * Phase 2 of the identity migration: lists every event the
+ * authenticated account has joined as an EventParticipation. Backs the
+ * "Meine Treffs" page.
+ */
+router.get('/me/participations', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const rows = await participationService.listForAccount(authReq.account.id);
+
+    res.json({
+      participations: rows.map((p) => ({
+        id: p.id,
+        eventId: p.eventId,
+        displayName: p.displayName,
+        role: p.role,
+        status: p.status,
+        joinedAt: p.joinedAt.toISOString(),
+        event: p.event && {
+          id: p.event.id,
+          name: p.event.name,
+          slug: p.event.slug,
+          status: p.event.status,
+          startsAt: p.event.startsAt?.toISOString() ?? null,
+          endsAt: p.event.endsAt?.toISOString() ?? null,
+          location: p.event.location,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error('List participations error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * GET /api/accounts/me/claim-candidates
+ *
+ * Legacy claim flow, step 1 (discovery): events with at least one
+ * unclaimed legacy User row, that this account doesn't already
+ * participate in. Returns counts only — full names are gated behind
+ * the event-password verify in step 2.
+ */
+router.get('/me/claim-candidates', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const candidates = await claimService.listClaimCandidates(authReq.account.id);
+    res.json({
+      candidates: candidates.map((c) => ({
+        ...c,
+        startsAt: c.startsAt?.toISOString() ?? null,
+        endsAt: c.endsAt?.toISOString() ?? null,
+      })),
+    });
+  } catch (error) {
+    console.error('Claim candidates error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * POST /api/accounts/me/claim-candidates/:eventId/users
+ * Body: { password: string }
+ *
+ * Legacy claim flow, step 2 (unlock + preview). The password proves
+ * the requesting account actually attended this event; only on a
+ * correct password do we reveal the unclaimed names + game previews.
+ */
+router.post(
+  '/me/claim-candidates/:eventId/users',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const { eventId } = req.params;
+      const { password } = req.body ?? {};
+      if (typeof password !== 'string' || password.length === 0) {
+        res.status(400).json({
+          error: 'MISSING_PASSWORD',
+          message: 'Bitte das Kennwort des Treffs eingeben.',
+        });
+        return;
+      }
+
+      const users = await claimService.listUnclaimedWithPreviews({
+        accountId: authReq.account.id,
+        eventId,
+        eventPassword: password,
+      });
+      res.json({
+        users: users.map((u) => ({
+          ...u,
+          lastActivityAt: u.lastActivityAt?.toISOString() ?? null,
+        })),
+      });
+    } catch (error) {
+      if (error instanceof ClaimAuthError) {
+        const status = error.code === 'INVALID_PASSWORD' ? 401 : 403;
+        res.status(status).json({ error: error.code, message: error.message });
+        return;
+      }
+      console.error('Claim unlock error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/accounts/me/claim/:userId
+ * Body: { password: string }
+ *
+ * Legacy claim flow, step 3 (commit). Atomically links the legacy
+ * User to the requesting account if (a) the password is correct, (b)
+ * the User is still unclaimed, and (c) the account doesn't already
+ * have a User in the same event. Also upserts an EventParticipation
+ * row so the event surfaces immediately in "Meine Treffs".
+ */
+router.post(
+  '/me/claim/:userId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const { userId } = req.params;
+      const { password } = req.body ?? {};
+      if (typeof password !== 'string' || password.length === 0) {
+        res.status(400).json({
+          error: 'MISSING_PASSWORD',
+          message: 'Bitte das Kennwort des Treffs eingeben.',
+        });
+        return;
+      }
+
+      const result = await claimService.claim({
+        accountId: authReq.account.id,
+        userId,
+        eventPassword: password,
+      });
+      if (!result.ok) {
+        const messages: Record<string, string> = {
+          not_found: 'Diese Identität existiert nicht (mehr).',
+          already_claimed:
+            'Diese Identität wurde gerade von jemand anderem übernommen. Bitte einen anderen Namen wählen.',
+          conflict:
+            'Du hast bereits eine Identität in diesem Treff. Bitte einen Admin kontaktieren.',
+        };
+        const status =
+          result.reason === 'not_found' ? 404 :
+          result.reason === 'conflict' ? 409 : 410;
+        res.status(status).json({
+          error: result.reason.toUpperCase(),
+          message: messages[result.reason],
+        });
+        return;
+      }
+
+      res.json({ success: true, eventId: result.eventId, userName: result.userName });
+    } catch (error) {
+      if (error instanceof ClaimAuthError) {
+        res.status(401).json({ error: error.code, message: error.message });
+        return;
+      }
+      console.error('Claim commit error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/accounts/me/email
+ * Body: { newEmail: string }
+ *
+ * Step 1 of the email-change flow. Creates a single-use confirmation
+ * token bound to (accountId, newEmail), sends the confirm link to the
+ * NEW address and a notice to the OLD address. The actual swap happens
+ * in `/email-change/confirm` once the user clicks the link.
+ */
+router.post('/me/email', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { newEmail } = req.body;
+
+    if (!newEmail || typeof newEmail !== 'string') {
+      res.status(400).json({
+        error: 'MISSING_FIELDS',
+        message: 'Bitte eine neue E-Mail-Adresse eingeben.',
+      });
+      return;
+    }
+
+    await accountService.requestEmailChange(authReq.account.id, newEmail);
+
+    res.json({
+      success: true,
+      message:
+        'Wir haben einen Bestätigungs-Link an die neue Adresse geschickt. Klicke darauf, um die Änderung abzuschließen.',
+    });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({ error: error.code, message: error.message });
+      return;
+    }
+    console.error('Email-change request error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * POST /api/accounts/email-change/confirm
+ * Body: { token: string }
+ *
+ * Step 2 of the email-change flow. Public — the recipient of the confirm
+ * mail clicks the link and the frontend posts the token here. On success
+ * returns the updated account; the user's existing session keeps working
+ * (account id is unchanged).
+ */
+router.post('/email-change/confirm', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({
+        error: 'MISSING_TOKEN',
+        message: 'Kein Bestätigungs-Token übergeben.',
+      });
+      return;
+    }
+
+    const ip = req.ip || req.socket.remoteAddress || null;
+    const account = await accountService.confirmEmailChange(token, ip);
+    res.json({ success: true, account });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({ error: error.code, message: error.message });
+      return;
+    }
+    console.error('Email-change confirm error:', error);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',

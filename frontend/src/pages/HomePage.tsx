@@ -67,7 +67,8 @@ export function HomePage({ participant }: HomePageProps) {
 
   // Account auth (organizer/admin)
   const { account } = useAuth();
-  const { eventName: ctxEventName, startsAt, location } = useEvent();
+  const { eventName: ctxEventName, startsAt, location, effectiveStatus } = useEvent();
+  const isReadOnly = effectiveStatus === 'archived';
   const eventName = ctxEventName || 'Spieleabend';
   const canManageGames = account?.role === 'admin' || account?.role === 'account_owner';
   
@@ -520,8 +521,12 @@ export function HomePage({ participant }: HomePageProps) {
       />
       <div className={`px-4 sm:px-6 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1fr_320px] gap-8 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
         <main className="space-y-6 min-w-0">
-          {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search */}
-          {participant && (
+          {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search.
+              Hidden entirely when the event is archived — no adds, no searches that
+              would surface "add this game" CTAs. The search field also disappears,
+              which is a UX trade-off worth accepting (read-only events get the simpler
+              filter pills below for browsing). */}
+          {participant && !isReadOnly && (
             <div className="bg-paper-hi border-[1.5px] border-rule rounded-2xl p-5 shadow-sm">
               <div className="wg-label text-plum mb-2">
                 Spiel suchen oder hinzufügen
@@ -534,6 +539,14 @@ export function HomePage({ participant }: HomePageProps) {
                 onScrollToGame={handleScrollToGame}
                 clearTrigger={searchClearTrigger}
               />
+            </div>
+          )}
+
+          {isReadOnly && (
+            <div className="rounded-2xl border border-rule bg-paper-lo px-5 py-4 text-sm text-ink-soft">
+              <strong className="text-ink">Dieser Treff ist archiviert.</strong>{' '}
+              Die Liste bleibt sichtbar, aber neue Spiele, Mitbringen-Zusagen und
+              Spieler:innen-Eintragungen sind nicht mehr möglich.
             </div>
           )}
 
@@ -609,15 +622,15 @@ export function HomePage({ participant }: HomePageProps) {
             sortKey={sortKey}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
-            onAddPlayer={handleAddPlayer}
-            onAddBringer={handleAddBringer}
-            onRemovePlayer={handleRemovePlayer}
-            onRemoveBringer={handleRemoveBringer}
-            onHideGame={handleHideGame}
-            onUnhideGame={handleUnhideGame}
-            onDeleteGame={handleDeleteGameClick}
-            onTogglePrototype={handleTogglePrototype}
-            onThumbnailUploaded={handleThumbnailUploaded}
+            onAddPlayer={isReadOnly ? undefined : handleAddPlayer}
+            onAddBringer={isReadOnly ? undefined : handleAddBringer}
+            onRemovePlayer={isReadOnly ? undefined : handleRemovePlayer}
+            onRemoveBringer={isReadOnly ? undefined : handleRemoveBringer}
+            onHideGame={isReadOnly ? undefined : handleHideGame}
+            onUnhideGame={isReadOnly ? undefined : handleUnhideGame}
+            onDeleteGame={isReadOnly ? undefined : handleDeleteGameClick}
+            onTogglePrototype={isReadOnly ? undefined : handleTogglePrototype}
+            onThumbnailUploaded={isReadOnly ? undefined : handleThumbnailUploaded}
             scrollToGameId={scrollToGameId}
             onScrolledToGame={handleScrolledToGame}
             highlightedGameIds={highlightedGameIds}
@@ -625,7 +638,7 @@ export function HomePage({ participant }: HomePageProps) {
             hiddenCount={hiddenCount}
             hiddenOnly={filters.hiddenOnly}
             thumbnailTimestamps={thumbnailTimestamps}
-            canManageGames={canManageGames}
+            canManageGames={canManageGames && !isReadOnly}
           />
         </main>
         <aside className="grid gap-5 md:grid-cols-3 lg:grid-cols-1 lg:sticky lg:top-6 lg:self-start">

@@ -20,7 +20,7 @@ import type {
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
-import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse } from '../types/account';
+import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, Participation, ClaimCandidate, ClaimableUser } from '../types/account';
 import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
 
 // Get API URL from environment variable
@@ -165,10 +165,13 @@ export const authApi = {
   verify: (password: string, slug?: string): Promise<AuthVerifyResponse> => {
     const body: AuthVerifyRequest & { slug?: string } = { password };
     if (slug) body.slug = slug;
+    // Include the account JWT when present so the backend can also
+    // upsert an EventParticipation row alongside issuing the event
+    // token. Anonymous verifies still work — no account token, no row.
     return fetchApi<AuthVerifyResponse>('/api/auth/verify', {
       method: 'POST',
       body: JSON.stringify(body),
-    });
+    }, true);
   },
 
   /** Request a magic-link email. Always resolves (server returns 200 even
@@ -421,11 +424,60 @@ export const accountsApi = {
     }, true);
   },
 
+  updateProfile: (data: { displayName?: string | null }): Promise<{ account: Account }> => {
+    return fetchApi<{ account: Account }>('/api/accounts/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }, true);
+  },
+
   deactivate: (password: string): Promise<{ success: boolean; message: string }> => {
     return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/deactivate', {
       method: 'POST',
       body: JSON.stringify({ password }),
     }, true);
+  },
+
+  requestEmailChange: (newEmail: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>('/api/accounts/me/email', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail }),
+    }, true);
+  },
+
+  confirmEmailChange: (token: string): Promise<{ success: boolean; account: Account }> => {
+    return fetchApi<{ success: boolean; account: Account }>('/api/accounts/email-change/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  },
+
+  getMyParticipations: (): Promise<{ participations: Participation[] }> => {
+    return fetchApi<{ participations: Participation[] }>('/api/accounts/me/participations', {}, true);
+  },
+
+  // ── Legacy claim flow ─────────────────────────────────────────
+  getClaimCandidates: (): Promise<{ candidates: ClaimCandidate[] }> => {
+    return fetchApi<{ candidates: ClaimCandidate[] }>('/api/accounts/me/claim-candidates', {}, true);
+  },
+
+  /** Returns the unclaimed users + previews for an event after the
+   *  caller proves they know the event password. */
+  unlockClaimCandidate: (eventId: string, password: string): Promise<{ users: ClaimableUser[] }> => {
+    return fetchApi<{ users: ClaimableUser[] }>(
+      `/api/accounts/me/claim-candidates/${eventId}/users`,
+      { method: 'POST', body: JSON.stringify({ password }) },
+      true,
+    );
+  },
+
+  /** Atomic claim. Re-sends the password (server re-verifies). */
+  claimUser: (userId: string, password: string): Promise<{ success: true; eventId: string; userName: string }> => {
+    return fetchApi<{ success: true; eventId: string; userName: string }>(
+      `/api/accounts/me/claim/${userId}`,
+      { method: 'POST', body: JSON.stringify({ password }) },
+      true,
+    );
   },
 
   promoteToAdmin: (accountId: string): Promise<{ account: Account }> => {

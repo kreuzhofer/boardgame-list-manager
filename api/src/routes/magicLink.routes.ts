@@ -187,6 +187,7 @@ router.get('/magic-link/consume', async (req: Request, res: Response) => {
 
     // First click on the magic link doubles as email verification for
     // accounts created via magic-link signup.
+    let justActivated = false;
     if (account.status === 'unverified') {
       account = await prisma.account.update({
         where: { id: account.id },
@@ -199,7 +200,30 @@ router.get('/magic-link/consume', async (req: Request, res: Response) => {
           createdAt: true,
         },
       });
+      justActivated = true;
       console.log(`[magic-link] activated unverified account=${account.id}`);
+    }
+
+    // Welcome email — first activation only. Email send failures must
+    // not block the consume flow; the user is already authenticated and
+    // we have a session ready to issue.
+    if (justActivated) {
+      const accountForMail = account;
+      const accountLocale = await prisma.account
+        .findUnique({ where: { id: account.id }, select: { locale: true } })
+        .then((r) => r?.locale ?? null);
+      sendTemplatedEmail({
+        to: accountForMail.email,
+        template: 'welcome',
+        locale: accountLocale,
+        variables: {},
+      }).catch((err) => {
+        console.error(
+          `[magic-link] welcome email failed account=${accountForMail.id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      });
     }
 
     const jwt = await sessionService.createSession(

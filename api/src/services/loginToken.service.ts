@@ -8,7 +8,8 @@ export type LoginTokenPurpose =
   | 'login'
   | 'invite-claim'
   | 'legacy-claim'
-  | 'reset-password';
+  | 'reset-password'
+  | 'email-change';
 
 function generateToken(): string {
   return crypto.randomBytes(TOKEN_BYTES).toString('base64url');
@@ -24,6 +25,7 @@ export async function createLoginToken(args: {
   accountId: string;
   purpose: LoginTokenPurpose;
   targetPath?: string | null;
+  newEmail?: string | null;
   ttlMinutes?: number;
 }): Promise<{ token: string; expiresAt: Date }> {
   const token = generateToken();
@@ -37,6 +39,7 @@ export async function createLoginToken(args: {
       accountId: args.accountId,
       purpose: args.purpose,
       targetPath: args.targetPath ?? null,
+      newEmail: args.newEmail ?? null,
       expiresAt,
     },
   });
@@ -45,7 +48,13 @@ export async function createLoginToken(args: {
 }
 
 export type ConsumeResult =
-  | { ok: true; accountId: string; purpose: LoginTokenPurpose; targetPath: string | null }
+  | {
+      ok: true;
+      accountId: string;
+      purpose: LoginTokenPurpose;
+      targetPath: string | null;
+      newEmail: string | null;
+    }
   | { ok: false; reason: 'not_found' | 'expired' | 'already_consumed' };
 
 /**
@@ -84,6 +93,7 @@ export async function consumeLoginToken(args: {
     accountId: row.accountId,
     purpose: row.purpose as LoginTokenPurpose,
     targetPath: row.targetPath,
+    newEmail: row.newEmail,
   };
 }
 

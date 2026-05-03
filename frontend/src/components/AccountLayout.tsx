@@ -8,6 +8,7 @@ interface AccountLayoutProps {
 
 const NAV_ITEMS = [
   { path: '/events', label: 'Meine Events' },
+  { path: '/meine-treffs', label: 'Meine Treffs' },
   { path: '/admin', label: 'Admin', adminOnly: true },
   { path: '/profile', label: 'Profil' },
 ];

@@ -5,7 +5,7 @@ import { accountsApi, sessionsApi, ApiError } from '../api/client';
 import type { Session } from '../types/account';
 
 export function ProfilePage() {
-  const { account, logout } = useAuth();
+  const { account, logout, refreshAccount } = useAuth();
   const navigate = useNavigate();
 
   // Password change state
@@ -26,6 +26,72 @@ export function ProfilePage() {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deactivateError, setDeactivateError] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
+
+  // Display name edit state
+  const [displayNameDraft, setDisplayNameDraft] = useState(account?.displayName ?? '');
+  const [isSavingDisplayName, setIsSavingDisplayName] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNameSuccess, setDisplayNameSuccess] = useState<string | null>(null);
+
+  // Sync draft when the account context refreshes (e.g. after a save).
+  useEffect(() => {
+    setDisplayNameDraft(account?.displayName ?? '');
+  }, [account?.displayName]);
+
+  const handleSaveDisplayName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDisplayNameError(null);
+    setDisplayNameSuccess(null);
+
+    setIsSavingDisplayName(true);
+    try {
+      await accountsApi.updateProfile({ displayName: displayNameDraft });
+      await refreshAccount();
+      setDisplayNameSuccess('Anzeigename gespeichert.');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setDisplayNameError(err.message);
+      } else {
+        setDisplayNameError('Speichern fehlgeschlagen. Bitte später erneut versuchen.');
+      }
+    } finally {
+      setIsSavingDisplayName(false);
+    }
+  };
+
+  // Email change state
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState<string | null>(null);
+  const [isRequestingEmailChange, setIsRequestingEmailChange] = useState(false);
+
+  const handleRequestEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailChangeError(null);
+    setEmailChangeSuccess(null);
+
+    const trimmed = newEmail.trim();
+    if (!trimmed) {
+      setEmailChangeError('Bitte eine neue E-Mail-Adresse eingeben.');
+      return;
+    }
+
+    setIsRequestingEmailChange(true);
+    try {
+      const response = await accountsApi.requestEmailChange(trimmed);
+      setEmailChangeSuccess(response.message);
+      setNewEmail('');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setEmailChangeError(err.message);
+      } else {
+        setEmailChangeError('Anfrage konnte nicht gesendet werden. Bitte später erneut versuchen.');
+      }
+    } finally {
+      setIsRequestingEmailChange(false);
+    }
+  };
 
   // Load sessions
   useEffect(() => {
@@ -191,6 +257,138 @@ export function ProfilePage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Display Name */}
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
+          <h2 className="text-xl font-bold text-ink mb-4">Anzeigename</h2>
+          <p className="text-sm text-ink-soft mb-4">
+            Wird als Standardname verwendet, wenn du einem neuen Treff beitrittst.
+            Bestehende Treffs behalten ihren aktuellen Namen.
+          </p>
+
+          {displayNameError && (
+            <div className="mb-4 p-3 bg-blush-50 border border-blush text-blush-deep rounded text-sm">
+              {displayNameError}
+            </div>
+          )}
+          {displayNameSuccess && (
+            <div className="mb-4 p-3 bg-sage-50 border border-sage-100 text-sage-deep rounded text-sm">
+              {displayNameSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveDisplayName} className="space-y-4">
+            <div>
+              <label htmlFor="displayName" className="block text-sm font-medium text-ink-soft mb-2">
+                Anzeigename
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayNameDraft}
+                onChange={(e) => setDisplayNameDraft(e.target.value)}
+                maxLength={60}
+                placeholder={account.email.split('@')[0]}
+                className="wg-input w-full"
+                disabled={isSavingDisplayName}
+              />
+              <p className="mt-2 text-xs text-ink-mute">
+                Leer lassen, um den Teil vor dem @ deiner E-Mail-Adresse zu verwenden.
+              </p>
+            </div>
+            <button
+              type="submit"
+              disabled={
+                isSavingDisplayName ||
+                displayNameDraft.trim() === (account.displayName ?? '').trim()
+              }
+              className="wg-btn-primary disabled:bg-plum-soft"
+            >
+              {isSavingDisplayName ? 'Wird gespeichert…' : 'Speichern'}
+            </button>
+          </form>
+        </div>
+
+        {/* Email Change */}
+        <div className="bg-paper-hi rounded-lg shadow-raised p-6">
+          <h2 className="text-xl font-bold text-ink mb-4">E-Mail-Adresse ändern</h2>
+
+          {!showEmailChange ? (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-ink-soft">
+                Aktuelle Adresse: <strong className="text-ink">{account.email}</strong>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEmailChange(true);
+                  setEmailChangeSuccess(null);
+                  setEmailChangeError(null);
+                }}
+                className="wg-btn-secondary"
+              >
+                Ändern
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleRequestEmailChange} className="space-y-4">
+              <p className="text-sm text-ink-soft">
+                Wir schicken dir einen Bestätigungs-Link an die neue Adresse. Erst
+                wenn du darauf klickst, wird die Änderung wirksam — bis dahin
+                gilt weiter <strong className="text-ink">{account.email}</strong>.
+              </p>
+
+              {emailChangeError && (
+                <div className="p-3 bg-blush-50 border border-blush text-blush-deep rounded text-sm">
+                  {emailChangeError}
+                </div>
+              )}
+              {emailChangeSuccess && (
+                <div className="p-3 bg-sage-50 border border-sage-100 text-sage-deep rounded text-sm">
+                  {emailChangeSuccess}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="newEmail" className="block text-sm font-medium text-ink-soft mb-2">
+                  Neue E-Mail-Adresse
+                </label>
+                <input
+                  id="newEmail"
+                  type="email"
+                  autoComplete="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="wg-input w-full"
+                  placeholder="neue@email.de"
+                  disabled={isRequestingEmailChange}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={isRequestingEmailChange}
+                  className="wg-btn-primary disabled:bg-plum-soft"
+                >
+                  {isRequestingEmailChange ? 'Wird gesendet…' : 'Bestätigungs-Link senden'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailChange(false);
+                    setNewEmail('');
+                    setEmailChangeError(null);
+                    setEmailChangeSuccess(null);
+                  }}
+                  className="wg-btn-ghost"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Password Change */}

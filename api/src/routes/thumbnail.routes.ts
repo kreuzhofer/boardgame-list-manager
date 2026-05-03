@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import multer from 'multer';
 import { thumbnailService } from '../services/thumbnailService';
 import { gameRepository } from '../repositories';
-import { resolveEventId } from '../middleware/event.middleware';
+import { resolveEventId, requireEditableEvent } from '../middleware/event.middleware';
 import { resolveParticipantId } from '../middleware/participant.middleware';
 import { config } from '../config';
 import { sseManager } from '../services/sse.service';
@@ -58,7 +58,7 @@ const upload = multer({
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.6, 1.7
  */
-router.post('/:gameId', (req: Request, res: Response) => {
+router.post('/:gameId', requireEditableEvent, (req: Request, res: Response) => {
   upload.single('thumbnail')(req, res, async (err) => {
     try {
       const { gameId } = req.params;

@@ -227,24 +227,7 @@ After any code changes, finalize with `docker compose up -d --build`. Scope Dock
 
 ## Roadmap
 
-Remaining work for the multi-event transition. The admin panel (019) is already implemented.
-
-### Event Management (ex-spec 018)
-Organizer dashboard for creating and managing events. The Event model already has all required fields (name, passwordHash, startsAt, endsAt, location, capacity, notes, fees, ownerAccountId, isDefault). What's missing:
-- Add `slug` field (unique, kebab-case, auto-generated from name) to Event model
-- CRUD API endpoints for events scoped to ownerAccountId
-- Event list/settings UI for account owners
-- Slug-based event resolution: `/{slug}` resolves to the event, root `/` falls back to default event during migration
-
-### Email System (ex-spec 020)
-Transactional email via SMTP (Nodemailer). Not yet started — new service entirely:
-- SMTP config via env vars, Handlebars templates in `/api/templates/emails/`, all in German
-- Email confirmation flow: `unverified` account status, verification token, 24h expiry
-- Password reset flow: reset token, 1h expiry, rate limiting
-- Notification emails: password changed, account deactivated, welcome
-
-### Landing Page (ex-spec 021)
-Public marketing page at `/` once slug-based routing is active:
-- Landing page explaining the app with CTAs (register/login), in German
-- Event-not-found page for invalid slugs
-- Transition: root `/` remains default event experience until slug routing is enabled
+The product roadmap — what's shipped, what's open, and what was
+consciously dropped or adapted — lives in [`docs/roadmap.md`](./docs/roadmap.md).
+That file is the source of truth; update it (not this section) when
+features land or scope changes.

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { gameService } from '../services/game.service';
 import { eventService } from '../services/event.service';
 import { resolveOptionalAccount } from '../middleware/auth.middleware';
-import { resolveEventId } from '../middleware/event.middleware';
+import { resolveEventId, requireEditableEvent } from '../middleware/event.middleware';
 import { resolveParticipantId, resolveParticipantIdFromBody, resolveParticipantIdFromParams } from '../middleware/participant.middleware';
 
 const router = Router();
@@ -85,7 +85,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * Requirements: 3.1, 3.3, 3.4, 4.1, 4.3, 4.4
  * Feature: 014-alternate-names-search - Accept alternate name data
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { name, isBringing, isPlaying, isPrototype, bggId, yearPublished, bggRating, addedAsAlternateName, alternateNames } = req.body;
     const eventId = await resolveEventId(req);
@@ -181,7 +181,7 @@ router.post('/', async (req: Request, res: Response) => {
  * 
  * Requirements: 3.5, 4.2
  */
-router.post('/:id/players', async (req: Request, res: Response) => {
+router.post('/:id/players', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromBody(req);
@@ -241,7 +241,7 @@ router.post('/:id/players', async (req: Request, res: Response) => {
  * 
  * Requirements: 3.5, 4.4
  */
-router.delete('/:id/players/:participantId', async (req: Request, res: Response) => {
+router.delete('/:id/players/:participantId', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromParams(req);
@@ -303,7 +303,7 @@ router.delete('/:id/players/:participantId', async (req: Request, res: Response)
  * 
  * Requirements: 3.6, 4.3
  */
-router.post('/:id/bringers', async (req: Request, res: Response) => {
+router.post('/:id/bringers', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromBody(req);
@@ -363,7 +363,7 @@ router.post('/:id/bringers', async (req: Request, res: Response) => {
  * 
  * Requirements: 3.6, 4.5
  */
-router.delete('/:id/bringers/:participantId', async (req: Request, res: Response) => {
+router.delete('/:id/bringers/:participantId', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromParams(req);
@@ -423,7 +423,7 @@ router.delete('/:id/bringers/:participantId', async (req: Request, res: Response
  *   - 404 if game not found
  *   - 409 if already hidden
  */
-router.post('/:id/hidden', async (req: Request, res: Response) => {
+router.post('/:id/hidden', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromBody(req);
@@ -487,7 +487,7 @@ router.post('/:id/hidden', async (req: Request, res: Response) => {
  * Error responses:
  *   - 404 if game not found or not hidden
  */
-router.delete('/:id/hidden/:participantId', async (req: Request, res: Response) => {
+router.delete('/:id/hidden/:participantId', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantIdFromParams(req);
@@ -548,7 +548,7 @@ router.delete('/:id/hidden/:participantId', async (req: Request, res: Response) 
  * 
  * Requirements: 3.2, 3.5, 3.6, 3.7
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantId(req);
@@ -642,7 +642,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  * 
  * Requirements: 022-prototype-toggle 1.1, 1.2, 1.3, 1.5
  */
-router.patch('/:id/prototype', async (req: Request, res: Response) => {
+router.patch('/:id/prototype', requireEditableEvent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const participantId = resolveParticipantId(req);

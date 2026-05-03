@@ -91,6 +91,14 @@ export interface AuthVerifyResponse {
   success: boolean;
   message?: string;
   token?: string;
+  /**
+   * Phase 2: when the verify request carries an account JWT, the API
+   * returns the per-event User row that was upserted for the account
+   * so the frontend can skip the participant-pick modal. Null for
+   * anonymous verifies and when auto-creation falls through (e.g.
+   * unrecoverable name conflict).
+   */
+  participant?: { id: string; name: string } | null;
 }
 
 export interface CreateGameRequest {

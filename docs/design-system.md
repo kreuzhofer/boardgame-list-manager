@@ -10,34 +10,36 @@
 
 ## Voice & feel
 
-Brettspieltreff is **warm, faithful, happy**. It's the digital version of a long
-wooden table strewn with game boxes, soft lamplight, mugs of tea — built for
-**families, casual game nights, and serious hobbyists alike**. Never nerdy, never
-cold, never sterile. Display type uses **Playfair Display** italic for a hand-set,
-storybook flavour; body uses **Nunito** for friendly, rounded, readable copy.
+Brettspieltreff is **warm, faithful, happy**, built for **families, casual
+game nights, and serious hobbyists alike**. Never nerdy, never sterile.
+The visual system is **contemporary**: a cool light-grey field, white
+cards, and a single brand colour (plum) doing the visual lifting. The
+warmth lives in the typography — the whole interface, headlines and
+body, is set in **Lora**, a contemporary serif. One family, varied
+only by weight and size.
 
 ## The palette (memorise these)
 
 | Token            | Hex       | When to use                                                |
 | ---------------- | --------- | ---------------------------------------------------------- |
-| `paper`          | `#f7f1e6` | App background                                             |
-| `paper-hi`       | `#fdf9ee` | Cards, inputs, raised surfaces                             |
-| `paper-lo`       | `#ede4d0` | Sunken areas (table headers, event ribbon, bottom bar)     |
-| `rule`           | `#e3d5b8` | Default border                                             |
-| `rule-soft`      | `#ecdfc6` | Inner row dividers inside a card                           |
-| `ink`            | `#2d2233` | Primary text + headings                                    |
-| `ink-soft`       | `#5b4866` | Secondary text                                             |
-| `ink-mute`       | `#8c7d92` | Tertiary, placeholder, captions                            |
+| `paper`          | `#f4f5f7` | App background (light cool grey)                           |
+| `paper-hi`       | `#ffffff` | Cards, inputs, raised surfaces                             |
+| `paper-lo`       | `#eaecf0` | Sunken areas (table headers, event ribbon, bottom bar)     |
+| `rule`           | `#e4e7eb` | Default border                                             |
+| `rule-soft`      | `#eef0f3` | Inner row dividers inside a card                           |
+| `ink`            | `#1a1d23` | Primary text + headings                                    |
+| `ink-soft`       | `#525864` | Secondary text                                             |
+| `ink-mute`       | `#8a92a0` | Tertiary, placeholder, captions                            |
 | **`plum`**       | `#6b3a5c` | Primary brand: buttons, active nav, links                  |
 | `plum-deep`      | `#4a2540` | App header chrome, headlines                               |
-| **`sage`**       | `#7a9476` | **Verfügbar** status · success · "ich bringe" active state |
-| `sage-deep`      | `#5b7458` | Sage text on light backgrounds                             |
-| **`butter`**     | `#e8c75c` | **Wunsch** status · **Donate** CTA · all friendly nudges   |
+| **`sage`**       | `#5f9b6f` | **Verfügbar** status · success · "ich bringe" active state |
+| `sage-deep`      | `#3f7d52` | Sage text on light backgrounds                             |
+| **`butter`**     | `#f0b942` | **Wunsch** status · **Donate** CTA · all friendly nudges   |
 | `butter-deep`    | `#7a5e0f` | Butter text                                                |
-| **`blush`**      | `#d97a6c` | Destructive, **Hide/ausblenden**, errors                   |
-| `blush-deep`     | `#9c4537` | Blush text                                                 |
-| **`ocean`**      | `#3f6f8f` | **Prototyp** marker · organizer-mode chrome                |
-| `ocean-deep`     | `#284b62` | Ocean text                                                 |
+| **`blush`**      | `#e07574` | Destructive, **Hide/ausblenden**, errors                   |
+| `blush-deep`     | `#a93b3a` | Blush text                                                 |
+| **`ocean`**      | `#4a7eb0` | **Prototyp** marker · organizer-mode chrome                |
+| `ocean-deep`     | `#2c5680` | Ocean text                                                 |
 
 ### Semantic mapping (do not confuse)
 
@@ -50,20 +52,25 @@ storybook flavour; body uses **Nunito** for friendly, rounded, readable copy.
 
 ## Typography
 
-- **`font-display`** — Playfair Display. Use for: page titles, card titles ≥ 20px,
-  decorative italic accents. Often italic. Letter-spacing slightly tight.
-- **`font-sans`** — Nunito. Use for: all body, buttons, labels, inputs.
-  - Body weight `400` for paragraphs, `600`/`700` for emphasis.
-  - Buttons & nav are always `font-bold` (`700`).
-- **`font-mono`** — JetBrains Mono. Reserve for: dates in tabular contexts, hex tokens,
-  technical badges. Don't use for body copy.
+Single-family system. **`font-display`** and **`font-sans`** both alias
+to **Lora**; the alias names are kept so existing components don't
+need a sweep. Hierarchy comes from size + weight, not from a second
+family.
+
+- **`font-display`** — Lora, used for headlines (page titles, card
+  titles, game titles). Weight `600` (semibold) by default; `700`
+  for hero / landing.
+- **`font-sans`** — Lora, used for body copy. Weight `400` for
+  paragraphs, `600`/`700` for emphasis. Buttons & nav are `font-bold`.
+- **`font-mono`** — JetBrains Mono. Reserve for dates in tabular
+  contexts, hex tokens, technical badges. Don't use for body copy.
 
 ### Scale anchors
 
 | Use                       | Class                                            |
 | ------------------------- | ------------------------------------------------ |
-| Hero / landing headline   | `font-display text-display-lg italic`            |
-| Page title                | `font-display text-display italic`               |
+| Hero / landing headline   | `font-display text-display-lg`                   |
+| Page title                | `font-display text-display`                      |
 | Section heading           | `font-display text-2xl`                          |
 | Card title                | `font-display text-xl`                           |
 | Game title (in row/card)  | `font-display text-lg font-semibold`             |
@@ -72,9 +79,9 @@ storybook flavour; body uses **Nunito** for friendly, rounded, readable copy.
 
 ### Italics rules
 
-- Display headings often italic for warmth.
-- Never italicise body copy or buttons.
-- Eyebrow labels never italic (use `wg-label`).
+Italic is **not** a default. Reserve it for genuine emphasis (`<em>`
+in body copy, occasional accent words like *"Endlich klar."* on the
+landing). Headlines are upright.
 
 ## Components — use the layer classes
 
@@ -138,7 +145,7 @@ heights smaller than `wg-btn-sm` (32px) — that's already the floor.
 
 ```tsx
 <div className="wg-label text-plum">Aktueller Treff</div>
-<h2 className="font-display text-display italic text-plum-deep mt-1">Spieleabend April</h2>
+<h2 className="font-display text-display text-plum-deep mt-1">Spieleabend April</h2>
 
 <div className="wg-divider-dotted my-4"></div>
 ```
@@ -168,8 +175,9 @@ heights smaller than `wg-btn-sm` (32px) — that's already the floor.
 7. **Avoid emoji in core UI.** Use the design-system tokens, dotted dividers, and
    subtle line decoration instead. (Single rotated "kostenlos · für alle" badge in
    butter on the landing hero is the one allowed exception.)
-8. **Display serif italic is the brand voice.** Use it for the app name, event titles,
-   page headlines, and 1–2 decorative accents per page. Don't overuse.
+8. **Lora upright is the brand voice** for everything user-facing.
+   No italic by default; reserve italic for genuine emphasis or
+   1–2 decorative accents per page max.
 9. **No drop shadows on tags or inline elements.** Reserve elevation for cards/modals.
 10. **Modals use `shadow-floating` and a darker scrim** (`bg-ink/40`).
 11. **Bring/play state is sage when active, paper when off.** Never invert.
@@ -239,9 +247,9 @@ size and weight only.
 | Element | Treatment |
 |---|---|
 | Mark | `cid:wg-logo` — self-contained butter-chip + plum-meeple SVG/PNG. The only coloured element on the page. |
-| Wordmark | Playfair Display italic, weight 600, 22 px, black. |
-| Title | Playfair Display italic, weight 600, 30 px, black. |
-| Body copy | System sans, 15 px, black. `<strong>` is black + weight 700. |
+| Wordmark | Lora upright, weight 600, 22 px, black. |
+| Title | Lora upright, weight 600, 30 px, black. |
+| Body copy | Lora, 15 px, black. `<strong>` is black + weight 700. |
 | Hairlines | 1 px solid black (above and below the body). Dark-mode clients invert to a light hairline. |
 | CTA | `plum` `#6b3a5c` background, white bold text — mirrors `wg-btn-primary`. The single coloured surface in the email; visual continuity with the web app. Plum is already dark enough that dark-mode clients leave it alone. |
 | Links | Black, with default underline. |
@@ -252,10 +260,10 @@ invitation than a marketing template.
 
 ### Typography
 
-Same display family as the web app: Playfair Display italic for the
-wordmark (`.email-wordmark`) and the title (`.email-title`), Georgia /
-Times fallback for clients that strip web fonts. Body copy stays in the
-system sans-serif stack.
+Same single-family system as the web app: Lora upright everywhere —
+wordmark (`.email-wordmark`), title (`.email-title`), and body copy.
+Georgia / Times fallback for clients that strip web fonts. No italic
+by default.
 
 ### Components — use the email classes
 

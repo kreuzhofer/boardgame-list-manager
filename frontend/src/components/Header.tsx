@@ -1,7 +1,7 @@
 /**
  * Header — Würfelglück design system.
  * - Header chrome: plum-deep.
- * - Body type: Nunito (font-sans). App name: Playfair Display italic.
+ * - Body + headlines: Lora (single-family system, font-display = font-sans).
  * - Active nav underline: butter (warm accent on plum chrome).
  *
  * Updated for Spec 016: account management link (Verwaltung → /events).
@@ -68,7 +68,7 @@ export function Header({
               <span className="font-sans text-paper-hi/70 text-[10px] sm:text-xs tracking-wider uppercase truncate">
                 Aktueller Treff
               </span>
-              <span className="font-display italic text-paper-hi text-lg sm:text-xl truncate">
+              <span className="font-display text-paper-hi text-lg sm:text-xl truncate">
                 {eventName}
               </span>
             </div>

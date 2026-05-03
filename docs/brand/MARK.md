@@ -30,8 +30,8 @@ That is the entire surface. No other place in the app renders the mark.
 
 ## Lockup with wordmark
 
-The mark always pairs with the wordmark "Brettspieltreff" set in `font-display`
-(Playfair Display), italic, weight 600.
+The mark always pairs with the wordmark "Brettspieltreff" set in
+`font-display` (Lora), upright, weight 600.
 
 ```
 [mark]   Brettspieltreff

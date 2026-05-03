@@ -96,7 +96,7 @@ function ActiveEventCard({ event }: { event: Event }) {
         )}
       </div>
 
-      <h3 className="font-display italic text-2xl text-plum-deep mt-3 leading-tight">
+      <h3 className="font-display text-2xl text-plum-deep mt-3 leading-tight">
         {event.name}
       </h3>
 
@@ -122,13 +122,13 @@ function ActiveEventCard({ event }: { event: Event }) {
       <div className="flex items-end justify-between mt-auto">
         <div className="flex gap-6">
           <div>
-            <div className="font-display italic font-semibold text-2xl text-plum-deep leading-none">
+            <div className="font-display font-semibold text-2xl text-plum-deep leading-none">
               {event.gameCount}
             </div>
             <div className="wg-label mt-1">Spiele</div>
           </div>
           <div>
-            <div className="font-display italic font-semibold text-2xl text-plum-deep leading-none">
+            <div className="font-display font-semibold text-2xl text-plum-deep leading-none">
               {event.participantCount}
             </div>
             <div className="wg-label mt-1">Teilnehmer</div>
@@ -216,7 +216,7 @@ function OrganizerDonateCard({ stats }: { stats: DonationStats | null }) {
       }}
     >
       <div className="wg-label text-butter-deep">Brettspieltreff bleibt kostenlos</div>
-      <h3 className="font-display italic text-xl text-plum-deep mt-2.5 leading-tight">
+      <h3 className="font-display text-xl text-plum-deep mt-2.5 leading-tight">
         Kaffeekasse fürs Hosting
       </h3>
       {stats && (stats.count > 0 || stats.activeSubscribers > 0) ? (
@@ -324,7 +324,7 @@ export function EventsPage() {
   if (!account) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <h2 className="font-display italic text-3xl text-plum-deep">Meine Events</h2>
+        <h2 className="font-display text-3xl text-plum-deep">Meine Events</h2>
         <p className="text-sm text-ink-soft">Bitte melde dich an.</p>
       </div>
     );
@@ -334,7 +334,7 @@ export function EventsPage() {
     return (
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="wg-label text-plum">Deine Treffs</div>
-        <h2 className="font-display italic text-3xl sm:text-4xl text-plum-deep">
+        <h2 className="font-display text-3xl sm:text-4xl text-plum-deep">
           Lade Treffs…
         </h2>
       </div>
@@ -356,7 +356,7 @@ export function EventsPage() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <div className="wg-label text-plum">Deine Treffs</div>
-          <h2 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-1.5">
+          <h2 className="font-display text-3xl sm:text-4xl text-plum-deep mt-1.5">
             {titleLine}
           </h2>
           <p className="text-sm text-ink-soft mt-2">

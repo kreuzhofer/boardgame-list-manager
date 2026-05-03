@@ -35,7 +35,7 @@ function DonateCard() {
         <Eyebrow text="Brettspieltreff ist kostenlos" />
       </div>
 
-      <h3 className="font-display italic text-xl text-plum-deep mt-3">
+      <h3 className="font-display text-xl text-plum-deep mt-3">
         Hilf mit, das Licht anzulassen.
       </h3>
 
@@ -102,7 +102,7 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
     <div className="wg-card rounded-2xl">
       <Eyebrow text="Wer bringt was" />
 
-      <h3 className="font-display italic text-xl text-ink mt-1.5">
+      <h3 className="font-display text-xl text-ink mt-1.5">
         {bringedGamesCount} Spiele zugesagt
       </h3>
 
@@ -170,9 +170,14 @@ function ParticipantsCard({ participants }: { participants: Participant[] }) {
 export function HomeSidebar({ games, participants }: HomeSidebarProps) {
   return (
     <>
-      <DonateCard />
+      {/* DonateCard intentionally not rendered for now — the component
+          stays in the file so we can re-enable it without rewriting
+          the copy/markup. */}
       <BringerSummaryCard games={games} />
       <ParticipantsCard participants={participants} />
     </>
   );
 }
+
+// Suppress unused-symbol lint on the dormant component.
+void DonateCard;

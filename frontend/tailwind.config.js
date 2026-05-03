@@ -18,25 +18,25 @@ export default {
       black: '#000',
       white: '#fff',
 
-      // Surfaces (warm parchment family)
+      // Surfaces (cool grey family — modern, fresh, neutral)
       paper: {
-        DEFAULT: '#f7f1e6',  // primary background
-        hi:      '#fdf9ee',  // raised cards / inputs
-        lo:      '#ede4d0',  // sunken / table headers
+        DEFAULT: '#f4f5f7',  // primary background (cool light grey)
+        hi:      '#ffffff',  // raised cards / inputs (pure white pops on grey)
+        lo:      '#eaecf0',  // sunken / table headers
       },
       rule: {
-        DEFAULT: '#e3d5b8',  // borders
-        soft:    '#ecdfc6',  // table row dividers
+        DEFAULT: '#e4e7eb',  // borders
+        soft:    '#eef0f3',  // table row dividers
       },
 
-      // Ink (text)
+      // Ink (text) — slight cool tint, near-black
       ink: {
-        DEFAULT: '#2d2233',  // primary text + headings
-        soft:    '#5b4866',  // secondary text
-        mute:    '#8c7d92',  // tertiary / placeholder
+        DEFAULT: '#1a1d23',  // primary text + headings
+        soft:    '#525864',  // secondary text
+        mute:    '#8a92a0',  // tertiary / placeholder
       },
 
-      // Brand — plum
+      // Brand — plum (kept; it's the recognizable Brettspieltreff signature)
       plum: {
         DEFAULT: '#6b3a5c',  // primary brand
         deep:    '#4a2540',  // headlines, header chrome
@@ -47,38 +47,43 @@ export default {
         700:     '#4a2540',
       },
 
-      // Semantics — sage = verfügbar / success
+      // Semantics — sage = verfügbar / success (fresher green, less olive)
       sage: {
-        DEFAULT: '#7a9476',
-        deep:    '#5b7458',
-        50:      '#eef3ed',
-        100:     '#d6e1d3',
+        DEFAULT: '#5f9b6f',
+        deep:    '#3f7d52',
+        50:      '#eaf3ec',
+        100:     '#cfe3d4',
       },
-      // butter = donate / wunsch (warm yellow)
+      // butter = donate / wunsch (cleaner amber, more "highlighter")
       butter: {
-        DEFAULT: '#e8c75c',
-        hi:      '#f3d97a',
+        DEFAULT: '#f0b942',
+        hi:      '#f5c764',
         deep:    '#7a5e0f',
-        50:      '#fbf4d8',
+        50:      '#fdf3d8',
       },
-      // blush = destructive / hide
+      // blush = destructive / hide (rosier, less brick)
       blush: {
-        DEFAULT: '#d97a6c',
-        deep:    '#9c4537',
-        50:      '#fbe8e3',
+        DEFAULT: '#e07574',
+        deep:    '#a93b3a',
+        50:      '#fce6e6',
       },
-      // ocean = prototyp / organizer chrome
+      // ocean = prototyp / organizer chrome (lighter, more contemporary)
       ocean: {
-        DEFAULT: '#3f6f8f',
-        deep:    '#284b62',
-        50:      '#e3eef4',
+        DEFAULT: '#4a7eb0',
+        deep:    '#2c5680',
+        50:      '#e3edf6',
       },
     },
 
     // ── Typography ────────────────────────────────────────────────
+    // Single-family system: Lora for both display and body. Modern
+    // serif with low stroke contrast — keeps the parchment warmth
+    // without the editorial-italic feel of Playfair. The `display`
+    // and `sans` aliases both point at Lora so existing
+    // `font-display` / `font-sans` usages don't need a sweep.
     fontFamily: {
-      display: ['"Playfair Display"', '"Cormorant Garamond"', 'Georgia', 'serif'],
-      sans: ['Nunito', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'system-ui', 'sans-serif'],
+      display: ['Lora', 'Georgia', '"Times New Roman"', 'serif'],
+      sans: ['Lora', 'Georgia', '"Times New Roman"', 'serif'],
       mono: ['"JetBrains Mono"', 'ui-monospace', '"SF Mono"', 'Menlo', 'monospace'],
     },
 

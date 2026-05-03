@@ -43,7 +43,7 @@ export function EventBar({
           <span className="wg-label text-plum">
             Aktueller Treff
           </span>
-          <h2 className="font-display italic text-3xl lg:text-[42px] text-plum-deep mt-1.5">
+          <h2 className="font-display text-3xl lg:text-[42px] text-plum-deep mt-1.5">
             {eventName}
           </h2>
           {(startsAt || location) && (

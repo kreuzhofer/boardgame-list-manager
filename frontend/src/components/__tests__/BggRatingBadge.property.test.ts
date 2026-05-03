@@ -56,16 +56,16 @@ describe('BggRatingBadge Property Tests', () => {
    */
   describe('Property 7: Rating Color Mapping', () => {
     const colorMap: Record<number, string> = {
-      1: '#9c4537', // blush-deep
-      2: '#9c4537',
-      3: '#9c4537',
-      4: '#9c4537',
-      5: '#3f6f8f', // ocean
-      6: '#3f6f8f',
+      1: '#a93b3a', // blush-deep
+      2: '#a93b3a',
+      3: '#a93b3a',
+      4: '#a93b3a',
+      5: '#4a7eb0', // ocean
+      6: '#4a7eb0',
       7: '#6b3a5c', // plum
-      8: '#7a9476', // sage
-      9: '#5b7458', // sage-deep
-      10: '#5b7458',
+      8: '#5f9b6f', // sage
+      9: '#3f7d52', // sage-deep
+      10: '#3f7d52',
     };
 
     it('should return correct color for any rating in valid range', () => {
@@ -74,7 +74,7 @@ describe('BggRatingBadge Property Tests', () => {
           fc.float({ min: 1, max: Math.fround(10.99), noNaN: true }),
           (rating) => {
             const color = getRatingColor(rating);
-            const expectedColor = colorMap[Math.floor(rating)] || '#8c7d92';
+            const expectedColor = colorMap[Math.floor(rating)] || '#8a92a0';
             return color === expectedColor;
           }
         ),
@@ -91,7 +91,7 @@ describe('BggRatingBadge Property Tests', () => {
           ),
           (rating) => {
             const color = getRatingColor(rating);
-            return color === '#8c7d92';
+            return color === '#8a92a0';
           }
         ),
         { numRuns: 10 }
@@ -106,7 +106,7 @@ describe('BggRatingBadge Property Tests', () => {
           (base, decimal) => {
             const rating = base + decimal;
             const color = getRatingColor(rating);
-            const expectedColor = colorMap[base] || '#8c7d92';
+            const expectedColor = colorMap[base] || '#8a92a0';
             return color === expectedColor;
           }
         ),

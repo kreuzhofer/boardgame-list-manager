@@ -49,7 +49,7 @@ export function MagicLinkConsumePage() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
         <div className="wg-label text-plum">Anmelden</div>
-        <h1 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-2">
+        <h1 className="font-display text-3xl sm:text-4xl text-plum-deep mt-2">
           {state.kind === 'loading' && 'Einen Moment …'}
           {state.kind === 'success' && 'Willkommen zurück'}
           {state.kind === 'error' && 'Hat nicht geklappt'}

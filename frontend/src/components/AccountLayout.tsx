@@ -51,7 +51,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
                 aria-hidden="true"
                 className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
               />
-              <span className="font-display italic text-lg sm:text-xl text-plum-deep truncate">
+              <span className="font-display text-lg sm:text-xl text-plum-deep truncate">
                 Brettspieltreff
               </span>
               <span className="hidden sm:inline-flex wg-tag-ocean">Organisator</span>

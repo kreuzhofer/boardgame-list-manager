@@ -60,11 +60,13 @@ export function GameActions({
     }
   };
 
-  // Base button classes - touch targets on mobile (Requirement 6.4)
-  // Mobile: icon-only with 44px touch target (Apple recommended minimum)
-  // Desktop: full text with icon, whitespace-nowrap prevents checkmark wrapping
+  // Base button classes - touch targets on mobile (Requirement 6.4).
+  // Mobile: icon-only with 44px touch target (Apple recommended minimum).
+  // The `!p-0` override is load-bearing: `wg-btn-toggle` extends `wg-btn`
+  // which applies `px-4` (16 px each side). Without this, the inherited
+  // padding squeezes the 28 px icon down to ~12 px of available width.
   const baseButtonClasses = isMobile
-    ? 'w-[44px] h-[44px] text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
+    ? 'w-[44px] h-[44px] !p-0 text-sm font-medium rounded-lg flex items-center justify-center active:scale-95 transition-all'
     : 'px-3 py-1.5 text-xs font-medium rounded-md min-w-[6.5rem] whitespace-nowrap transition-colors';
 
   // Bringer button text (desktop only)
@@ -91,7 +93,7 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/package.svg?v=2" alt="Mitbringen" className="w-5 h-5" />
+              <img src="/package.svg?v=2" alt="Mitbringen" className="w-6 h-6" />
               {isBringer && <span className="ml-0.5 text-xs">✓</span>}
             </>
           ) : (
@@ -112,12 +114,12 @@ export function GameActions({
         >
           {isMobile ? (
             <>
-              <img src="/meeple.svg" alt="Mitspielen" className="w-4 h-4" />
+              <img src="/meeple.svg" alt="Mitspielen" className="w-6 h-6" />
               {isPlayer && <span className="ml-0.5 text-xs">✓</span>}
             </>
           ) : (
             <>
-              <img src="/meeple.svg" alt="" className="w-4 h-4 inline-block mr-1 -mt-0.5" /> {playerText}<span className="inline-block w-3 text-left">{isPlayer ? ' ✓' : ''}</span>
+              <img src="/meeple.svg" alt="" className="w-5 h-5 inline-block mr-1 -mt-0.5" /> {playerText}<span className="inline-block w-3 text-left">{isPlayer ? ' ✓' : ''}</span>
             </>
           )}
         </button>

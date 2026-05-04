@@ -31,6 +31,24 @@ export interface EnrichmentData {
   maxPlaytime?: number;
 }
 
+/**
+ * Thrown by extractEnrichmentData when the BGG page has no
+ * `GEEK.geekitemPreload` blob, an unparseable one, or one without
+ * an `item` field. This is the normal shape of a "dead" page —
+ * older entries, redirects, hidden games — and is a per-row
+ * data condition, not an infrastructure problem. The bulk loop
+ * still counts it as an error (so the operator sees the count)
+ * but doesn't let it advance the consecutive-error counter,
+ * since hitting a streak of these working backward in time
+ * shouldn't kill the run.
+ */
+export class EnrichmentExtractionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EnrichmentExtractionError';
+  }
+}
+
 export interface BulkEnrichmentStatus {
   running: boolean;
   processed: number;
@@ -105,7 +123,7 @@ class BggEnrichmentService {
       if (options.onlyReferenced) {
         await prisma.$executeRaw`
           UPDATE bgg_games SET scraping_done = false
-          WHERE id IN (SELECT DISTINCT bgg_id FROM games WHERE bgg_id IS NOT NULL)
+          WHERE bgg_id IN (SELECT DISTINCT bgg_id FROM games WHERE bgg_id IS NOT NULL)
         `;
       } else {
         await prisma.bggGame.updateMany({ data: { scrapingDone: false } });
@@ -250,19 +268,19 @@ class BggEnrichmentService {
     const geekitemMatch = html.match(/GEEK\.geekitemPreload\s*=\s*(\{[\s\S]*?\});[\s\n]*GEEK\.geekitemSettings/);
     
     if (!geekitemMatch) {
-      throw new Error('Could not find GEEK.geekitemPreload in HTML');
+      throw new EnrichmentExtractionError('Could not find GEEK.geekitemPreload in HTML');
     }
-    
+
     let geekitem: any;
     try {
       geekitem = JSON.parse(geekitemMatch[1]);
     } catch (e) {
-      throw new Error('Failed to parse GEEK.geekitemPreload JSON: ' + (e as Error).message);
+      throw new EnrichmentExtractionError('Failed to parse GEEK.geekitemPreload JSON: ' + (e as Error).message);
     }
-    
+
     const item = geekitem.item;
     if (!item) {
-      throw new Error('No item found in GEEK.geekitemPreload');
+      throw new EnrichmentExtractionError('No item found in GEEK.geekitemPreload');
     }
     
     // Extract alternate names
@@ -550,22 +568,46 @@ class BggEnrichmentService {
         
       } catch (error) {
         this.bulkStatus.errors++;
-        consecutiveErrors++;
-        
+
         // Check for fatal ScraperAPI errors (credits exhausted)
         if (error instanceof ScraperApiError && error.isFatal) {
           console.error(`[BggEnrichment] Fatal error: ${error.message}`);
           this.finishBulkEnrichment(`ScraperAPI error: ${error.message}`);
           return;
         }
-        
+
+        // Per-row data conditions (no preload blob on the page,
+        // unparseable JSON, missing item) are not infrastructure
+        // problems. Count them as errors for the operator's view but
+        // don't advance the consecutive-error counter — older games
+        // can produce streaks of these and shouldn't end the run.
+        if (error instanceof EnrichmentExtractionError) {
+          console.warn(
+            `[BggEnrichment] Game ${game.id}: ${error.message} (skipped, not counted as consecutive)`,
+          );
+          // Mark as scraping_done so a resumed run doesn't keep
+          // trying the same dead page. enrichmentData stays null.
+          try {
+            await prisma.bggGame.update({
+              where: { id: game.id },
+              data: { scrapingDone: true, enrichedAt: new Date() },
+            });
+          } catch (e) {
+            console.error(`[BggEnrichment] Failed to mark ${game.id} as done:`, e);
+          }
+          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+          continue;
+        }
+
+        consecutiveErrors++;
+
         // Check consecutive error threshold
         if (consecutiveErrors >= BggEnrichmentService.MAX_CONSECUTIVE_ERRORS) {
           console.error(`[BggEnrichment] Too many consecutive errors (${consecutiveErrors}), stopping`);
           this.finishBulkEnrichment(`Too many consecutive errors (${consecutiveErrors})`);
           return;
         }
-        
+
         console.error(`[BggEnrichment] Error enriching game ${game.id}:`, error);
         // Continue with next game
       }

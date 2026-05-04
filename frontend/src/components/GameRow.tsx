@@ -11,8 +11,6 @@ import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
-import { openBggPage } from './BggModal';
-import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { GameMeta } from './GameMeta';
@@ -271,7 +269,7 @@ export function GameRow({
       </td>
 
       {/* Game Name with Status Badge and Owner */}
-      <td className="w-[22%] 2xl:w-[25%] p-0">
+      <td className="w-[32%] 2xl:w-[34%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex flex-col gap-1">
             <span className="font-medium text-ink">{game.name}</span>
@@ -294,7 +292,7 @@ export function GameRow({
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-      <td className="w-[15%] 2xl:w-[18%] p-0">
+      <td className="w-[22%] 2xl:w-[23%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <BringerList 
             bringers={game.bringers} 
@@ -308,7 +306,7 @@ export function GameRow({
       </td>
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
-      <td className="w-[15%] 2xl:w-[18%] p-0">
+      <td className="w-[22%] 2xl:w-[23%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <PlayerList 
             players={game.players} 
@@ -322,7 +320,7 @@ export function GameRow({
       </td>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
-      <td className="w-[320px] 2xl:w-[300px] p-0">
+      <td className="w-[200px] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex gap-2 flex-nowrap items-center">
             <div className="shrink-0 hidden 2xl:flex">
@@ -347,27 +345,6 @@ export function GameRow({
               />
             </div>
             
-            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-            <div className="relative w-9 h-8 flex items-center justify-center shrink-0">
-              {game.bggId && game.bggRating ? (
-                <>
-                  <button
-                    onClick={() => openBggPage(game.bggId!)}
-                    className="p-1 rounded flex items-center hover:bg-paper-lo transition-colors"
-                    aria-label="BoardGameGeek Info"
-                  >
-                    <BggRatingBadge rating={game.bggRating} />
-                  </button>
-                  <HelpBubble
-                    text="BoardGameGeek Seite öffnen (neuer Tab)"
-                    position="top-right"
-                  />
-                </>
-              ) : (
-                <div className="w-8 h-8 pointer-events-none" aria-hidden="true" />
-              )}
-            </div>
-
             {/* Hide/Show button */}
             {(onHideGame || onUnhideGame) && (
               <div className="relative shrink-0">

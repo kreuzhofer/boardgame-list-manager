@@ -1,14 +1,16 @@
 /**
  * HelpBubble component
- * A small "?" button that shows an explanatory speech bubble on tap/hover
- * - Positioned at the edge of the parent element
- * - Speech bubble appears with tip pointing to the ? button
- * - Auto-dismisses based on text length
- * - Viewport-aware: flips position if bubble would overflow screen
- * - Reusable for any control needing explanation
+ * A small "?" button that shows an explanatory speech bubble on tap/hover.
+ * - Inline button as anchor; bubble rendered via createPortal to document.body
+ *   so it escapes any ancestor with `overflow: hidden` (cards, table cells,
+ *   scroll containers).
+ * - Position computed in viewport coords from the anchor's getBoundingClientRect;
+ *   re-anchors on scroll/resize while visible.
+ * - Auto-dismisses based on text length; flips/shifts to stay in viewport.
  */
 
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface HelpBubbleProps {
   /** The help text to display in the bubble */
@@ -23,22 +25,30 @@ interface HelpBubbleProps {
 
 type Position = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 
-// Calculate display duration based on text length (minimum 2s, ~50ms per character)
 const calculateDuration = (text: string): number => {
   const baseDuration = 2000;
   const perCharDuration = 50;
   return Math.max(baseDuration, text.length * perCharDuration);
 };
 
-export function HelpBubble({ 
-  text, 
+const VIEWPORT_PADDING = 8;
+const BUBBLE_GAP = 8;
+
+export function HelpBubble({
+  text,
   position: preferredPosition = 'top-right',
   className = '',
-  showIndicator = true
+  showIndicator = true,
 }: HelpBubbleProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [actualPosition, setActualPosition] = useState<Position>(preferredPosition);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [bubbleStyle, setBubbleStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    visibility: 'hidden',
+  });
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -56,75 +66,83 @@ export function HelpBubble({
     }
   }, []);
 
-  // Track horizontal offset to keep bubble in viewport (use ref to avoid re-render loops)
-  const horizontalOffsetRef = useRef(0);
-  const [, forceUpdate] = useState(0);
+  const captureAnchorRect = useCallback(() => {
+    if (!containerRef.current) return;
+    setAnchorRect(containerRef.current.getBoundingClientRect());
+  }, []);
 
-  // Adjust bubble position after it renders to ensure it stays in viewport
+  // Re-anchor on scroll/resize while visible so the bubble follows the button.
+  useEffect(() => {
+    if (!isVisible) return;
+    const update = () => captureAnchorRect();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [isVisible, captureAnchorRect]);
+
+  // Position the bubble in viewport coords once it has rendered (so we know
+  // its size). Flips top<->bottom and shifts horizontally to stay on screen.
   useLayoutEffect(() => {
-    if (isVisible && bubbleRef.current) {
-      const bubbleRect = bubbleRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const padding = 8; // Keep some padding from edges
+    if (!isVisible || !anchorRect || !bubbleRef.current) return;
 
-      let newPosition = actualPosition;
-      let needsPositionUpdate = false;
+    const bubble = bubbleRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-      // Check horizontal overflow - adjust offset to keep in viewport
-      // Account for current offset when checking bounds
-      const currentOffset = horizontalOffsetRef.current;
-      const actualLeft = bubbleRect.left;
-      const actualRight = bubbleRect.right;
-      
-      let newOffset = currentOffset;
-      if (actualLeft < padding) {
-        // Bubble overflows left edge - shift it right
-        newOffset = currentOffset + (padding - actualLeft);
-      } else if (actualRight > viewportWidth - padding) {
-        // Bubble overflows right edge - shift it left
-        newOffset = currentOffset + ((viewportWidth - padding) - actualRight);
-      }
+    let pos = preferredPosition;
 
-      // Only update if offset changed significantly (avoid floating point issues)
-      if (Math.abs(newOffset - currentOffset) > 0.5) {
-        horizontalOffsetRef.current = newOffset;
-        forceUpdate(n => n + 1); // Trigger re-render to apply new offset
-      }
-
-      // Check vertical overflow
-      if (bubbleRect.top < padding) {
-        // Flip to bottom
-        if (newPosition.startsWith('top')) {
-          newPosition = newPosition.replace('top', 'bottom') as Position;
-          needsPositionUpdate = true;
-        }
-      } else if (bubbleRect.bottom > viewportHeight - padding) {
-        // Flip to top
-        if (newPosition.startsWith('bottom')) {
-          newPosition = newPosition.replace('bottom', 'top') as Position;
-          needsPositionUpdate = true;
-        }
-      }
-
-      if (needsPositionUpdate) {
-        setActualPosition(newPosition);
-      }
+    // Vertical flip if the preferred side won't fit.
+    const wantsTop = pos.startsWith('top');
+    const fitsAbove = anchorRect.top - BUBBLE_GAP - bubble.height >= VIEWPORT_PADDING;
+    const fitsBelow = anchorRect.bottom + BUBBLE_GAP + bubble.height <= vh - VIEWPORT_PADDING;
+    if (wantsTop && !fitsAbove && fitsBelow) {
+      pos = pos.replace('top', 'bottom') as Position;
+    } else if (!wantsTop && !fitsBelow && fitsAbove) {
+      pos = pos.replace('bottom', 'top') as Position;
     }
-  }, [isVisible, actualPosition]);
+
+    const isTop = pos.startsWith('top');
+    const isRight = pos.endsWith('right');
+
+    const top = isTop
+      ? anchorRect.top - BUBBLE_GAP - bubble.height
+      : anchorRect.bottom + BUBBLE_GAP;
+
+    let left = isRight
+      ? anchorRect.right - bubble.width
+      : anchorRect.left;
+
+    // Horizontal viewport clamp.
+    if (left < VIEWPORT_PADDING) left = VIEWPORT_PADDING;
+    if (left + bubble.width > vw - VIEWPORT_PADDING) {
+      left = vw - VIEWPORT_PADDING - bubble.width;
+    }
+
+    setActualPosition(pos);
+    setBubbleStyle({
+      position: 'fixed',
+      top: `${Math.round(top)}px`,
+      left: `${Math.round(left)}px`,
+      visibility: 'visible',
+    });
+  }, [isVisible, anchorRect, preferredPosition]);
 
   const showBubble = useCallback(() => {
     if (isInteractingRef.current) return;
     isInteractingRef.current = true;
-    
+
     clearTimeouts();
-    setActualPosition(preferredPosition); // Start with preferred, will adjust in useLayoutEffect
-    horizontalOffsetRef.current = 0; // Reset offset
+    setActualPosition(preferredPosition);
+    setBubbleStyle({ position: 'fixed', visibility: 'hidden' });
+    captureAnchorRect();
     setIsFadingOut(false);
     setIsVisible(true);
 
     const duration = calculateDuration(text);
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsFadingOut(true);
       fadeTimeoutRef.current = setTimeout(() => {
@@ -133,12 +151,10 @@ export function HelpBubble({
         isInteractingRef.current = false;
       }, 300);
     }, duration);
-  }, [text, clearTimeouts, preferredPosition]);
+  }, [text, clearTimeouts, preferredPosition, captureAnchorRect]);
 
   const hideBubble = useCallback(() => {
-    // Don't hide if we're in the middle of showing
     if (!isVisible || isFadingOut) return;
-    
     setIsFadingOut(true);
     clearTimeouts();
     fadeTimeoutRef.current = setTimeout(() => {
@@ -148,36 +164,37 @@ export function HelpBubble({
     }, 300);
   }, [isVisible, isFadingOut, clearTimeouts]);
 
-  // Handle click for mobile
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isVisible) {
-      showBubble();
-    }
-  }, [isVisible, showBubble]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isVisible) {
+        showBubble();
+      }
+    },
+    [isVisible, showBubble],
+  );
 
-  // Handle mouse enter/leave for desktop
   const handleMouseEnter = useCallback(() => {
     if (!isVisible && !isInteractingRef.current) {
       showBubble();
     }
   }, [isVisible, showBubble]);
 
-  const handleMouseLeave = useCallback((e: React.MouseEvent) => {
-    // Check if we're moving to a child element (the bubble)
-    const relatedTarget = e.relatedTarget as Node | null;
-    if (containerRef.current?.contains(relatedTarget)) {
-      return;
-    }
-    hideBubble();
-  }, [hideBubble]);
+  const handleMouseLeave = useCallback(
+    (e: React.MouseEvent) => {
+      const relatedTarget = e.relatedTarget as Node | null;
+      if (containerRef.current?.contains(relatedTarget)) {
+        return;
+      }
+      hideBubble();
+    },
+    [hideBubble],
+  );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => clearTimeouts();
   }, [clearTimeouts]);
 
-  // Position classes for the ? button
   const buttonPositionClasses: Record<Position, string> = {
     'top-right': '-top-1.5 -right-1.5',
     'top-left': '-top-1.5 -left-1.5',
@@ -185,49 +202,46 @@ export function HelpBubble({
     'bottom-left': '-bottom-1.5 -left-1.5',
   };
 
-  // Position classes for the speech bubble
-  const getBubblePositionStyle = (): React.CSSProperties => {
-    const isTop = actualPosition.startsWith('top');
-    const isRight = actualPosition.endsWith('right');
-    
-    const style: React.CSSProperties = {
-      position: 'absolute',
-      [isTop ? 'bottom' : 'top']: '100%',
-      [isRight ? 'right' : 'left']: 0,
-      [isTop ? 'marginBottom' : 'marginTop']: '8px',
-    };
-
-    // Apply horizontal offset to keep bubble in viewport
-    if (horizontalOffsetRef.current !== 0) {
-      style.transform = `translateX(${horizontalOffsetRef.current}px)`;
-    }
-
-    return style;
-  };
-
-  // Arrow/tip position classes
+  // Arrow tip — points back toward the anchor. With the bubble portalled and
+  // free-floating, the arrow stays cosmetic and may not always perfectly
+  // align after a horizontal shift; that's acceptable.
   const arrowPositionClasses: Record<Position, string> = {
-    'top-right': 'top-full right-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
-    'top-left': 'top-full left-1.5 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
-    'bottom-right': 'bottom-full right-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
-    'bottom-left': 'bottom-full left-1.5 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
+    'top-right': 'top-full right-3 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
+    'top-left': 'top-full left-3 border-l-transparent border-r-transparent border-b-transparent border-t-ink',
+    'bottom-right': 'bottom-full right-3 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
+    'bottom-left': 'bottom-full left-3 border-l-transparent border-r-transparent border-t-transparent border-b-ink',
   };
 
-  // When showIndicator is false, we need the container to cover the parent for events
-  // Use inset-0 to cover the parent element completely
-  const containerClasses = showIndicator 
+  const containerClasses = showIndicator
     ? `absolute ${buttonPositionClasses[preferredPosition]} z-10 ${className}`
     : `absolute inset-0 z-10 cursor-help ${className}`;
 
+  const bubble =
+    isVisible &&
+    createPortal(
+      <div
+        ref={bubbleRef}
+        style={{ ...bubbleStyle, zIndex: 1000 }}
+        className={`pointer-events-none transition-opacity duration-300 ${
+          isFadingOut ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        <div className="relative bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-floating max-w-48 whitespace-normal">
+          {text}
+          <div className={`absolute w-0 h-0 border-4 ${arrowPositionClasses[actualPosition]}`} />
+        </div>
+      </div>,
+      document.body,
+    );
+
   return (
-    <div 
+    <div
       ref={containerRef}
       className={containerClasses}
       onMouseLeave={handleMouseLeave}
       onClick={!showIndicator ? handleClick : undefined}
       onMouseEnter={!showIndicator ? handleMouseEnter : undefined}
     >
-      {/* ? Button - visible when showIndicator is true */}
       {showIndicator && (
         <button
           type="button"
@@ -239,23 +253,7 @@ export function HelpBubble({
           ?
         </button>
       )}
-
-      {/* Speech Bubble */}
-      {isVisible && (
-        <div
-          ref={bubbleRef}
-          style={getBubblePositionStyle()}
-          className={`transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
-        >
-          <div className="relative bg-ink text-white text-xs px-3 py-2 rounded-lg shadow-floating max-w-48 whitespace-normal">
-            {text}
-            {/* Arrow/tip */}
-            <div
-              className={`absolute w-0 h-0 border-4 ${arrowPositionClasses[actualPosition]}`}
-            />
-          </div>
-        </div>
-      )}
+      {bubble}
     </div>
   );
 }

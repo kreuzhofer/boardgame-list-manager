@@ -12,8 +12,6 @@ import { useSwipeable } from 'react-swipeable';
 import { Game, Player, Bringer } from '../types';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
-import { openBggPage } from './BggModal';
-import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
 import { GameMeta } from './GameMeta';
@@ -657,23 +655,6 @@ export function GameCard({
                     onRemoveBringer={handleRemoveBringerInline}
                     isMobile={true}
                   />
-                  
-                  {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-                  {game.bggId && game.bggRating && (
-                    <div className="relative">
-                      <button
-                        onClick={() => openBggPage(game.bggId!)}
-                        className="p-1.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-paper-lo transition-colors"
-                        aria-label="BoardGameGeek Info"
-                      >
-                        <BggRatingBadge rating={game.bggRating} />
-                      </button>
-                      <HelpBubble
-                        text="BoardGameGeek Seite öffnen (neuer Tab)"
-                        position="top-right"
-                      />
-                    </div>
-                  )}
                   
                   {/* Thumbnail Upload Modal - rendered via portal */}
                   <ThumbnailUploadModal

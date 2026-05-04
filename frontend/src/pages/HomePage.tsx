@@ -610,7 +610,7 @@ export function HomePage({ participant }: HomePageProps) {
             canManageGames={canManageGames && !isReadOnly}
           />
         </main>
-        <aside className="grid gap-5 md:grid-cols-3 lg:grid-cols-1 lg:sticky lg:top-6 lg:self-start">
+        <aside className="grid gap-5 md:grid-cols-3 lg:grid-cols-1 lg:self-start">
           <HomeSidebar games={games} participants={participants} />
         </aside>
       </div>

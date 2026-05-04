@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Game, Participant } from '../types';
 import { PersonChip } from './PersonChip';
 
@@ -137,9 +138,16 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
 }
 
 // ── Card 3: ParticipantsCard ──────────────────────────────────────────
+const COLLAPSED_LIMIT = 10;
+
 function ParticipantsCard({ participants }: { participants: Participant[] }) {
-  const visible = participants.slice(0, 10);
-  const remaining = participants.length - visible.length;
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? participants : participants.slice(0, COLLAPSED_LIMIT);
+  const remaining = participants.length - COLLAPSED_LIMIT;
+  const canExpand = remaining > 0;
+
+  const toggleClasses =
+    'inline-flex items-center px-3 h-7 rounded-full border border-dashed border-rule text-ink-mute font-sans text-[11px] font-bold hover:bg-paper-lo hover:text-ink-soft hover:border-rule transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-plum/40 cursor-pointer';
 
   return (
     <div className="wg-card rounded-2xl">
@@ -155,10 +163,15 @@ function ParticipantsCard({ participants }: { participants: Participant[] }) {
           {visible.map((p) => (
             <PersonChip key={p.id} name={p.name} />
           ))}
-          {remaining > 0 && (
-            <span className="inline-flex items-center px-3 h-7 rounded-full border border-dashed border-rule text-ink-mute font-sans text-[11px] font-bold">
+          {canExpand && !expanded && (
+            <button type="button" onClick={() => setExpanded(true)} className={toggleClasses}>
               + {remaining} weitere
-            </span>
+            </button>
+          )}
+          {canExpand && expanded && (
+            <button type="button" onClick={() => setExpanded(false)} className={toggleClasses}>
+              weniger anzeigen
+            </button>
           )}
         </div>
       )}

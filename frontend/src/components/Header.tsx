@@ -15,6 +15,8 @@ import type { Participant } from '../types';
 interface HeaderProps {
   basePath?: string;
   eventName?: string;
+  startsAt?: string | null;
+  location?: string | null;
   participant?: Participant;
   onParticipantUpdated?: (participant: Participant) => void;
   onParticipantSwitch?: () => void;
@@ -22,6 +24,21 @@ interface HeaderProps {
 
 const getEventName = (): string =>
   import.meta.env.VITE_EVENT_NAME || 'Brettspieltreff';
+
+function formatHeaderDate(startsAt: string): string {
+  return new Date(startsAt).toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function formatHeaderTime(startsAt: string): string {
+  return new Date(startsAt).toLocaleTimeString('de-DE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 const DESKTOP_TABS = [
   { path: '/', label: 'Spieleliste' },
@@ -32,11 +49,20 @@ const DESKTOP_TABS = [
 export function Header({
   basePath = '',
   eventName: eventNameProp,
+  startsAt,
+  location: eventLocation,
   participant,
   onParticipantUpdated,
   onParticipantSwitch,
 }: HeaderProps) {
   const eventName = eventNameProp || getEventName();
+  const metaParts: string[] = [];
+  if (startsAt) {
+    metaParts.push(formatHeaderDate(startsAt));
+    metaParts.push(formatHeaderTime(startsAt));
+  }
+  if (eventLocation) metaParts.push(eventLocation);
+  const metaLine = metaParts.length > 0 ? metaParts.join(' • ') : null;
   const location = useLocation();
   const { isAuthenticated: isAccountAuthenticated, account } = useAuth();
 
@@ -63,14 +89,16 @@ export function Header({
               aria-hidden="true"
               className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
             />
-            {/* Eyebrow + event name */}
+            {/* Event name + optional meta line (date • time • place) */}
             <div className="flex flex-col min-w-0 leading-tight">
-              <span className="font-sans text-paper-hi/70 text-[10px] sm:text-xs tracking-wider uppercase truncate">
-                Aktueller Treff
-              </span>
               <span className="font-display text-paper-hi text-lg sm:text-xl truncate">
                 {eventName}
               </span>
+              {metaLine && (
+                <span className="font-sans text-paper-hi/70 text-[10px] sm:text-xs truncate mt-0.5">
+                  {metaLine}
+                </span>
+              )}
             </div>
           </Link>
 

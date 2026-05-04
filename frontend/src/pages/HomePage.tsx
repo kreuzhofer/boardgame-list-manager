@@ -19,7 +19,6 @@ import { GameTable } from '../components/GameTable';
 import { UnifiedSearchBar } from '../components/UnifiedSearchBar';
 import { AdvancedFilters } from '../components/AdvancedFilters';
 import { DeleteGameModal } from '../components/DeleteGameModal';
-import { EventBar } from '../components/EventBar';
 import { HomeSidebar } from '../components/HomeSidebar';
 import { FilterPill } from '../components/FilterPill';
 import { useToast } from '../components/ToastProvider';
@@ -67,9 +66,8 @@ export function HomePage({ participant }: HomePageProps) {
 
   // Account auth (organizer/admin)
   const { account } = useAuth();
-  const { eventName: ctxEventName, startsAt, location, effectiveStatus } = useEvent();
+  const { effectiveStatus } = useEvent();
   const isReadOnly = effectiveStatus === 'archived';
-  const eventName = ctxEventName || 'Spieleabend';
   const canManageGames = account?.role === 'admin' || account?.role === 'account_owner';
   
   // Filter state from hook
@@ -407,8 +405,6 @@ export function HomePage({ participant }: HomePageProps) {
     }));
   }, []);
 
-  // Derived counts for EventBar
-  const bringersCount = new Set(games.flatMap(g => g.bringers.map(b => b.participant.id))).size;
   const wishesCount = games.filter(g => g.bringers.length === 0).length;
 
   // Apply filters to games
@@ -422,15 +418,6 @@ export function HomePage({ participant }: HomePageProps) {
   if (loading) {
     return (
       <>
-        <EventBar
-          eventName={eventName}
-          startsAt={startsAt}
-          location={location}
-          gamesCount={0}
-          bringersCount={0}
-          wishesCount={0}
-          participantsCount={0}
-        />
         <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
           <div className="bg-paper-hi rounded-lg shadow p-8">
             <div className="flex items-center justify-center gap-3">
@@ -466,15 +453,6 @@ export function HomePage({ participant }: HomePageProps) {
   if (error) {
     return (
       <>
-        <EventBar
-          eventName={eventName}
-          startsAt={startsAt}
-          location={location}
-          gamesCount={0}
-          bringersCount={0}
-          wishesCount={0}
-          participantsCount={0}
-        />
         <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
           <div className="bg-blush-50 border border-blush rounded-lg p-6">
             <div className="flex items-start gap-3">
@@ -510,15 +488,6 @@ export function HomePage({ participant }: HomePageProps) {
 
   return (
     <>
-      <EventBar
-        eventName={eventName}
-        startsAt={startsAt}
-        location={location}
-        gamesCount={games.length}
-        bringersCount={bringersCount}
-        wishesCount={wishesCount}
-        participantsCount={participants.length}
-      />
       <div className={`px-4 sm:px-6 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1fr_320px] gap-8 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
         <main className="space-y-6 min-w-0">
           {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search.

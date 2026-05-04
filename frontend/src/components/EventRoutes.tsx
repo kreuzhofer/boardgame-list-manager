@@ -14,7 +14,7 @@ import type { Participant } from '../types';
 import { useState, useCallback } from 'react';
 
 function EventContent() {
-  const { slug, eventName, effectiveStatus, loading, error } = useEvent();
+  const { slug, eventName, startsAt, location: eventLocation, effectiveStatus, loading, error } = useEvent();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { participant, isLoading, setParticipant, clearParticipant } = useParticipant(slug);
   const { account } = useAuth();
@@ -105,6 +105,8 @@ function EventContent() {
         <Layout
           basePath={`/${slug}`}
           eventName={eventName}
+          startsAt={startsAt}
+          location={eventLocation}
           participant={participant ?? undefined}
           onParticipantUpdated={handleParticipantUpdated}
           onParticipantSwitch={isAccountBound ? undefined : handleParticipantSwitch}

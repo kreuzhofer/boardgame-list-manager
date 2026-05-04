@@ -20,6 +20,33 @@ export interface EnrichmentData {
   publishers: string[];
   categories: string[];
   mechanics: string[];
+  /** Game-stat fields read from `geekitemPreload.item`. BGG returns
+   *  these as strings (e.g. "1", "150"); we parse to numbers and
+   *  store undefined when absent or unparseable. `playingtime` is
+   *  often null on BGG (Ark Nova has it null), so we don't capture
+   *  it — display-side derives the time range from min/max instead. */
+  minPlayers?: number;
+  maxPlayers?: number;
+  minPlaytime?: number;
+  maxPlaytime?: number;
+}
+
+/**
+ * Thrown by extractEnrichmentData when the BGG page has no
+ * `GEEK.geekitemPreload` blob, an unparseable one, or one without
+ * an `item` field. This is the normal shape of a "dead" page —
+ * older entries, redirects, hidden games — and is a per-row
+ * data condition, not an infrastructure problem. The bulk loop
+ * still counts it as an error (so the operator sees the count)
+ * but doesn't let it advance the consecutive-error counter,
+ * since hitting a streak of these working backward in time
+ * shouldn't kill the run.
+ */
+export class EnrichmentExtractionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EnrichmentExtractionError';
+  }
 }
 
 export interface BulkEnrichmentStatus {
@@ -57,12 +84,50 @@ class BggEnrichmentService {
 
 
   /**
-   * Start bulk enrichment process (returns immediately)
+   * Start bulk enrichment process (returns immediately).
+   *
+   * @param options.force          - Reset `scraping_done` to false on the
+   *                                 target set BEFORE the loop runs, so all
+   *                                 games (or referenced ones) get re-fetched
+   *                                 from BGG. Idempotent under server crash:
+   *                                 the DB always reflects which rows are
+   *                                 still pending; resume by clicking the
+   *                                 normal (no-force) button.
+   * @param options.onlyReferenced - Restrict the target set to BggGames
+   *                                 referenced by any per-event Game row.
+   *                                 Cuts ScraperAPI cost dramatically.
+   * @param options.source         - 'bgg' (default) hits BGG via ScraperAPI;
+   *                                 'cache' re-runs the extractor against the
+   *                                 stored `raw_preload` blobs (no network).
+   *
    * Requirement 6a.1: Start background process, return 202
    */
-  startBulkEnrichment(): { started: boolean; message: string } {
+  async startBulkEnrichment(
+    options: {
+      force?: boolean;
+      onlyReferenced?: boolean;
+      source?: 'bgg' | 'cache';
+    } = {},
+  ): Promise<{ started: boolean; message: string }> {
     if (this.bulkStatus.running) {
       return { started: false, message: 'Bulk enrichment already in progress' };
+    }
+
+    const source = options.source ?? 'bgg';
+
+    // For BGG-source runs with `force`: clear scraping_done on the target
+    // set so the existing loop picks them up. Crash-resilient by design —
+    // a server restart leaves enriched rows at true and the rest at false;
+    // the normal (no-force) button resumes from there.
+    if (source === 'bgg' && options.force) {
+      if (options.onlyReferenced) {
+        await prisma.$executeRaw`
+          UPDATE bgg_games SET scraping_done = false
+          WHERE bgg_id IN (SELECT DISTINCT bgg_id FROM games WHERE bgg_id IS NOT NULL)
+        `;
+      } else {
+        await prisma.bggGame.updateMany({ data: { scrapingDone: false } });
+      }
     }
 
     this.bulkStatus = {
@@ -78,14 +143,36 @@ class BggEnrichmentService {
 
     this.stopRequested = false;
 
-    // Start background process
-    this.processBulkEnrichment().catch((error) => {
+    const runner =
+      source === 'cache'
+        ? this.processBulkReextract.bind(this, options)
+        : this.processBulkEnrichment.bind(this, options);
+
+    runner().catch((error) => {
       console.error('[BggEnrichment] Fatal error:', error);
       this.bulkStatus.running = false;
       this.bulkStatus.completedAt = new Date();
     });
 
-    return { started: true, message: 'Bulk enrichment started' };
+    return {
+      started: true,
+      message:
+        source === 'cache'
+          ? 'Cache-Re-Extraktion gestartet'
+          : 'Bulk enrichment started',
+    };
+  }
+
+  /** Distinct bggIds referenced by any per-event Game row. */
+  private async getReferencedBggIds(): Promise<number[]> {
+    const rows = await prisma.game.findMany({
+      where: { bggId: { not: null } },
+      select: { bggId: true },
+      distinct: ['bggId'],
+    });
+    return rows
+      .map((r) => r.bggId)
+      .filter((id): id is number => typeof id === 'number');
   }
 
   /**
@@ -181,19 +268,19 @@ class BggEnrichmentService {
     const geekitemMatch = html.match(/GEEK\.geekitemPreload\s*=\s*(\{[\s\S]*?\});[\s\n]*GEEK\.geekitemSettings/);
     
     if (!geekitemMatch) {
-      throw new Error('Could not find GEEK.geekitemPreload in HTML');
+      throw new EnrichmentExtractionError('Could not find GEEK.geekitemPreload in HTML');
     }
-    
+
     let geekitem: any;
     try {
       geekitem = JSON.parse(geekitemMatch[1]);
     } catch (e) {
-      throw new Error('Failed to parse GEEK.geekitemPreload JSON: ' + (e as Error).message);
+      throw new EnrichmentExtractionError('Failed to parse GEEK.geekitemPreload JSON: ' + (e as Error).message);
     }
-    
+
     const item = geekitem.item;
     if (!item) {
-      throw new Error('No item found in GEEK.geekitemPreload');
+      throw new EnrichmentExtractionError('No item found in GEEK.geekitemPreload');
     }
     
     // Extract alternate names
@@ -227,6 +314,13 @@ class BggEnrichmentService {
         .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
     };
     
+    // Numeric stat fields (strings on BGG, undefined if absent/garbage).
+    const parseStat = (v: unknown): number | undefined => {
+      if (v === null || v === undefined || v === '') return undefined;
+      const n = parseInt(String(v), 10);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    };
+
     return {
       alternateNames,
       primaryName: item.name || '',
@@ -238,6 +332,88 @@ class BggEnrichmentService {
       publishers: extractNames('boardgamepublisher'),
       categories: extractNames('boardgamecategory'),
       mechanics: extractNames('boardgamemechanic'),
+      minPlayers: parseStat(item.minplayers),
+      maxPlayers: parseStat(item.maxplayers),
+      minPlaytime: parseStat(item.minplaytime),
+      maxPlaytime: parseStat(item.maxplaytime),
+    };
+  }
+
+  /**
+   * Same as extractEnrichmentData but also returns the raw
+   * `geekitemPreload.item` blob, for persistence in `raw_preload`.
+   * Storing the raw blob means future schema bumps are a re-extract
+   * pass against this data, not another ScraperAPI roundtrip.
+   */
+  private extractEnrichmentAndRaw(html: string): {
+    enrichment: EnrichmentData;
+    rawPreload: unknown;
+  } {
+    const enrichment = this.extractEnrichmentData(html);
+    const m = html.match(/GEEK\.geekitemPreload\s*=\s*(\{[\s\S]*?\});[\s\n]*GEEK\.geekitemSettings/);
+    let rawPreload: unknown = null;
+    if (m) {
+      try {
+        const parsed = JSON.parse(m[1]);
+        rawPreload = parsed?.item ?? null;
+      } catch {
+        rawPreload = null;
+      }
+    }
+    return { enrichment, rawPreload };
+  }
+
+  /**
+   * Re-run the extractor against an existing `raw_preload` blob,
+   * skipping BGG entirely. Returns the new EnrichmentData. Mirrors
+   * `extractEnrichmentData(html)` but takes the parsed `item`
+   * directly. Used by the "Aus Cache neu extrahieren" admin flow.
+   */
+  reextractFromRawPreload(item: any): EnrichmentData {
+    const alternateNames: Array<{ name: string; language?: string }> = [];
+    if (Array.isArray(item.alternatenames)) {
+      for (const alt of item.alternatenames) {
+        if (alt.name) {
+          alternateNames.push({
+            name: alt.name,
+            language: alt.nameid ? undefined : alt.language,
+          });
+        }
+      }
+    }
+    const links = item.links || {};
+    const extractNames = (linkType: string): string[] => {
+      const arr = links[linkType];
+      if (!Array.isArray(arr)) return [];
+      return arr.map((l: any) => l.name).filter(Boolean);
+    };
+    const sanitizeHtml = (html: string): string => {
+      if (!html) return '';
+      return html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
+    };
+    const parseStat = (v: unknown): number | undefined => {
+      if (v === null || v === undefined || v === '') return undefined;
+      const n = parseInt(String(v), 10);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    };
+    return {
+      alternateNames,
+      primaryName: item.name || '',
+      description: sanitizeHtml(item.description || ''),
+      shortDescription: item.short_description || '',
+      slug: item.href || '',
+      designers: extractNames('boardgamedesigner'),
+      artists: extractNames('boardgameartist'),
+      publishers: extractNames('boardgamepublisher'),
+      categories: extractNames('boardgamecategory'),
+      mechanics: extractNames('boardgamemechanic'),
+      minPlayers: parseStat(item.minplayers),
+      maxPlayers: parseStat(item.maxplayers),
+      minPlaytime: parseStat(item.minplaytime),
+      maxPlaytime: parseStat(item.maxplaytime),
     };
   }
 
@@ -265,15 +441,16 @@ class BggEnrichmentService {
     
     // Fetch and parse BGG page
     const { html } = await this.fetchBggPage(bggId);
-    const enrichmentData = this.extractEnrichmentData(html);
-    
-    // Store enrichment data
+    const { enrichment: enrichmentData, rawPreload } = this.extractEnrichmentAndRaw(html);
+
+    // Store enrichment data + the raw blob (for future re-extraction)
     await prisma.bggGame.update({
       where: { id: bggId },
       data: {
         scrapingDone: true,
         enrichedAt: new Date(),
         enrichmentData: enrichmentData as any,
+        rawPreload: rawPreload as any,
       },
     });
     
@@ -288,24 +465,39 @@ class BggEnrichmentService {
    * Process bulk enrichment in background
    * Requirements 6a.3, 6a.4, 6b.6, 6c.3, 6c.4
    */
-  private async processBulkEnrichment(): Promise<void> {
+  private async processBulkEnrichment(
+    options: { onlyReferenced?: boolean } = {},
+  ): Promise<void> {
     const LOG_INTERVAL_MS = 60000; // Log every 60 seconds
     const DELAY_MS = 1000; // 1 second between requests
-    
-    // Get count of games needing enrichment and already enriched
+
+    // Build the WHERE clause. Always filters by scraping_done=false; the
+    // optional `onlyReferenced` flag intersects with bggIds referenced
+    // by any per-event Game row.
+    const whereTodo: any = { scrapingDone: false };
+    const whereDone: any = { scrapingDone: true };
+    if (options.onlyReferenced) {
+      const refs = await this.getReferencedBggIds();
+      whereTodo.id = { in: refs };
+      whereDone.id = { in: refs };
+    }
+
     const [needingEnrichment, alreadyEnriched] = await Promise.all([
-      prisma.bggGame.count({ where: { scrapingDone: false } }),
-      prisma.bggGame.count({ where: { scrapingDone: true } }),
+      prisma.bggGame.count({ where: whereTodo }),
+      prisma.bggGame.count({ where: whereDone }),
     ]);
-    
+
     this.bulkStatus.total = needingEnrichment;
     this.bulkStatus.skipped = alreadyEnriched;
-    console.log(`[BggEnrichment] Starting bulk enrichment of ${needingEnrichment} games (${alreadyEnriched} already enriched)`);
-    
+    console.log(
+      `[BggEnrichment] Starting bulk enrichment of ${needingEnrichment} games ` +
+        `(${alreadyEnriched} already enriched${options.onlyReferenced ? ', referenced only' : ''})`,
+    );
+
     // Get all games needing enrichment, sorted by year_published DESC (newest first)
     // Requirement 6a.5: Sort by year_published descending so newer games are enriched first
     const games = await prisma.bggGame.findMany({
-      where: { scrapingDone: false },
+      where: whereTodo,
       select: { id: true, yearPublished: true },
       orderBy: { yearPublished: 'desc' },
     });
@@ -324,14 +516,16 @@ class BggEnrichmentService {
         const result = await this.fetchWithRetry(game.id);
         this.bulkStatus.bytesTransferred += result.bytes;
         
-        const enrichmentData = this.extractEnrichmentData(result.html);
-        
+        const { enrichment: enrichmentData, rawPreload } =
+          this.extractEnrichmentAndRaw(result.html);
+
         await prisma.bggGame.update({
           where: { id: game.id },
           data: {
             scrapingDone: true,
             enrichedAt: new Date(),
             enrichmentData: enrichmentData as any,
+            rawPreload: rawPreload as any,
           },
         });
         
@@ -374,22 +568,46 @@ class BggEnrichmentService {
         
       } catch (error) {
         this.bulkStatus.errors++;
-        consecutiveErrors++;
-        
+
         // Check for fatal ScraperAPI errors (credits exhausted)
         if (error instanceof ScraperApiError && error.isFatal) {
           console.error(`[BggEnrichment] Fatal error: ${error.message}`);
           this.finishBulkEnrichment(`ScraperAPI error: ${error.message}`);
           return;
         }
-        
+
+        // Per-row data conditions (no preload blob on the page,
+        // unparseable JSON, missing item) are not infrastructure
+        // problems. Count them as errors for the operator's view but
+        // don't advance the consecutive-error counter — older games
+        // can produce streaks of these and shouldn't end the run.
+        if (error instanceof EnrichmentExtractionError) {
+          console.warn(
+            `[BggEnrichment] Game ${game.id}: ${error.message} (skipped, not counted as consecutive)`,
+          );
+          // Mark as scraping_done so a resumed run doesn't keep
+          // trying the same dead page. enrichmentData stays null.
+          try {
+            await prisma.bggGame.update({
+              where: { id: game.id },
+              data: { scrapingDone: true, enrichedAt: new Date() },
+            });
+          } catch (e) {
+            console.error(`[BggEnrichment] Failed to mark ${game.id} as done:`, e);
+          }
+          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+          continue;
+        }
+
+        consecutiveErrors++;
+
         // Check consecutive error threshold
         if (consecutiveErrors >= BggEnrichmentService.MAX_CONSECUTIVE_ERRORS) {
           console.error(`[BggEnrichment] Too many consecutive errors (${consecutiveErrors}), stopping`);
           this.finishBulkEnrichment(`Too many consecutive errors (${consecutiveErrors})`);
           return;
         }
-        
+
         console.error(`[BggEnrichment] Error enriching game ${game.id}:`, error);
         // Continue with next game
       }
@@ -423,6 +641,93 @@ class BggEnrichmentService {
     }
     
     throw lastError;
+  }
+
+  /**
+   * Re-extract enrichmentData from the stored `raw_preload` blobs.
+   * Zero network — runs the existing extractor against rows we
+   * already have. Used after the extractor learns a new field that
+   * lives in the raw blob.
+   */
+  private async processBulkReextract(
+    options: { onlyReferenced?: boolean } = {},
+  ): Promise<void> {
+    // Prisma requires `JsonNullValueFilter` for null-comparison on JSON
+    // fields. `not: 'JsonNull'` matches any non-null JSONB value.
+    const where: any = { rawPreload: { not: 'JsonNull' } };
+    if (options.onlyReferenced) {
+      const refs = await this.getReferencedBggIds();
+      where.id = { in: refs };
+    }
+
+    const total = await prisma.bggGame.count({ where });
+    this.bulkStatus.total = total;
+    this.bulkStatus.skipped = 0;
+    console.log(
+      `[BggEnrichment] Cache re-extract over ${total} games` +
+        (options.onlyReferenced ? ' (referenced only)' : ''),
+    );
+
+    // Iterate in batches; we sort by id for deterministic ordering and
+    // page through with `skip`. Updates only mutate enrichmentData /
+    // enrichedAt — the WHERE clause `rawPreload IS NOT NULL` still
+    // matches every row across pages.
+    const BATCH = 500;
+    let cursor = 0;
+    let lastBroadcast = 0;
+    for (;;) {
+      if (this.stopRequested) {
+        this.finishBulkEnrichment('Stopped by user');
+        return;
+      }
+
+      const batch = await prisma.bggGame.findMany({
+        where,
+        select: { id: true, rawPreload: true },
+        orderBy: { id: 'asc' },
+        skip: cursor,
+        take: BATCH,
+      });
+      if (batch.length === 0) break;
+
+      for (const row of batch) {
+        try {
+          const newEnrichment = this.reextractFromRawPreload(row.rawPreload);
+          await prisma.bggGame.update({
+            where: { id: row.id },
+            data: {
+              enrichmentData: newEnrichment as any,
+              enrichedAt: new Date(),
+            },
+          });
+          const altNames = newEnrichment.alternateNames.map((a) => a.name);
+          bggCache.updateGameAlternateNames(row.id, altNames);
+          this.bulkStatus.processed++;
+        } catch (err) {
+          this.bulkStatus.errors++;
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`[BggEnrichment/cache] re-extract failed for ${row.id}: ${msg}`);
+        }
+      }
+      cursor += batch.length;
+
+      // Broadcast progress every ~1% or every 100 rows.
+      if (this.bulkStatus.processed - lastBroadcast >= 100) {
+        lastBroadcast = this.bulkStatus.processed;
+        adminSseManager.broadcast({
+          type: 'bgg:enrich-progress',
+          running: true,
+          processed: this.bulkStatus.processed,
+          total: this.bulkStatus.total,
+          skipped: this.bulkStatus.skipped,
+          errors: this.bulkStatus.errors,
+          bytesTransferred: this.bulkStatus.bytesTransferred,
+          etaSeconds: this.calculateEta(),
+        });
+      }
+    }
+
+    this.finishBulkEnrichment('Cache re-extract completed');
   }
 
   /**

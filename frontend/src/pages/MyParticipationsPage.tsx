@@ -71,7 +71,7 @@ export function MyParticipationsPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="wg-label text-plum">Teilnahmen</div>
-      <h1 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-2">
+      <h1 className="font-display text-3xl sm:text-4xl text-plum-deep mt-2">
         Meine Treffs
       </h1>
       <p className="mt-3 text-ink-soft text-sm">
@@ -100,7 +100,7 @@ export function MyParticipationsPage() {
 
       {!loading && !error && candidates.length > 0 && (
         <section className="mt-10">
-          <h2 className="font-display italic text-2xl text-plum-deep">
+          <h2 className="font-display text-2xl text-plum-deep">
             Möglicherweise warst du dabei?
           </h2>
           <p className="mt-2 text-sm text-ink-soft">
@@ -115,7 +115,7 @@ export function MyParticipationsPage() {
                     <div className="wg-label text-plum">
                       {EVENT_STATUS_LABEL[c.status]}
                     </div>
-                    <h3 className="font-display italic text-xl text-plum-deep mt-1 truncate">
+                    <h3 className="font-display text-xl text-plum-deep mt-1 truncate">
                       {c.name}
                     </h3>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-soft">
@@ -164,7 +164,7 @@ export function MyParticipationsPage() {
                     <div className="wg-label text-plum">
                       {EVENT_STATUS_LABEL[ev.status]}
                     </div>
-                    <h2 className="font-display italic text-2xl text-plum-deep mt-1 truncate">
+                    <h2 className="font-display text-2xl text-plum-deep mt-1 truncate">
                       {ev.name}
                     </h2>
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-soft">

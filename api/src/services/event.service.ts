@@ -230,6 +230,15 @@ export class EventService {
       fees: input.fees ?? null,
     });
 
+    // Auto-promote: a `player` account that creates an event becomes
+    // an `account_owner` (organizer in the target naming) so they can
+    // manage what they just made. updateMany guards the role to avoid
+    // touching admins or accounts that are already organizers.
+    await this.prisma.account.updateMany({
+      where: { id: ownerAccountId, role: 'player' },
+      data: { role: 'account_owner' },
+    });
+
     return toEventResponse(event);
   }
 

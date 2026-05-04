@@ -2,7 +2,25 @@ import { gameRepository, GameRepository, participantRepository, ParticipantRepos
 import { sseManager } from './sse.service';
 import { activityLogService } from './activityLog.service';
 import { thumbnailService } from './thumbnailService';
+import { prisma } from '../db/prisma';
 import type { Game, GameEntity, Player, Bringer, PlayerEntity, BringerEntity } from '../types';
+
+/** Subset of `EnrichmentData` we surface on the per-event Game API
+ *  response. Read at request time so re-enrichment shows up
+ *  immediately without a per-Game backfill. */
+interface BggStats {
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
+}
+
+const EMPTY_STATS: BggStats = {
+  minPlayers: null,
+  maxPlayers: null,
+  minPlaytime: null,
+  maxPlaytime: null,
+};
 
 interface DeleteGameOptions {
   allowNonOwner?: boolean;
@@ -66,7 +84,23 @@ export class GameService {
    * Requirements: 4.3, 4.4 - Include bggId and yearPublished
    * Feature: 014-alternate-names-search - Include alternate name data
    */
-  private transformGame(entity: GameEntity, isHidden: boolean = false): Game {
+  private async transformGame(
+    entity: GameEntity,
+    isHidden: boolean = false,
+    statsByBggId?: Map<number, BggStats>,
+  ): Promise<Game> {
+    let stats = EMPTY_STATS;
+    if (entity.bggId !== null) {
+      if (statsByBggId) {
+        stats = statsByBggId.get(entity.bggId) ?? EMPTY_STATS;
+      } else {
+        // Single-entity callers (SSE broadcast paths) do an inline
+        // lookup so the broadcast payload carries the same fields the
+        // list endpoint does. One small JSONB read per mutation.
+        const map = await this.loadBggStats([entity.bggId]);
+        stats = map.get(entity.bggId) ?? EMPTY_STATS;
+      }
+    }
     return {
       id: entity.id,
       name: entity.name,
@@ -81,8 +115,40 @@ export class GameService {
       players: entity.players.map((p) => this.transformPlayer(p)),
       bringers: entity.bringers.map((b) => this.transformBringer(b)),
       status: this.deriveStatus(entity.bringers.length),
+      minPlayers: stats.minPlayers,
+      maxPlayers: stats.maxPlayers,
+      minPlaytime: stats.minPlaytime,
+      maxPlaytime: stats.maxPlaytime,
       createdAt: entity.createdAt,
     };
+  }
+
+  /** Batch-load BggGame stats for the given bggIds. JSONB read at
+   *  request time means re-enrichment shows up immediately without a
+   *  per-Game backfill. Unenriched / missing fields → null. */
+  private async loadBggStats(bggIds: number[]): Promise<Map<number, BggStats>> {
+    const map = new Map<number, BggStats>();
+    if (bggIds.length === 0) return map;
+
+    const rows = await prisma.bggGame.findMany({
+      where: { id: { in: bggIds } },
+      select: { id: true, enrichmentData: true },
+    });
+    for (const row of rows) {
+      const data = (row.enrichmentData ?? {}) as {
+        minPlayers?: number;
+        maxPlayers?: number;
+        minPlaytime?: number;
+        maxPlaytime?: number;
+      };
+      map.set(row.id, {
+        minPlayers: typeof data.minPlayers === 'number' ? data.minPlayers : null,
+        maxPlayers: typeof data.maxPlayers === 'number' ? data.maxPlayers : null,
+        minPlaytime: typeof data.minPlaytime === 'number' ? data.minPlaytime : null,
+        maxPlaytime: typeof data.maxPlaytime === 'number' ? data.maxPlaytime : null,
+      });
+    }
+    return map;
   }
 
   /**
@@ -91,12 +157,23 @@ export class GameService {
    */
   async getAllGames(eventId: string, participantId?: string): Promise<Game[]> {
     const entities = await this.repository.findAll(eventId);
+    const bggIds = Array.from(
+      new Set(entities.map((e) => e.bggId).filter((id): id is number => id !== null)),
+    );
+    const statsByBggId = await this.loadBggStats(bggIds);
+
     if (!participantId) {
-      return entities.map((entity) => this.transformGame(entity, false));
+      return Promise.all(
+        entities.map((entity) => this.transformGame(entity, false, statsByBggId)),
+      );
     }
 
     const hiddenGameIds = await this.repository.findHiddenGameIdsByParticipant(participantId);
-    return entities.map((entity) => this.transformGame(entity, hiddenGameIds.has(entity.id)));
+    return Promise.all(
+      entities.map((entity) =>
+        this.transformGame(entity, hiddenGameIds.has(entity.id), statsByBggId),
+      ),
+    );
   }
 
   /**
@@ -112,11 +189,11 @@ export class GameService {
       return null;
     }
     if (!participantId) {
-      return this.transformGame(entity, false);
+      return await this.transformGame(entity, false);
     }
 
     const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
-    return this.transformGame(entity, isHidden);
+    return await this.transformGame(entity, isHidden);
   }
 
   /**
@@ -177,7 +254,7 @@ export class GameService {
         alternateNames,
       });
       
-      const game = this.transformGame(entity);
+      const game = await this.transformGame(entity);
       
       // Get participant name for SSE event
       const participant = await this.participantRepo.findById(participantId, eventId);
@@ -229,7 +306,7 @@ export class GameService {
     try {
       const entity = await this.repository.addPlayer(gameId, participantId, eventId);
       const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
-      const game = this.transformGame(entity, isHidden);
+      const game = await this.transformGame(entity, isHidden);
       
       // Get participant name for SSE event
       const participant = await this.participantRepo.findById(participantId, eventId);
@@ -279,7 +356,7 @@ export class GameService {
     try {
       const entity = await this.repository.removePlayer(gameId, participantId, eventId);
       const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
-      const game = this.transformGame(entity, isHidden);
+      const game = await this.transformGame(entity, isHidden);
       
       // Broadcast game:player-removed event
       sseManager.broadcast({
@@ -322,7 +399,7 @@ export class GameService {
     try {
       const entity = await this.repository.addBringer(gameId, participantId, eventId);
       await this.repository.unhideGameIfExists(gameId, participantId);
-      const game = this.transformGame(entity, false);
+      const game = await this.transformGame(entity, false);
       
       // Get participant name for SSE event
       const participant = await this.participantRepo.findById(participantId, eventId);
@@ -372,7 +449,7 @@ export class GameService {
     try {
       const entity = await this.repository.removeBringer(gameId, participantId, eventId);
       const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
-      const game = this.transformGame(entity, isHidden);
+      const game = await this.transformGame(entity, isHidden);
       
       // Broadcast game:bringer-removed event
       sseManager.broadcast({
@@ -514,7 +591,7 @@ export class GameService {
     // Update prototype status
     const updatedEntity = await this.repository.updatePrototype(gameId, isPrototype, eventId);
     const isHidden = await this.repository.isGameHiddenForParticipant(gameId, participantId);
-    const game = this.transformGame(updatedEntity, isHidden);
+    const game = await this.transformGame(updatedEntity, isHidden);
 
     // Broadcast game:prototype-toggled event
     sseManager.broadcast({
@@ -571,6 +648,7 @@ export class GameService {
     });
 
     return this.transformGame(entity, true);
+  // (transformGame is async — return propagates the promise)
   }
 
   /**

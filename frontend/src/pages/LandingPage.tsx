@@ -31,7 +31,7 @@ export function LandingPage() {
             aria-hidden="true"
             className="w-9 h-9"
           />
-          <span className="font-display italic text-[22px] text-plum-deep">
+          <span className="font-display text-[22px] text-plum-deep">
             Brettspieltreff
           </span>
         </Link>
@@ -76,7 +76,7 @@ export function LandingPage() {
             Brettspielabende, ohne Listen-Chaos
           </p>
 
-          <h1 className="font-display italic text-5xl sm:text-6xl lg:text-[88px] leading-[1.02] mt-5">
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-[88px] leading-[1.02] mt-5">
             <span className="text-plum-deep">Wer bringt was?</span>
             <br />
             <span className="text-sage-deep">Endlich klar.</span>
@@ -122,7 +122,7 @@ export function LandingPage() {
         <div className="hidden lg:block">
           <div className="relative -rotate-[1.5deg]">
             {/* Butter sticker */}
-            <span className="absolute top-[-16px] right-[-16px] rotate-[8deg] bg-butter text-plum-deep font-display italic text-[16px] font-semibold rounded-full py-2.5 px-4 shadow z-10">
+            <span className="absolute top-[-16px] right-[-16px] rotate-[8deg] bg-butter text-plum-deep font-display text-[16px] font-semibold rounded-full py-2.5 px-4 shadow z-10">
               kostenlos &middot; f&uuml;r alle
             </span>
 
@@ -200,7 +200,7 @@ export function LandingPage() {
             ].map((card) => (
               <div key={card.num} className="bg-paper-hi border border-rule rounded-xl p-7">
                 <span className="font-mono text-[11px] tracking-widest text-plum font-bold">{card.num}</span>
-                <h3 className="font-display italic text-[22px] text-plum-deep mt-3">{card.title}</h3>
+                <h3 className="font-display text-[22px] text-plum-deep mt-3">{card.title}</h3>
                 <p className="text-sm text-ink-soft mt-2.5 leading-relaxed">{card.body}</p>
               </div>
             ))}
@@ -211,20 +211,20 @@ export function LandingPage() {
       {/* ── Use cases ───────────────────────────────────────────── */}
       <section className="bg-paper-lo py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="font-display italic text-3xl text-plum-deep text-center mb-12">
+          <h2 className="font-display text-3xl text-plum-deep text-center mb-12">
             So passt das zu dir.
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-paper-hi border-[1.5px] border-rule rounded-2xl p-8">
               <p className="text-ink-mute text-sm">Privat &amp; famili&auml;r</p>
-              <h3 className="font-display italic text-xl text-plum-deep mt-1.5">Private Spieleabende</h3>
+              <h3 className="font-display text-xl text-plum-deep mt-1.5">Private Spieleabende</h3>
               <p className="text-ink-soft mt-3 leading-relaxed">
                 Du l&auml;dst Freunde zum Spieleabend ein und willst wissen, wer welche Spiele mitbringt? Erstelle einen Treff, teile den Link in der Gruppe und alle tragen ihre Spiele ein. Kein Hin-und-her-Schreiben mehr.
               </p>
             </div>
             <div className="bg-paper-hi border-[1.5px] border-rule rounded-2xl p-8">
               <p className="text-ink-mute text-sm">Verein &amp; Community</p>
-              <h3 className="font-display italic text-xl text-plum-deep mt-1.5">Brettspiel-Veranstaltungen</h3>
+              <h3 className="font-display text-xl text-plum-deep mt-1.5">Brettspiel-Veranstaltungen</h3>
               <p className="text-ink-soft mt-3 leading-relaxed">
                 Du organisierst ein Brettspiel-Treffen f&uuml;r einen Verein oder eine Community? Verwalte mehrere Treffs, behalte den &Uuml;berblick &uuml;ber Teilnehmer und Spiele und nutze die Statistiken f&uuml;r die Planung.
               </p>
@@ -236,7 +236,7 @@ export function LandingPage() {
       {/* ── Detailed features ───────────────────────────────────── */}
       <section className="bg-plum-50 py-16 sm:py-24">
         <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="font-display italic text-3xl text-plum-deep text-center mb-12">
+          <h2 className="font-display text-3xl text-plum-deep text-center mb-12">
             Funktionen, die euch den Abend retten.
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -251,7 +251,7 @@ export function LandingPage() {
               <div key={f.title} className="bg-paper-hi border border-rule rounded-xl p-5">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl" aria-hidden="true">{f.icon}</span>
-                  <h3 className="font-display italic text-lg text-plum-deep">{f.title}</h3>
+                  <h3 className="font-display text-lg text-plum-deep">{f.title}</h3>
                 </div>
                 <p className="text-sm text-ink-soft mt-2">{f.body}</p>
               </div>
@@ -267,7 +267,7 @@ export function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
               <div>
                 <p className="text-butter-deep text-sm font-bold">Frei und werbefrei</p>
-                <h2 className="font-display italic text-4xl text-plum-deep mt-2.5">
+                <h2 className="font-display text-4xl text-plum-deep mt-2.5">
                   Kaffeekassenprinzip.
                 </h2>
                 <p className="mt-3 text-[15px] leading-relaxed max-w-[600px]">
@@ -309,7 +309,7 @@ export function LandingPage() {
       {!isAuthenticated && (
         <section className="bg-ink py-16 sm:py-24">
           <div className="container mx-auto px-4 max-w-3xl text-center">
-            <h2 className="font-display italic text-3xl text-paper-hi">
+            <h2 className="font-display text-3xl text-paper-hi">
               Bereit f&uuml;r den n&auml;chsten Spielabend?
             </h2>
             <p className="text-paper-hi/70 mt-3">

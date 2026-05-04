@@ -16,15 +16,19 @@ interface LayoutProps {
   children: ReactNode;
   basePath?: string;
   eventName?: string;
+  startsAt?: string | null;
+  location?: string | null;
   participant?: Participant;
   onParticipantUpdated?: (participant: Participant) => void;
   onParticipantSwitch?: () => void;
 }
 
-export function Layout({ children, basePath, eventName, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
-  // Default handlers for when props are not provided
+export function Layout({ children, basePath, eventName, startsAt, location, participant, onParticipantUpdated, onParticipantSwitch }: LayoutProps) {
+  // Default handler for when prop is not provided. onParticipantSwitch
+  // is intentionally NOT defaulted — account-bound users omit it, and
+  // children check its presence to decide whether to show "Wechseln" /
+  // "Abmelden" affordances.
   const handleParticipantUpdated = onParticipantUpdated || (() => {});
-  const handleParticipantSwitch = onParticipantSwitch || (() => {});
 
   // Handle pull-to-refresh - reload the page
   const handleRefresh = useCallback(async () => {
@@ -36,6 +40,8 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
       <Header
         basePath={basePath}
         eventName={eventName}
+        startsAt={startsAt}
+        location={location}
         participant={participant}
         onParticipantUpdated={onParticipantUpdated}
         onParticipantSwitch={onParticipantSwitch}
@@ -70,7 +76,7 @@ export function Layout({ children, basePath, eventName, participant, onParticipa
         basePath={basePath}
         participant={participant ?? null}
         onParticipantUpdated={handleParticipantUpdated}
-        onParticipantSwitch={handleParticipantSwitch}
+        onParticipantSwitch={onParticipantSwitch}
       />
     </div>
   );

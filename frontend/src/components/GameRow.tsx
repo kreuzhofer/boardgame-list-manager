@@ -11,10 +11,9 @@ import { PlayerList } from './PlayerList';
 import { BringerList } from './BringerList';
 import { GameActions } from './GameActions';
 import { NeuheitSticker } from './NeuheitSticker';
-import { openBggPage } from './BggModal';
-import { BggRatingBadge } from './BggRatingBadge';
 import { HelpBubble } from './HelpBubble';
 import { LazyBggImage } from './LazyBggImage';
+import { GameMeta } from './GameMeta';
 import { DesktopActionsMenu } from './DesktopActionsMenu';
 import { ThumbnailUploadModal } from './ThumbnailUploadModal';
 import { useToast } from './ToastProvider';
@@ -224,25 +223,41 @@ export function GameRow({
       <td className="w-20 p-0">
         <div className="px-2 py-2" style={collapseStyle}>
           <div className="relative w-[72px] h-16">
-            {game.bggId ? (
-              <LazyBggImage
-                bggId={game.bggId}
-                size="micro"
-                alt={game.name}
-                className="rounded"
-                enableZoom={true}
-              />
-            ) : (
-              /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
-              <LazyBggImage
-                customThumbnailGameId={game.id}
-                size="micro"
-                alt={game.name}
-                className="rounded"
-                enableZoom={true}
-                thumbnailTimestamp={thumbnailTimestamp}
-              />
-            )}
+            {/* Inner clip is sized to the image's intrinsic micro
+                dimensions (64×64) so the "Gesucht" banner matches the
+                image edges instead of the wider outer container.
+                Neuheit sticker stays outside so it can hang over the
+                corner with negative offsets. */}
+            <div className="relative w-16 h-16 overflow-hidden rounded">
+              {game.bggId ? (
+                <LazyBggImage
+                  bggId={game.bggId}
+                  size="micro"
+                  alt={game.name}
+                  className="rounded"
+                  enableZoom={true}
+                />
+              ) : (
+                /* For non-BGG games, try to show custom thumbnail, fallback to placeholder */
+                <LazyBggImage
+                  customThumbnailGameId={game.id}
+                  size="micro"
+                  alt={game.name}
+                  className="rounded"
+                  enableZoom={true}
+                  thumbnailTimestamp={thumbnailTimestamp}
+                />
+              )}
+              {/* "Gesucht" banner — replaces the inline pill for wunsch
+                  games. Same butter palette as the pill, lower third
+                  of the thumbnail, rounded bottom corners inherited
+                  from the clip container. */}
+              {isWunsch && (
+                <div className="absolute bottom-0 inset-x-0 h-[34%] bg-butter text-butter-deep flex items-center justify-center text-[10px] font-bold uppercase tracking-wide">
+                  Gesucht
+                </div>
+              )}
+            </div>
             {/* Neuheit Sticker overlay - Requirement 5.1, 5.4 */}
             {game.yearPublished && (
               <div className="absolute -top-2 -right-2">
@@ -254,7 +269,7 @@ export function GameRow({
       </td>
 
       {/* Game Name with Status Badge and Owner */}
-      <td className="w-[22%] 2xl:w-[25%] p-0">
+      <td className="w-[32%] 2xl:w-[34%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex flex-col gap-1">
             <span className="font-medium text-ink">{game.name}</span>
@@ -264,29 +279,20 @@ export function GameRow({
                 {game.addedAsAlternateName}
               </span>
             )}
-            <div className="flex items-center gap-2">
-              {/* Status Badge - Requirement 4.1, 4.2 */}
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium min-w-[4.5rem] text-center ${
-                  isWunsch
-                    ? 'bg-butter text-butter-deep'
-                    : 'bg-sage-100 text-sage-deep'
-                }`}
-              >
-                {isWunsch ? 'Gesucht' : 'Verfügbar'}
-              </span>
-              {isPrototype && (
-                <span className="wg-tag-ocean">
-                  Prototyp
-                </span>
-              )}
+            {/* Metadata line (player range · play time · BGG rating).
+                "Gesucht" lives on the thumbnail banner; "Verfügbar"
+                pill is retired — the bringer column already carries
+                that signal. Prototyp tag stays. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <GameMeta game={game} />
+              {isPrototype && <span className="wg-tag-ocean">Prototyp</span>}
             </div>
           </div>
         </div>
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-      <td className="w-[15%] 2xl:w-[18%] p-0">
+      <td className="w-[22%] 2xl:w-[23%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <BringerList 
             bringers={game.bringers} 
@@ -300,7 +306,7 @@ export function GameRow({
       </td>
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
-      <td className="w-[15%] 2xl:w-[18%] p-0">
+      <td className="w-[22%] 2xl:w-[23%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <PlayerList 
             players={game.players} 
@@ -314,7 +320,7 @@ export function GameRow({
       </td>
 
       {/* Actions - Requirement 3.5, 3.6, 4.4, 4.5 */}
-      <td className="w-[320px] 2xl:w-[300px] p-0">
+      <td className="w-[200px] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex gap-2 flex-nowrap items-center">
             <div className="shrink-0 hidden 2xl:flex">
@@ -339,27 +345,6 @@ export function GameRow({
               />
             </div>
             
-            {/* BGG Button - Requirement 6.1, 6.2, 6.3 - Opens in new tab */}
-            <div className="relative w-9 h-8 flex items-center justify-center shrink-0">
-              {game.bggId && game.bggRating ? (
-                <>
-                  <button
-                    onClick={() => openBggPage(game.bggId!)}
-                    className="p-1 rounded flex items-center hover:bg-paper-lo transition-colors"
-                    aria-label="BoardGameGeek Info"
-                  >
-                    <BggRatingBadge rating={game.bggRating} />
-                  </button>
-                  <HelpBubble
-                    text="BoardGameGeek Seite öffnen (neuer Tab)"
-                    position="top-right"
-                  />
-                </>
-              ) : (
-                <div className="w-8 h-8 pointer-events-none" aria-hidden="true" />
-              )}
-            </div>
-
             {/* Hide/Show button */}
             {(onHideGame || onUnhideGame) && (
               <div className="relative shrink-0">

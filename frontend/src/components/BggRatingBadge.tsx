@@ -23,19 +23,19 @@ export function getRatingColor(rating: number): string {
     case 2:
     case 3:
     case 4:
-      return '#9c4537'; // blush-deep
+      return '#a93b3a'; // blush-deep
     case 5:
     case 6:
-      return '#3f6f8f'; // ocean
+      return '#4a7eb0'; // ocean
     case 7:
       return '#6b3a5c'; // plum
     case 8:
-      return '#7a9476'; // sage
+      return '#5f9b6f'; // sage
     case 9:
     case 10:
-      return '#5b7458'; // sage-deep
+      return '#3f7d52'; // sage-deep
     default:
-      return '#8c7d92'; // ink-mute
+      return '#8a92a0'; // ink-mute
   }
 }
 

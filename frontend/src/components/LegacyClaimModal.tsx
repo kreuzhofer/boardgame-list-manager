@@ -111,7 +111,7 @@ export function LegacyClaimModal({ candidate, isOpen, onClose, onClaimed }: Lega
         <div className="px-6 py-4 border-b border-rule flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="wg-label text-plum">Treff übernehmen</div>
-            <h2 className="font-display italic text-2xl text-plum-deep mt-1 truncate">
+            <h2 className="font-display text-2xl text-plum-deep mt-1 truncate">
               {candidate.name}
             </h2>
             {candidate.startsAt && (
@@ -242,7 +242,7 @@ export function LegacyClaimModal({ candidate, isOpen, onClose, onClaimed }: Lega
               <div className="wg-card-raised space-y-3">
                 <div>
                   <div className="wg-label text-plum">Name beim Treff</div>
-                  <p className="font-display italic text-xl text-plum-deep mt-1">{picked.displayName}</p>
+                  <p className="font-display text-xl text-plum-deep mt-1">{picked.displayName}</p>
                 </div>
                 <div className="border-t border-rule pt-3">
                   <div className="wg-label text-plum">Mitgebracht ({picked.brought.length})</div>

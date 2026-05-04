@@ -157,7 +157,10 @@ export class AccountService {
       data: {
         email: input.email.toLowerCase(),
         passwordHash,
-        role: 'account_owner',
+        // New signups land as `player` by default. Creating their first
+        // event promotes them to `account_owner` (handled in
+        // eventService.createEvent). Admins are seeded out-of-band only.
+        role: 'player',
         status: 'active',
       },
     });

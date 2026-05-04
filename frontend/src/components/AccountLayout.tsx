@@ -6,8 +6,16 @@ interface AccountLayoutProps {
   children: ReactNode;
 }
 
-const NAV_ITEMS = [
-  { path: '/events', label: 'Meine Events' },
+type NavItem = {
+  path: string;
+  label: string;
+  adminOnly?: boolean;
+  /** Hidden for `player` accounts who haven't created an event yet. */
+  organizerOnly?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { path: '/events', label: 'Meine Events', organizerOnly: true },
   { path: '/meine-treffs', label: 'Meine Treffs' },
   { path: '/admin', label: 'Admin', adminOnly: true },
   { path: '/profile', label: 'Profil' },
@@ -43,7 +51,7 @@ export function AccountLayout({ children }: AccountLayoutProps) {
                 aria-hidden="true"
                 className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
               />
-              <span className="font-display italic text-lg sm:text-xl text-plum-deep truncate">
+              <span className="font-display text-lg sm:text-xl text-plum-deep truncate">
                 Brettspieltreff
               </span>
               <span className="hidden sm:inline-flex wg-tag-ocean">Organisator</span>
@@ -51,7 +59,11 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
             {/* Nav + logout */}
             <nav className="flex items-center gap-0.5 sm:gap-1">
-              {NAV_ITEMS.filter(item => !item.adminOnly || account?.role === 'admin').map((item) => (
+              {NAV_ITEMS.filter((item) => {
+                if (item.adminOnly && account?.role !== 'admin') return false;
+                if (item.organizerOnly && account?.role !== 'admin' && account?.role !== 'account_owner') return false;
+                return true;
+              }).map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}

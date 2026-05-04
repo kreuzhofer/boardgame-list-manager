@@ -174,7 +174,7 @@ export function EventSettingsPage() {
         >
           &larr; Zurück
         </button>
-        <h2 className="font-display italic text-3xl text-plum-deep">
+        <h2 className="font-display text-3xl text-plum-deep">
           {isEditMode ? 'Event bearbeiten' : 'Neues Event erstellen'}
         </h2>
       </div>

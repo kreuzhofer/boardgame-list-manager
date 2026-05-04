@@ -9,13 +9,21 @@ import { PrintPage } from '../pages/PrintPage';
 import { StatisticsPage } from '../pages/StatisticsPage';
 import { EventWelcomePage } from '../pages/EventWelcomePage';
 import { useParticipant } from '../hooks';
+import { useAuth } from '../contexts/AuthContext';
 import type { Participant } from '../types';
 import { useState, useCallback } from 'react';
 
 function EventContent() {
-  const { slug, eventName, effectiveStatus, loading, error } = useEvent();
+  const { slug, eventName, startsAt, location: eventLocation, effectiveStatus, loading, error } = useEvent();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { participant, isLoading, setParticipant, clearParticipant } = useParticipant(slug);
+  const { account } = useAuth();
+  // Account-authed users have a 1:1 binding between their Account and
+  // the per-event User row (auto-resolved on verify), so switching to
+  // a different participant doesn't make sense — hide "Wechseln". The
+  // anon flow (no account JWT) keeps the switch button so users can
+  // re-pick from the modal.
+  const isAccountBound = !!account;
 
   const handleAuthChange = useCallback((authenticated: boolean) => {
     setIsAuthenticated(authenticated);
@@ -97,9 +105,11 @@ function EventContent() {
         <Layout
           basePath={`/${slug}`}
           eventName={eventName}
+          startsAt={startsAt}
+          location={eventLocation}
           participant={participant ?? undefined}
           onParticipantUpdated={handleParticipantUpdated}
-          onParticipantSwitch={handleParticipantSwitch}
+          onParticipantSwitch={isAccountBound ? undefined : handleParticipantSwitch}
         >
           <Routes>
             <Route path="/" element={<HomePage participant={participant} />} />

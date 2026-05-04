@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { accountsApi, getToken, setToken, removeToken, ApiError } from '../api/client';
+import { accountsApi, getToken, setToken, removeToken, clearAllEventSessionData, ApiError } from '../api/client';
 import type { Account } from '../types/account';
 
 interface AuthContextValue {
@@ -96,6 +96,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     removeToken();
+    // Account logout also drops every per-event session artefact (event
+    // JWTs + cached participant IDs). Without this, a user who entered
+    // an event password while logged in could later log out and still
+    // breeze past the password gate on the next visit because the event
+    // JWT is still cached and the `users` row is still keyed by their
+    // (now-orphaned) `participant_id` in localStorage.
+    clearAllEventSessionData();
     setAccount(null);
     setError(null);
   }, []);

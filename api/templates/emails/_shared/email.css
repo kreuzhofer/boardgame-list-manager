@@ -10,8 +10,9 @@
 
    Brand expression comes from:
    - The mark (cid:wg-logo, self-contained butter+plum SVG/PNG)
-   - Playfair Display italic for the wordmark and title
-   - Composition (rhythm, hierarchy, italic accents) — not colour
+   - Lora upright for the wordmark and title (single-family system,
+     same as the web app — see docs/design-system.md Typography)
+   - Composition (rhythm, hierarchy, scale + weight) — not colour
 
    Authoring rules:
    1. Templates use semantic classes only. No inline `style=""` in .hbs.
@@ -22,10 +23,13 @@
       clean.
    ───────────────────────────────────────────────────────────────────── */
 
-/* Field — outer wrapper. No background; the client paints its own. */
+/* Field — outer wrapper. No background; the client paints its own.
+   Lora-first with Georgia / Times fallbacks — clients that strip
+   web fonts still get a serif (matches the web app's single-family
+   system instead of falling back to a system sans). */
 .email-field {
   padding: 32px 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
   color: #000000;
 }
 
@@ -38,8 +42,7 @@
 .email-header { padding: 4px 28px 18px; }
 
 .email-wordmark {
-  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-  font-style: italic;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
   font-size: 22px;
   font-weight: 600;
   letter-spacing: 0.2px;
@@ -74,8 +77,7 @@
 
 .email-title {
   margin: 0 0 14px;
-  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-  font-style: italic;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
   font-size: 30px;
   line-height: 1.15;
   font-weight: 600;

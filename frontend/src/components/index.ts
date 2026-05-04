@@ -9,8 +9,6 @@ export { BggModal, getBggUrl, openBggPage } from './BggModal';
 export { BggRatingBadge } from './BggRatingBadge';
 export { BringerList } from './BringerList';
 export { DeleteGameModal } from './DeleteGameModal';
-export { EventBar } from './EventBar';
-export type { EventBarProps } from './EventBar';
 export { GameActions } from './GameActions';
 export { GameCard } from './GameCard';
 export { HelpBubble } from './HelpBubble';

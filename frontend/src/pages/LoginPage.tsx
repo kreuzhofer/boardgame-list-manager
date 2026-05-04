@@ -92,7 +92,7 @@ export function LoginPage() {
       marketingFootnote="Teilnehmer brauchen kein Konto — nur den Link und das Kennwort des Treffs."
     >
       <div className="wg-label text-plum">Anmelden</div>
-      <h1 className="font-display italic text-3xl sm:text-4xl text-plum-deep mt-2">
+      <h1 className="font-display text-3xl sm:text-4xl text-plum-deep mt-2">
         Schön, dich zu sehen
       </h1>
       <p className="mt-3 text-ink-soft text-sm">

@@ -65,7 +65,7 @@ export function EventWelcomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-90 transition-opacity">
             <img src="/favicon.svg" alt="" aria-hidden="true" className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0" />
-            <span className="font-display italic text-lg sm:text-xl">Brettspieltreff</span>
+            <span className="font-display text-lg sm:text-xl">Brettspieltreff</span>
           </Link>
         </div>
       </header>
@@ -75,7 +75,7 @@ export function EventWelcomePage() {
         <div className="wg-label text-butter-deep">In Planung</div>
 
         {/* Title */}
-        <h1 className="font-display italic text-4xl sm:text-5xl text-plum-deep mt-2 leading-tight">
+        <h1 className="font-display text-4xl sm:text-5xl text-plum-deep mt-2 leading-tight">
           {eventName}
         </h1>
 
@@ -106,7 +106,7 @@ export function EventWelcomePage() {
         {/* Welcome message — italic display, like a personal note */}
         {welcomeMessage && (
           <div className="mt-10 wg-card border-l-[3px] border-l-butter">
-            <p className="font-display italic text-xl text-plum-deep leading-snug whitespace-pre-line">
+            <p className="font-display text-xl text-plum-deep leading-snug whitespace-pre-line">
               {welcomeMessage}
             </p>
           </div>
@@ -124,7 +124,7 @@ export function EventWelcomePage() {
         {/* Status notice */}
         <div className="mt-12 wg-card-raised">
           <div className="wg-label text-plum">Hinweis</div>
-          <h3 className="font-display italic text-xl text-plum-deep mt-2">
+          <h3 className="font-display text-xl text-plum-deep mt-2">
             Der Treff wird vorbereitet
           </h3>
           <p className="mt-2 text-sm text-ink-soft leading-relaxed">

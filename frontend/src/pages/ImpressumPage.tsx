@@ -7,7 +7,7 @@ export function ImpressumPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="font-display italic text-3xl text-plum-deep">Impressum</h1>
+      <h1 className="font-display text-3xl text-plum-deep">Impressum</h1>
 
         <div className="bg-white rounded-lg shadow p-8 space-y-6 text-ink-soft text-sm leading-relaxed">
           <section>

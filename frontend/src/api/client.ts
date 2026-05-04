@@ -65,6 +65,39 @@ export const removeEventToken = (slug?: string): void => {
   localStorage.removeItem(eventTokenKey(slug));
 };
 
+/**
+ * Drop every per-event session artefact in localStorage — event JWTs
+ * (`boardgame_event_token:*`) and cached participant IDs
+ * (`boardgame_event_participant_id*`). Called by `logout()` so an
+ * account user who logs out doesn't keep walking past the password
+ * gate on subsequent visits to events they previously authenticated
+ * to. Anonymous users (who never log in via account) are unaffected
+ * since their flow doesn't go through `logout()`.
+ */
+export const clearAllEventSessionData = (): void => {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (
+        key === EVENT_TOKEN_KEY ||
+        key.startsWith(`${EVENT_TOKEN_KEY}:`) ||
+        key === 'boardgame_event_participant_id' ||
+        key.startsWith('boardgame_event_participant_id:') ||
+        key === 'boardgame_event_user_id' /* legacy pre-migration key */
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    for (const key of keysToRemove) localStorage.removeItem(key);
+  } catch {
+    // localStorage may be unavailable (private mode, quota, etc.).
+    // Logout proceeds regardless — worst case the next visit hits a
+    // stale event JWT, but the account is already signed out.
+  }
+};
+
 // Active event slug — set by EventContext so fetchApi sends the right token
 let activeEventSlug: string | undefined;
 
@@ -384,8 +417,18 @@ export const bggApi = {
     return fetchApi<import('../types/adminSse').ImportStatus>('/api/bgg/import/status', {}, true);
   },
 
-  startEnrichment: (): Promise<{ message: string }> => {
-    return fetchApi<{ message: string }>('/api/bgg/enrich', { method: 'POST' }, true);
+  startEnrichment: (
+    options: {
+      force?: boolean;
+      onlyReferenced?: boolean;
+      source?: 'bgg' | 'cache';
+    } = {},
+  ): Promise<{ message: string }> => {
+    return fetchApi<{ message: string }>(
+      '/api/bgg/enrich',
+      { method: 'POST', body: JSON.stringify(options) },
+      true,
+    );
   },
 
   getEnrichmentStatus: (): Promise<import('../types/adminSse').BulkEnrichmentStatus> => {

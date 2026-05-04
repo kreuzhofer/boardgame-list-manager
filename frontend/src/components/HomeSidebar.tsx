@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Game, Participant } from '../types';
 import { PersonChip } from './PersonChip';
 
@@ -35,7 +36,7 @@ function DonateCard() {
         <Eyebrow text="Brettspieltreff ist kostenlos" />
       </div>
 
-      <h3 className="font-display italic text-xl text-plum-deep mt-3">
+      <h3 className="font-display text-xl text-plum-deep mt-3">
         Hilf mit, das Licht anzulassen.
       </h3>
 
@@ -102,7 +103,7 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
     <div className="wg-card rounded-2xl">
       <Eyebrow text="Wer bringt was" />
 
-      <h3 className="font-display italic text-xl text-ink mt-1.5">
+      <h3 className="font-display text-xl text-ink mt-1.5">
         {bringedGamesCount} Spiele zugesagt
       </h3>
 
@@ -137,9 +138,16 @@ function BringerSummaryCard({ games }: { games: Game[] }) {
 }
 
 // ── Card 3: ParticipantsCard ──────────────────────────────────────────
+const COLLAPSED_LIMIT = 10;
+
 function ParticipantsCard({ participants }: { participants: Participant[] }) {
-  const visible = participants.slice(0, 10);
-  const remaining = participants.length - visible.length;
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? participants : participants.slice(0, COLLAPSED_LIMIT);
+  const remaining = participants.length - COLLAPSED_LIMIT;
+  const canExpand = remaining > 0;
+
+  const toggleClasses =
+    'inline-flex items-center px-3 h-7 rounded-full border border-dashed border-rule text-ink-mute font-sans text-[11px] font-bold hover:bg-paper-lo hover:text-ink-soft hover:border-rule transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-plum/40 cursor-pointer';
 
   return (
     <div className="wg-card rounded-2xl">
@@ -155,10 +163,15 @@ function ParticipantsCard({ participants }: { participants: Participant[] }) {
           {visible.map((p) => (
             <PersonChip key={p.id} name={p.name} />
           ))}
-          {remaining > 0 && (
-            <span className="inline-flex items-center px-3 h-7 rounded-full border border-dashed border-rule text-ink-mute font-sans text-[11px] font-bold">
+          {canExpand && !expanded && (
+            <button type="button" onClick={() => setExpanded(true)} className={toggleClasses}>
               + {remaining} weitere
-            </span>
+            </button>
+          )}
+          {canExpand && expanded && (
+            <button type="button" onClick={() => setExpanded(false)} className={toggleClasses}>
+              weniger anzeigen
+            </button>
           )}
         </div>
       )}
@@ -170,9 +183,14 @@ function ParticipantsCard({ participants }: { participants: Participant[] }) {
 export function HomeSidebar({ games, participants }: HomeSidebarProps) {
   return (
     <>
-      <DonateCard />
+      {/* DonateCard intentionally not rendered for now — the component
+          stays in the file so we can re-enable it without rewriting
+          the copy/markup. */}
       <BringerSummaryCard games={games} />
       <ParticipantsCard participants={participants} />
     </>
   );
 }
+
+// Suppress unused-symbol lint on the dormant component.
+void DonateCard;

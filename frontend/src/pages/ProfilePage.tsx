@@ -233,7 +233,7 @@ export function ProfilePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Account Info */}
         <div className="bg-paper-hi rounded-lg shadow-raised p-6">
-          <h1 className="font-display italic text-3xl text-plum-deep mb-4">Mein Profil</h1>
+          <h1 className="font-display text-3xl text-plum-deep mb-4">Mein Profil</h1>
           
           <div className="space-y-3">
             <div>

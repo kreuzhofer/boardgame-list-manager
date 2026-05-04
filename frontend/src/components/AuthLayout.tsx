@@ -43,7 +43,7 @@ export function AuthLayout({
             aria-hidden="true"
             className="h-9 w-9 lg:h-11 lg:w-11 flex-shrink-0"
           />
-          <span className="font-display italic text-xl lg:text-2xl text-paper-hi">
+          <span className="font-display text-xl lg:text-2xl text-paper-hi">
             Brettspieltreff
           </span>
         </Link>
@@ -51,7 +51,7 @@ export function AuthLayout({
         {/* Marketing block — desktop only. Mobile keeps just the wordmark above. */}
         <div className="hidden lg:block max-w-md">
           <div className="wg-label text-paper-hi/70">{marketingEyebrow}</div>
-          <h2 className="font-display italic text-paper-hi mt-4 text-5xl xl:text-6xl leading-[1.05] whitespace-pre-line">
+          <h2 className="font-display text-paper-hi mt-4 text-5xl xl:text-6xl leading-[1.05] whitespace-pre-line">
             {marketingTitle}
           </h2>
           <p className="mt-5 text-base text-paper-hi/80 leading-relaxed">

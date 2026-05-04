@@ -7,9 +7,17 @@ const accountService = new AccountService(prisma);
 
 describe('AccountService', () => {
   const testAccountIds: string[] = [];
+  const testEventIds: string[] = [];
 
   afterAll(async () => {
-    // Clean up test accounts
+    // Events first — otherwise cascade-delete from Account would
+    // remove them and we'd lose the visibility that the cleanup
+    // logic ran.
+    if (testEventIds.length > 0) {
+      await prisma.event.deleteMany({
+        where: { id: { in: testEventIds } },
+      });
+    }
     if (testAccountIds.length > 0) {
       await prisma.account.deleteMany({
         where: { id: { in: testAccountIds } },
@@ -284,6 +292,261 @@ describe('AccountService', () => {
     it('returns null for non-existent ID', async () => {
       const account = await accountService.getById('non-existent-id');
       expect(account).toBeNull();
+    });
+  });
+
+  // ─── deleteAccount + transferEvents (admin destructive ops) ───────
+
+  /**
+   * Helper: create an account row directly (bypasses register's
+   * email validation + default-role behaviour) so tests can build
+   * specific fixtures (e.g. an admin, a deactivated player).
+   */
+  async function makeAccount(opts: {
+    role?: 'admin' | 'account_owner' | 'player';
+    status?: 'active' | 'deactivated' | 'unverified';
+    label: string;
+  }): Promise<{ id: string; email: string }> {
+    const email = `test-${opts.label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+    const account = await prisma.account.create({
+      data: {
+        email,
+        passwordHash: 'test-hash',
+        role: opts.role ?? 'account_owner',
+        status: opts.status ?? 'active',
+      },
+    });
+    testAccountIds.push(account.id);
+    return { id: account.id, email };
+  }
+
+  /** Helper: create an event owned by `ownerAccountId`. */
+  async function makeEvent(ownerAccountId: string, label: string): Promise<string> {
+    const event = await prisma.event.create({
+      data: {
+        name: `Test Event ${label} ${Date.now()}`,
+        password: 'test-password',
+        ownerAccountId,
+      },
+    });
+    testEventIds.push(event.id);
+    return event.id;
+  }
+
+  describe('getOwnedEvents', () => {
+    it('returns owned events for the account', async () => {
+      const owner = await makeAccount({ label: 'owned-list-owner' });
+      const e1 = await makeEvent(owner.id, 'a');
+      const e2 = await makeEvent(owner.id, 'b');
+
+      const result = await accountService.getOwnedEvents(owner.id);
+
+      expect(result.map((r) => r.id).sort()).toEqual([e1, e2].sort());
+      expect(result[0]).toMatchObject({
+        name: expect.any(String),
+        status: expect.any(String),
+      });
+    });
+
+    it('returns empty array when the account owns no events', async () => {
+      const account = await makeAccount({ label: 'owned-empty', role: 'player' });
+      const result = await accountService.getOwnedEvents(account.id);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('hard-deletes the account row when no events are owned', async () => {
+      const target = await makeAccount({ label: 'del-happy' });
+      const caller = await makeAccount({ label: 'del-caller', role: 'admin' });
+
+      await accountService.deleteAccount(target.id, caller.id);
+
+      const found = await prisma.account.findUnique({ where: { id: target.id } });
+      expect(found).toBeNull();
+    });
+
+    it('preserves per-event User rows by nulling User.accountId', async () => {
+      // Reproduces the spec's central guarantee: deleting a player
+      // disassociates them from their per-event User identity but
+      // leaves the User (and any Player/Bringer rows it backs)
+      // intact under the event scope.
+      const target = await makeAccount({ label: 'del-with-user', role: 'player' });
+      const caller = await makeAccount({ label: 'del-with-user-caller', role: 'admin' });
+
+      // Need an event so we can attach a User to it. Owner is the
+      // caller, not the target — target owns nothing here.
+      const eventId = await makeEvent(caller.id, 'user-link');
+      const user = await prisma.user.create({
+        data: {
+          name: 'Linked Player',
+          eventId,
+          accountId: target.id,
+        },
+      });
+
+      await accountService.deleteAccount(target.id, caller.id);
+
+      const survivor = await prisma.user.findUnique({ where: { id: user.id } });
+      expect(survivor).not.toBeNull();
+      expect(survivor!.accountId).toBeNull();
+
+      // Cleanup the user row we created (event row gets cleaned in afterAll)
+      await prisma.user.delete({ where: { id: user.id } });
+    });
+
+    it('rejects self-delete with SELF_DELETE', async () => {
+      const admin = await makeAccount({ label: 'del-self', role: 'admin' });
+
+      await expect(
+        accountService.deleteAccount(admin.id, admin.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.deleteAccount(admin.id, admin.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.SELF_DELETE);
+        expect((error as AccountError).statusCode).toBe(403);
+      }
+    });
+
+    it('rejects when target still owns events with ACCOUNT_HAS_EVENTS', async () => {
+      const target = await makeAccount({ label: 'del-blocked' });
+      const caller = await makeAccount({ label: 'del-blocked-caller', role: 'admin' });
+      await makeEvent(target.id, 'blocker');
+
+      await expect(
+        accountService.deleteAccount(target.id, caller.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.deleteAccount(target.id, caller.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.ACCOUNT_HAS_EVENTS);
+        expect((error as AccountError).statusCode).toBe(409);
+      }
+
+      // Account must still exist after the rejected delete
+      const stillThere = await prisma.account.findUnique({ where: { id: target.id } });
+      expect(stillThere).not.toBeNull();
+    });
+
+    it('rejects non-existent target with ACCOUNT_NOT_FOUND', async () => {
+      const caller = await makeAccount({ label: 'del-missing-caller', role: 'admin' });
+
+      await expect(
+        accountService.deleteAccount('does-not-exist', caller.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.deleteAccount('does-not-exist', caller.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.ACCOUNT_NOT_FOUND);
+      }
+    });
+  });
+
+  describe('transferEvents', () => {
+    it('bulk-reassigns ownership and reports the count', async () => {
+      const source = await makeAccount({ label: 'xfer-src' });
+      const target = await makeAccount({ label: 'xfer-tgt' });
+      const caller = await makeAccount({ label: 'xfer-caller', role: 'admin' });
+
+      const e1 = await makeEvent(source.id, '1');
+      const e2 = await makeEvent(source.id, '2');
+
+      const result = await accountService.transferEvents(source.id, target.id, caller.id);
+
+      expect(result.transferred).toBe(2);
+      const both = await prisma.event.findMany({
+        where: { id: { in: [e1, e2] } },
+        select: { ownerAccountId: true },
+      });
+      expect(both.every((e) => e.ownerAccountId === target.id)).toBe(true);
+    });
+
+    it('promotes a player target to account_owner when transferring at least one event', async () => {
+      const source = await makeAccount({ label: 'xfer-promo-src' });
+      const target = await makeAccount({ label: 'xfer-promo-tgt', role: 'player' });
+      const caller = await makeAccount({ label: 'xfer-promo-caller', role: 'admin' });
+
+      await makeEvent(source.id, 'promote');
+
+      await accountService.transferEvents(source.id, target.id, caller.id);
+
+      const promoted = await prisma.account.findUnique({ where: { id: target.id } });
+      expect(promoted!.role).toBe('account_owner');
+    });
+
+    it('does not change role when source has no events to transfer', async () => {
+      const source = await makeAccount({ label: 'xfer-noop-src', role: 'player' });
+      const target = await makeAccount({ label: 'xfer-noop-tgt', role: 'player' });
+      const caller = await makeAccount({ label: 'xfer-noop-caller', role: 'admin' });
+
+      const result = await accountService.transferEvents(source.id, target.id, caller.id);
+      expect(result.transferred).toBe(0);
+
+      const stillPlayer = await prisma.account.findUnique({ where: { id: target.id } });
+      expect(stillPlayer!.role).toBe('player');
+    });
+
+    it('rejects target = source with SAME_TRANSFER_TARGET', async () => {
+      const acc = await makeAccount({ label: 'xfer-same' });
+      const caller = await makeAccount({ label: 'xfer-same-caller', role: 'admin' });
+
+      await expect(
+        accountService.transferEvents(acc.id, acc.id, caller.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.transferEvents(acc.id, acc.id, caller.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.SAME_TRANSFER_TARGET);
+      }
+    });
+
+    it('rejects deactivated target with INVALID_TRANSFER_TARGET', async () => {
+      const source = await makeAccount({ label: 'xfer-deact-src' });
+      const target = await makeAccount({ label: 'xfer-deact-tgt', status: 'deactivated' });
+      const caller = await makeAccount({ label: 'xfer-deact-caller', role: 'admin' });
+
+      await expect(
+        accountService.transferEvents(source.id, target.id, caller.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.transferEvents(source.id, target.id, caller.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.INVALID_TRANSFER_TARGET);
+      }
+    });
+
+    it('rejects unverified target with INVALID_TRANSFER_TARGET', async () => {
+      const source = await makeAccount({ label: 'xfer-unv-src' });
+      const target = await makeAccount({ label: 'xfer-unv-tgt', status: 'unverified' });
+      const caller = await makeAccount({ label: 'xfer-unv-caller', role: 'admin' });
+
+      await expect(
+        accountService.transferEvents(source.id, target.id, caller.id),
+      ).rejects.toThrow(AccountError);
+    });
+
+    it('rejects non-existent target with INVALID_TRANSFER_TARGET', async () => {
+      const source = await makeAccount({ label: 'xfer-missing-src' });
+      const caller = await makeAccount({ label: 'xfer-missing-caller', role: 'admin' });
+
+      await expect(
+        accountService.transferEvents(source.id, 'does-not-exist', caller.id),
+      ).rejects.toThrow(AccountError);
+    });
+
+    it('rejects non-existent source with ACCOUNT_NOT_FOUND', async () => {
+      const target = await makeAccount({ label: 'xfer-missing-src-tgt' });
+      const caller = await makeAccount({ label: 'xfer-missing-src-caller', role: 'admin' });
+
+      await expect(
+        accountService.transferEvents('does-not-exist', target.id, caller.id),
+      ).rejects.toThrow(AccountError);
+      try {
+        await accountService.transferEvents('does-not-exist', target.id, caller.id);
+      } catch (error) {
+        expect((error as AccountError).code).toBe(AccountErrorCodes.ACCOUNT_NOT_FOUND);
+      }
     });
   });
 });

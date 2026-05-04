@@ -20,7 +20,7 @@ import type {
   ErrorResponse,
   BggSearchResponse,
 } from '../types';
-import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, Participation, ClaimCandidate, ClaimableUser } from '../types/account';
+import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, OwnedEventsResponse, Participation, ClaimCandidate, ClaimableUser } from '../types/account';
 import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
 
 // Get API URL from environment variable
@@ -553,6 +553,34 @@ export const accountsApi = {
     return fetchApi<{ success: boolean; message: string }>(`/api/accounts/${accountId}/sessions`, {
       method: 'DELETE',
     }, true);
+  },
+  /** Lists events owned by the account. Backs the delete pre-check
+   *  and the transfer picker. */
+  getOwnedEvents: (accountId: string): Promise<OwnedEventsResponse> => {
+    return fetchApi<OwnedEventsResponse>(`/api/accounts/${accountId}/owned-events`, {}, true);
+  },
+  /** Hard-delete an account. Server enforces self-lock and the
+   *  owned-events block (must transfer first). */
+  deleteAccount: (accountId: string): Promise<{ success: boolean; message: string }> => {
+    return fetchApi<{ success: boolean; message: string }>(`/api/accounts/${accountId}`, {
+      method: 'DELETE',
+    }, true);
+  },
+  /** Bulk-reassign every event owned by `sourceAccountId` to
+   *  `targetAccountId`. Auto-promotes a `player` target to
+   *  `account_owner` server-side. */
+  transferEvents: (
+    sourceAccountId: string,
+    targetAccountId: string,
+  ): Promise<{ transferred: number; message: string }> => {
+    return fetchApi<{ transferred: number; message: string }>(
+      `/api/accounts/${sourceAccountId}/transfer-events`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ targetAccountId }),
+      },
+      true,
+    );
   },
 };
 

@@ -27,8 +27,34 @@ export interface RegisterResponse {
   message: string;
 }
 
+/**
+ * Admin accounts-list row. The `ownedEventsCount` lets the admin
+ * table decide locally whether the "Löschen" button is available
+ * (delete is blocked when count > 0) or "Treffs übertragen" should
+ * be surfaced (count > 0).
+ */
+export interface AdminAccountRow extends Account {
+  ownedEventsCount: number;
+}
+
 export interface AccountsResponse {
-  accounts: Account[];
+  accounts: AdminAccountRow[];
+}
+
+/**
+ * Minimal event shape returned by GET /api/accounts/:id/owned-events.
+ * Used by the delete pre-check and the transfer picker — no need for
+ * the full EventResponse here.
+ */
+export interface OwnedEventLite {
+  id: string;
+  name: string;
+  slug: string | null;
+  status: string;
+}
+
+export interface OwnedEventsResponse {
+  events: OwnedEventLite[];
 }
 
 export interface ApiError {

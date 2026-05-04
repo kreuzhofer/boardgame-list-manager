@@ -21,7 +21,7 @@ import type {
   BggSearchResponse,
 } from '../types';
 import type { Account, Session, LoginResponse, RegisterResponse, AccountsResponse, OwnedEventsResponse, Participation, ClaimCandidate, ClaimableUser } from '../types/account';
-import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest } from '../types/event';
+import type { Event, EventPublicInfo, CreateEventRequest, UpdateEventRequest, EventDeletionPreview, DeleteEventResponse } from '../types/event';
 
 // Get API URL from environment variable
 const getApiUrl = (): string => {
@@ -694,6 +694,30 @@ export const eventsApi = {
 
   getBySlug: (slug: string): Promise<{ event: EventPublicInfo }> => {
     return fetchApi<{ event: EventPublicInfo }>(`/api/events/by-slug/${slug}`);
+  },
+
+  /** Counts of substantive data inside the event — backs the
+   *  delete-confirmation modal. */
+  getDeletionPreview: (id: string): Promise<{ preview: EventDeletionPreview }> => {
+    return fetchApi<{ preview: EventDeletionPreview }>(`/api/events/${id}/deletion-preview`, {}, true);
+  },
+
+  /** Empty events are hard-deleted server-side; non-empty soft-delete
+   *  with a 30-day undelete window. The response tells the UI which
+   *  branch ran. */
+  deleteEvent: (id: string): Promise<DeleteEventResponse> => {
+    return fetchApi<DeleteEventResponse>(`/api/events/${id}`, { method: 'DELETE' }, true);
+  },
+
+  /** Restore a soft-deleted event. `slug` is the new slug to assign;
+   *  null/undefined falls back to the original (pre-rename) slug.
+   *  SLUG_TAKEN (409) is the signal to prompt the user to pick a
+   *  different one. */
+  undeleteEvent: (id: string, slug: string | null): Promise<{ event: Event }> => {
+    return fetchApi<{ event: Event }>(`/api/events/${id}/undelete`, {
+      method: 'POST',
+      body: JSON.stringify({ slug }),
+    }, true);
   },
 };
 

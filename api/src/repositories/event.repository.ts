@@ -2,6 +2,13 @@ import { prisma } from '../db/prisma';
 import type { EventEntity, EventStatus } from '../types/event';
 
 export class EventRepository {
+  /**
+   * Returns all events for a given owner, INCLUDING soft-deleted ones.
+   * Owner-scoped views (Meine Treffs) need to surface deleted events
+   * with a purge countdown and undelete affordance, so we don't filter
+   * here. Public/anon flows go through `findBySlug` / `findById` which
+   * the service layer filters.
+   */
   async findAll(ownerAccountId: string): Promise<EventEntity[]> {
     return prisma.event.findMany({
       where: { ownerAccountId },
@@ -20,6 +27,18 @@ export class EventRepository {
     return prisma.event.findUnique({
       where: { slug },
     }) as Promise<EventEntity | null>;
+  }
+
+  /**
+   * Find soft-deleted events whose 30-day grace period has elapsed.
+   * Backs `purgeExpiredDeletedEvents()` — both the boot sweep and the
+   * lazy sweep at the start of `getEventsForOwner`.
+   */
+  async findExpiredDeleted(threshold: Date): Promise<Array<{ id: string }>> {
+    return prisma.event.findMany({
+      where: { deletedAt: { lt: threshold } },
+      select: { id: true },
+    });
   }
 
   async create(data: {

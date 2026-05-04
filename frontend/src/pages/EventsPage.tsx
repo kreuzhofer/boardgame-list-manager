@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eventsApi, donationsApi, ApiError, type DonationStats } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/ToastProvider';
+import { UndeleteEventModal } from '../components/UndeleteEventModal';
 import type { Event, EventStatus } from '../types/event';
 import { EVENT_STATUS_LABEL } from '../types/event';
 
@@ -146,6 +148,56 @@ function ActiveEventCard({ event }: { event: Event }) {
   );
 }
 
+/**
+ * Card variant for soft-deleted events. Visible only to the owner in
+ * "Meine Treffs" — the public anon flow already filters these out.
+ * Shows the deletion date, the purge countdown, and a single CTA to
+ * undelete (which opens the slug picker).
+ */
+function DeletedEventCard({
+  event,
+  onRequestUndelete,
+}: {
+  event: Event;
+  onRequestUndelete: (event: Event) => void;
+}) {
+  const deletedLabel = event.deletedAt
+    ? formatGermanDate(event.deletedAt)
+    : '—';
+  const purgeMs = event.purgeAt
+    ? new Date(event.purgeAt).getTime() - Date.now()
+    : null;
+  const daysLeft =
+    purgeMs !== null ? Math.max(0, Math.ceil(purgeMs / (1000 * 60 * 60 * 24))) : null;
+
+  return (
+    <div className="bg-paper-lo border border-rule rounded-xl p-6 shadow-raised flex flex-col">
+      <span className="wg-label text-blush-deep">Gelöscht</span>
+      <h3 className="font-display text-2xl text-ink-soft mt-3 leading-tight line-through decoration-ink-mute/40">
+        {event.name}
+      </h3>
+      <div className="mt-3 text-sm text-ink-soft space-y-1">
+        <div>Gelöscht am {deletedLabel}.</div>
+        {daysLeft !== null && (
+          <div>
+            {daysLeft === 0
+              ? 'Wird in Kürze endgültig gelöscht.'
+              : `Endgültige Löschung in ${daysLeft} ${daysLeft === 1 ? 'Tag' : 'Tagen'}.`}
+          </div>
+        )}
+      </div>
+      <div className="flex items-end justify-end mt-auto pt-4">
+        <button
+          onClick={() => onRequestUndelete(event)}
+          className="wg-btn-primary wg-btn-sm"
+        >
+          Wiederherstellen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ArchiveListItem({ event }: { event: Event }) {
   const dateLabel = event.endsAt
     ? formatShortMonthYear(event.endsAt)
@@ -261,10 +313,60 @@ function OrganizerDonateCard({ stats }: { stats: DonationStats | null }) {
 
 export function EventsPage() {
   const { account } = useAuth();
+  const { showToast } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [donationStats, setDonationStats] = useState<DonationStats | null>(null);
+
+  // Undelete modal state. Delete now lives in the EventSettingsPage
+  // danger zone — only the deleted-events list and the Wiederherstellen
+  // affordance live here.
+  const [undeleteTarget, setUndeleteTarget] = useState<Event | null>(null);
+  const [isUndeleting, setIsUndeleting] = useState(false);
+
+  const reloadEvents = async () => {
+    try {
+      const response = await eventsApi.getAll();
+      setEvents(response.events);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Konnte Events nicht laden.');
+    }
+  };
+
+  const requestUndelete = (event: Event) => {
+    setUndeleteTarget(event);
+  };
+
+  const cancelUndelete = () => {
+    if (isUndeleting) return;
+    setUndeleteTarget(null);
+  };
+
+  /**
+   * Returns null on success; an error code (e.g. 'SLUG_TAKEN') when the
+   * server rejects the chosen slug so the modal can render an inline
+   * error and let the user pick a different one.
+   */
+  const confirmUndelete = async (slug: string): Promise<string | null> => {
+    if (!undeleteTarget) return null;
+    setIsUndeleting(true);
+    try {
+      await eventsApi.undeleteEvent(undeleteTarget.id, slug);
+      showToast(`Treff "${undeleteTarget.name}" wiederhergestellt.`);
+      setUndeleteTarget(null);
+      await reloadEvents();
+      return null;
+    } catch (err) {
+      if (err instanceof ApiError) {
+        return err.code;
+      }
+      return 'UNKNOWN';
+    } finally {
+      setIsUndeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!account) return;
@@ -298,10 +400,17 @@ export function EventsPage() {
     loadStats();
   }, [account]);
 
-  const { activeEvents, archivedEvents } = useMemo(() => {
+  const { activeEvents, archivedEvents, deletedEvents } = useMemo(() => {
     const active: Event[] = [];
     const archived: Event[] = [];
+    const deleted: Event[] = [];
     for (const e of events) {
+      // Soft-deleted events are owner-visible so they can be undeleted
+      // before the 30-day purge — bucket them out of active/archived.
+      if (e.deletedAt) {
+        deleted.push(e);
+        continue;
+      }
       if (e.status === 'archived') archived.push(e);
       else active.push(e);
     }
@@ -318,7 +427,13 @@ export function EventsPage() {
       const bTime = b.endsAt ? new Date(b.endsAt).getTime() : new Date(b.updatedAt).getTime();
       return bTime - aTime;
     });
-    return { activeEvents: active, archivedEvents: archived };
+    // Most recently deleted first.
+    deleted.sort((a, b) => {
+      const aTime = a.deletedAt ? new Date(a.deletedAt).getTime() : 0;
+      const bTime = b.deletedAt ? new Date(b.deletedAt).getTime() : 0;
+      return bTime - aTime;
+    });
+    return { activeEvents: active, archivedEvents: archived, deletedEvents: deleted };
   }, [events]);
 
   if (!account) {
@@ -393,6 +508,26 @@ export function EventsPage() {
         </div>
       )}
 
+      {/* Deleted events — owner-only soft-delete waiting room */}
+      {deletedEvents.length > 0 && (
+        <div className="space-y-3">
+          <div className="wg-label text-blush-deep">Gelöschte Treffs</div>
+          <p className="text-sm text-ink-soft">
+            Diese Treffs werden 30 Tage aufbewahrt. Du kannst sie bis dahin
+            wiederherstellen.
+          </p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {deletedEvents.map((event) => (
+              <DeletedEventCard
+                key={event.id}
+                event={event}
+                onRequestUndelete={requestUndelete}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Archive + Donate row */}
       {(archivedEvents.length > 0 || activeEvents.length > 0) && (
         <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
@@ -400,6 +535,15 @@ export function EventsPage() {
           <OrganizerDonateCard stats={donationStats} />
         </div>
       )}
+
+      {/* Undelete modal — delete is on EventSettingsPage */}
+      <UndeleteEventModal
+        isOpen={!!undeleteTarget}
+        event={undeleteTarget}
+        onConfirm={confirmUndelete}
+        onCancel={cancelUndelete}
+        isWorking={isUndeleting}
+      />
     </div>
   );
 }

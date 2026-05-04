@@ -118,6 +118,14 @@ model Event {
   fees           String?              @db.Text
   isDefault      Boolean              @default(false) @map("is_default")
   ownerAccountId String               @map("owner_account_id")
+  /// Soft-delete tombstone. Null = live event. When set, the event is
+  /// hidden from public lookups but still visible in the owner's
+  /// "Meine Treffs" with an undelete affordance and a 30-day purge
+  /// countdown. Hard delete (cascade) happens on or after
+  /// deletedAt + 30 days via `purgeExpiredDeletedEvents()`. Soft-deleted
+  /// events have their slug renamed to `<original>-deleted[-N]` so the
+  /// original slug is freed for re-use immediately.
+  deletedAt      DateTime?            @map("deleted_at")
   createdAt      DateTime             @default(now()) @map("created_at")
   updatedAt      DateTime             @updatedAt @map("updated_at")
   ownerAccount   Account              @relation(fields: [ownerAccountId], references: [id], onDelete: Cascade)
@@ -127,6 +135,7 @@ model Event {
   activityEvents ActivityEvent[]
 
   @@index([ownerAccountId])
+  @@index([deletedAt])
   @@map("events")
 }
 

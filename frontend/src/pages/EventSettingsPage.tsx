@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventsApi, ApiError } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import type { Event, CreateEventRequest, UpdateEventRequest, EventStatus } from '../types/event';
+import { useToast } from '../components/ToastProvider';
+import { DeleteEventModal } from '../components/DeleteEventModal';
+import type { Event, CreateEventRequest, UpdateEventRequest, EventStatus, EventDeletionPreview } from '../types/event';
 import { EVENT_STATUS_LABEL } from '../types/event';
 
 function slugify(name: string): string {
@@ -19,6 +21,7 @@ export function EventSettingsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { account } = useAuth();
+  const { showToast } = useToast();
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(isEditMode);
@@ -41,6 +44,15 @@ export function EventSettingsPage() {
   const [notes, setNotes] = useState('');
   const [fees, setFees] = useState('');
 
+  // Read-only flags used by the danger zone — the form doesn't touch
+  // these but the bottom section needs them to decide visibility.
+  const [isDefault, setIsDefault] = useState(false);
+  const [deletedAt, setDeletedAt] = useState<string | null>(null);
+
+  // Danger zone state
+  const [deletePreview, setDeletePreview] = useState<EventDeletionPreview | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const loadEvent = useCallback(async () => {
     if (!id) return;
     try {
@@ -60,6 +72,8 @@ export function EventSettingsPage() {
       setNotes(event.notes || '');
       setFees(event.fees || '');
       setPassword(event.password || '');
+      setIsDefault(event.isDefault);
+      setDeletedAt(event.deletedAt);
       setError(null);
     } catch (err) {
       const apiError = err as ApiError;
@@ -85,6 +99,41 @@ export function EventSettingsPage() {
   const handleSlugChange = (value: string) => {
     setSlugManuallyEdited(true);
     setSlug(value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+  };
+
+  // ─── Danger zone (delete) ──────────────────────────────────────────
+  const canShowDangerZone = isEditMode && !isDefault && !deletedAt;
+
+  const requestDelete = async () => {
+    if (!id) return;
+    try {
+      const { preview } = await eventsApi.getDeletionPreview(id);
+      setDeletePreview(preview);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Vorschau fehlgeschlagen.';
+      showToast(`Fehler: ${message}`);
+    }
+  };
+
+  const cancelDelete = () => {
+    if (isDeleting) return;
+    setDeletePreview(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      const result = await eventsApi.deleteEvent(id);
+      showToast(result.message);
+      setDeletePreview(null);
+      navigate('/events');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Löschen fehlgeschlagen.';
+      showToast(`Fehler: ${message}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -408,6 +457,36 @@ export function EventSettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Danger zone — destructive, owner-only, separated visually */}
+      {canShowDangerZone && (
+        <div className="bg-paper-hi border border-rule border-t-[3px] border-t-blush rounded-xl p-6 shadow-raised mt-8">
+          <div className="wg-label text-blush-deep">Gefahrenzone</div>
+          <h3 className="font-display text-xl text-ink mt-2">Treff löschen</h3>
+          <p className="text-sm text-ink-soft mt-2">
+            Leere Treffs werden sofort entfernt. Treffs mit Spielen oder
+            Teilnehmer:innen werden 30 Tage lang in „Gelöschte Treffs"
+            aufbewahrt und können dort wiederhergestellt werden.
+          </p>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={requestDelete}
+              className="wg-btn-danger"
+            >
+              Treff löschen
+            </button>
+          </div>
+        </div>
+      )}
+
+      <DeleteEventModal
+        isOpen={!!deletePreview}
+        preview={deletePreview}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

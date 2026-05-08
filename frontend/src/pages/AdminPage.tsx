@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { accountsApi, bggApi, ApiError } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminSSE } from '../hooks/useAdminSSE';
-import type { Account } from '../types/account';
+import { useToast } from '../components/ToastProvider';
+import { DeleteAccountModal } from '../components/DeleteAccountModal';
+import { TransferEventsModal } from '../components/TransferEventsModal';
+import type { Account, AdminAccountRow, OwnedEventLite } from '../types/account';
 import type { ImportStatus, BulkEnrichmentStatus } from '../types/adminSse';
 
 function formatEta(seconds: number | null): string {
@@ -27,9 +30,19 @@ function formatBytes(bytes: number): string {
 
 export function AdminPage() {
   const { account } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const { showToast } = useToast();
+  const [accounts, setAccounts] = useState<AdminAccountRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Delete + transfer modals. Each tracks its own target row and a
+  // pending flag so the corresponding modal can show a spinner without
+  // blocking the rest of the page.
+  const [deleteTarget, setDeleteTarget] = useState<AdminAccountRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [transferTarget, setTransferTarget] = useState<AdminAccountRow | null>(null);
+  const [transferOwnedEvents, setTransferOwnedEvents] = useState<OwnedEventLite[]>([]);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
   const [enrichStatus, setEnrichStatus] = useState<BulkEnrichmentStatus | null>(null);
@@ -169,6 +182,70 @@ export function AdminPage() {
     await accountsApi.forceLogout(target.id);
   };
 
+  // ─── Delete + transfer (admin destructive ops) ──────────────────────
+
+  const openDeleteModal = (target: AdminAccountRow) => {
+    setDeleteTarget(target);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await accountsApi.deleteAccount(deleteTarget.id);
+      showToast(`Konto ${deleteTarget.email} gelöscht.`);
+      setDeleteTarget(null);
+      await loadAccounts();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Löschen fehlgeschlagen.';
+      showToast(`Fehler: ${message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openTransferModal = async (target: AdminAccountRow) => {
+    // Fetch the actual event list lazily — the row count alone is
+    // enough to gate the button, but the modal shows the list so the
+    // operator confirms what they're about to move.
+    try {
+      const { events } = await accountsApi.getOwnedEvents(target.id);
+      setTransferOwnedEvents(events);
+      setTransferTarget(target);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Treffs konnten nicht geladen werden.';
+      showToast(`Fehler: ${message}`);
+    }
+  };
+
+  const closeTransferModal = () => {
+    if (isTransferring) return;
+    setTransferTarget(null);
+    setTransferOwnedEvents([]);
+  };
+
+  const confirmTransfer = async (targetAccountId: string) => {
+    if (!transferTarget) return;
+    setIsTransferring(true);
+    try {
+      const result = await accountsApi.transferEvents(transferTarget.id, targetAccountId);
+      showToast(result.message);
+      setTransferTarget(null);
+      setTransferOwnedEvents([]);
+      await loadAccounts();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Übertragung fehlgeschlagen.';
+      showToast(`Fehler: ${message}`);
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
@@ -209,54 +286,91 @@ export function AdminPage() {
               <th className="text-left px-4 py-3 font-medium">E-Mail</th>
               <th className="text-left px-4 py-3 font-medium">Rolle</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
+              <th className="text-left px-4 py-3 font-medium">Treffs</th>
               <th className="text-left px-4 py-3 font-medium">Aktionen</th>
             </tr>
           </thead>
           <tbody>
-            {accounts.map((entry) => (
-              <tr key={entry.id} className="border-t border-rule-soft">
-                <td className="px-4 py-3 text-ink">{entry.email}</td>
-                <td className="px-4 py-3 text-ink-soft">{entry.role}</td>
-                <td className="px-4 py-3 text-ink-soft">{entry.status}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleRoleToggle(entry)}
-                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-plum-50 text-plum-deep hover:bg-plum-100"
-                    >
-                      Rolle wechseln
-                    </button>
-                    <button
-                      onClick={() => handleStatusToggle(entry)}
-                      disabled={entry.id === account?.id && entry.status === 'active'}
-                      title={entry.id === account?.id && entry.status === 'active' ? 'Eigenes Konto kann nicht deaktiviert werden' : undefined}
-                      className={`text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center ${
-                        entry.id === account?.id && entry.status === 'active'
-                          ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
-                          : 'bg-butter-50 text-butter-deep hover:bg-butter-50'
-                      }`}
-                    >
-                      {entry.status === 'active' ? 'Deaktivieren' : 'Aktivieren'}
-                    </button>
-                    <button
-                      onClick={() => handlePasswordReset(entry)}
-                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-plum-50 text-plum-deep hover:bg-plum-100"
-                    >
-                      Passwort reset
-                    </button>
-                    <button
-                      onClick={() => handleForceLogout(entry)}
-                      className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-paper-lo text-ink-soft hover:bg-rule"
-                    >
-                      Sitzungen beenden
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {accounts.map((entry) => {
+              const isSelf = entry.id === account?.id;
+              const ownsEvents = entry.ownedEventsCount > 0;
+              const deleteBlockedReason = isSelf
+                ? 'Eigenes Konto kann nicht gelöscht werden'
+                : ownsEvents
+                  ? 'Treffs zuerst übertragen'
+                  : undefined;
+              return (
+                <tr key={entry.id} className="border-t border-rule-soft">
+                  <td className="px-4 py-3 text-ink">{entry.email}</td>
+                  <td className="px-4 py-3 text-ink-soft">{entry.role}</td>
+                  <td className="px-4 py-3 text-ink-soft">{entry.status}</td>
+                  <td className="px-4 py-3 text-ink-soft">{entry.ownedEventsCount}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleRoleToggle(entry)}
+                        disabled={isSelf}
+                        title={isSelf ? 'Eigene Rolle kann nicht geändert werden' : undefined}
+                        className={`text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center ${
+                          isSelf
+                            ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
+                            : 'bg-plum-50 text-plum-deep hover:bg-plum-100'
+                        }`}
+                      >
+                        Rolle wechseln
+                      </button>
+                      <button
+                        onClick={() => handleStatusToggle(entry)}
+                        disabled={isSelf && entry.status === 'active'}
+                        title={isSelf && entry.status === 'active' ? 'Eigenes Konto kann nicht deaktiviert werden' : undefined}
+                        className={`text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center ${
+                          isSelf && entry.status === 'active'
+                            ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
+                            : 'bg-butter-50 text-butter-deep hover:bg-butter-50'
+                        }`}
+                      >
+                        {entry.status === 'active' ? 'Deaktivieren' : 'Aktivieren'}
+                      </button>
+                      <button
+                        onClick={() => handlePasswordReset(entry)}
+                        className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-plum-50 text-plum-deep hover:bg-plum-100"
+                      >
+                        Passwort reset
+                      </button>
+                      <button
+                        onClick={() => handleForceLogout(entry)}
+                        className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-paper-lo text-ink-soft hover:bg-rule"
+                      >
+                        Sitzungen beenden
+                      </button>
+                      {ownsEvents && (
+                        <button
+                          onClick={() => openTransferModal(entry)}
+                          className="text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center bg-ocean-50 text-ocean-deep hover:bg-ocean-50"
+                        >
+                          Treffs übertragen
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openDeleteModal(entry)}
+                        disabled={isSelf || ownsEvents}
+                        title={deleteBlockedReason}
+                        className={`text-xs px-3 py-1.5 rounded min-h-[32px] inline-flex items-center ${
+                          isSelf || ownsEvents
+                            ? 'bg-paper-lo text-ink-mute cursor-not-allowed'
+                            : 'bg-blush-50 text-blush-deep hover:bg-blush-50'
+                        }`}
+                      >
+                        Löschen
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {accounts.length === 0 && (
               <tr>
-                <td className="px-4 py-3 text-ink-mute" colSpan={4}>
+                <td className="px-4 py-3 text-ink-mute" colSpan={5}>
                   Keine Konten gefunden.
                 </td>
               </tr>
@@ -398,6 +512,25 @@ export function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      <DeleteAccountModal
+        isOpen={!!deleteTarget}
+        email={deleteTarget?.email ?? ''}
+        ownedEventsCount={deleteTarget?.ownedEventsCount ?? 0}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+        isDeleting={isDeleting}
+      />
+      <TransferEventsModal
+        isOpen={!!transferTarget}
+        source={transferTarget}
+        ownedEvents={transferOwnedEvents}
+        allAccounts={accounts}
+        onConfirm={confirmTransfer}
+        onCancel={closeTransferModal}
+        isTransferring={isTransferring}
+      />
     </div>
   );
 }

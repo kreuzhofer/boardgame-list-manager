@@ -38,6 +38,16 @@ export interface AccountResponse {
   createdAt: Date;
 }
 
+/**
+ * Admin accounts-list row. Extends the basic AccountResponse with the
+ * count of events the account owns so the table can decide locally
+ * whether to enable the "Löschen" button or surface "Treffs übertragen"
+ * without an extra round-trip per row.
+ */
+export interface AdminAccountRow extends AccountResponse {
+  ownedEventsCount: number;
+}
+
 export interface TokenPayload {
   accountId: string;
   sessionId: string;
@@ -58,6 +68,11 @@ export const AccountErrorCodes = {
   ACCOUNT_NOT_FOUND: 'ACCOUNT_NOT_FOUND',
   SESSION_NOT_FOUND: 'SESSION_NOT_FOUND',
   SELF_DEACTIVATION: 'SELF_DEACTIVATION',
+  SELF_DELETE: 'SELF_DELETE',
+  SELF_ROLE_CHANGE: 'SELF_ROLE_CHANGE',
+  ACCOUNT_HAS_EVENTS: 'ACCOUNT_HAS_EVENTS',
+  INVALID_TRANSFER_TARGET: 'INVALID_TRANSFER_TARGET',
+  SAME_TRANSFER_TARGET: 'SAME_TRANSFER_TARGET',
 } as const;
 
 export type AccountErrorCode = typeof AccountErrorCodes[keyof typeof AccountErrorCodes];
@@ -77,4 +92,9 @@ export const AccountErrorMessages: Record<AccountErrorCode, string> = {
   ACCOUNT_NOT_FOUND: 'Konto nicht gefunden.',
   SESSION_NOT_FOUND: 'Sitzung nicht gefunden.',
   SELF_DEACTIVATION: 'Administratoren können ihr eigenes Konto nicht deaktivieren.',
+  SELF_DELETE: 'Das eigene Konto kann nicht gelöscht werden.',
+  SELF_ROLE_CHANGE: 'Die eigene Rolle kann nicht geändert werden.',
+  ACCOUNT_HAS_EVENTS: 'Konto besitzt noch Treffs. Bitte zuerst übertragen.',
+  INVALID_TRANSFER_TARGET: 'Ziel-Konto ist nicht aktiv.',
+  SAME_TRANSFER_TARGET: 'Quell- und Zielkonto sind identisch.',
 };

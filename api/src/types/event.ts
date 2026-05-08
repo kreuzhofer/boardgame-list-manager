@@ -2,6 +2,14 @@ export type EventStatus = 'planning' | 'active' | 'archived';
 
 export const EVENT_STATUSES: EventStatus[] = ['planning', 'active', 'archived'];
 
+/**
+ * Soft-deleted events live in the DB for this many days before
+ * `purgeExpiredDeletedEvents()` removes them for good. The owner
+ * sees the countdown in their "Meine Treffs" list and can undelete
+ * any time before the deadline.
+ */
+export const PURGE_AFTER_DAYS = 30;
+
 export interface EventEntity {
   id: string;
   name: string;
@@ -18,6 +26,8 @@ export interface EventEntity {
   fees: string | null;
   isDefault: boolean;
   ownerAccountId: string;
+  /** Null = live event. Non-null marks soft-deleted; purges after PURGE_AFTER_DAYS. */
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   _count?: { participants: number; games: number };
@@ -41,6 +51,14 @@ export interface EventResponse {
   isDefault: boolean;
   participantCount: number;
   gameCount: number;
+  /**
+   * Soft-delete metadata. `deletedAt` is the ISO timestamp at which
+   * the event was soft-deleted; null for live events. `purgeAt` is
+   * derived as `deletedAt + PURGE_AFTER_DAYS` and tells the UI when
+   * the event will be hard-deleted unless undeleted first.
+   */
+  deletedAt: string | null;
+  purgeAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +108,10 @@ export interface UpdateEventInput {
 }
 
 export function toEventResponse(entity: EventEntity): EventResponse {
+  const deletedAt = entity.deletedAt ?? null;
+  const purgeAt = deletedAt
+    ? new Date(deletedAt.getTime() + PURGE_AFTER_DAYS * 24 * 60 * 60 * 1000)
+    : null;
   return {
     id: entity.id,
     name: entity.name,
@@ -107,6 +129,8 @@ export function toEventResponse(entity: EventEntity): EventResponse {
     isDefault: entity.isDefault,
     participantCount: entity._count?.participants ?? 0,
     gameCount: entity._count?.games ?? 0,
+    deletedAt: deletedAt ? deletedAt.toISOString() : null,
+    purgeAt: purgeAt ? purgeAt.toISOString() : null,
     createdAt: entity.createdAt.toISOString(),
     updatedAt: entity.updatedAt.toISOString(),
   };

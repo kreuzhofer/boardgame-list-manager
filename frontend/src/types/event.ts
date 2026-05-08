@@ -25,8 +25,42 @@ export interface Event {
   isDefault: boolean;
   participantCount: number;
   gameCount: number;
+  /**
+   * Soft-delete metadata. `deletedAt` is the ISO timestamp at which
+   * the owner soft-deleted the event; null for live events. `purgeAt`
+   * tells the UI when the row will be hard-deleted unless undeleted
+   * first (deletedAt + 30 days).
+   */
+  deletedAt: string | null;
+  purgeAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EventDeletionPreview {
+  eventId: string;
+  name: string;
+  gamesCount: number;
+  participantsCount: number;
+  bringersCount: number;
+  playersCount: number;
+  eventParticipationsCount: number;
+  /**
+   * `true` when the event has no games and no per-event users.
+   * Empty events go through the single-confirm hard-delete path;
+   * non-empty events show this preview and use soft-delete with
+   * a 30-day undelete window.
+   */
+  isEmpty: boolean;
+}
+
+export interface DeleteEventResponse {
+  success: boolean;
+  kind: 'hard' | 'soft';
+  deletedAt: string | null;
+  purgeAt: string | null;
+  renamedSlug: string | null;
+  message: string;
 }
 
 export interface EventPublicInfo {

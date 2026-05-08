@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import {
   AccountResponse,
+  AdminAccountRow,
   CreateAccountInput,
   AccountErrorCodes,
   AccountErrorMessages,
@@ -261,13 +262,21 @@ export class AccountService {
   }
 
   /**
-   * List all accounts (admin only)
+   * List all accounts (admin only).
+   *
+   * Includes `ownedEventsCount` per row so the admin table can decide
+   * locally whether to enable the "Löschen" button or surface "Treffs
+   * übertragen" — saves an N+1 round-trip from the frontend.
    */
-  async getAll(): Promise<AccountResponse[]> {
+  async getAll(): Promise<AdminAccountRow[]> {
     const accounts = await this.prisma.account.findMany({
       orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { events: true } } },
     });
-    return accounts.map((account) => this.toAccountResponse(account));
+    return accounts.map((account) => ({
+      ...this.toAccountResponse(account),
+      ownedEventsCount: account._count.events,
+    }));
   }
 
   /**
@@ -413,8 +422,8 @@ export class AccountService {
   async setRole(accountId: string, role: 'account_owner' | 'admin', callerAccountId: string): Promise<AccountResponse> {
     if (accountId === callerAccountId) {
       throw new AccountError(
-        'SELF_ROLE_CHANGE',
-        'Die eigene Rolle kann nicht geändert werden.',
+        AccountErrorCodes.SELF_ROLE_CHANGE,
+        AccountErrorMessages.SELF_ROLE_CHANGE,
         403
       );
     }
@@ -683,5 +692,150 @@ export class AccountService {
     // would be redundant.
 
     return this.toAccountResponse(updated);
+  }
+
+  // ─── Admin: delete + transfer events ───────────────────────────────
+
+  /**
+   * List events owned by the given account. Backs the delete pre-check
+   * (operator must transfer ownership before deleting) and the transfer
+   * picker (so the operator sees what they're about to move).
+   */
+  async getOwnedEvents(accountId: string): Promise<
+    Array<{ id: string; name: string; slug: string | null; status: string }>
+  > {
+    const events = await this.prisma.event.findMany({
+      where: { ownerAccountId: accountId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, name: true, slug: true, status: true },
+    });
+    return events;
+  }
+
+  /**
+   * Hard-delete an account.
+   *
+   * Side effects via existing schema cascades:
+   *  - Sessions, LoginTokens          → cascade delete
+   *  - per-event User rows            → accountId set to NULL (player
+   *                                     identity preserved per-event,
+   *                                     just disassociated)
+   *  - EventParticipation rows        → accountId set to NULL
+   *
+   * Refuses to delete:
+   *  - the caller themselves (SELF_DELETE)
+   *  - an account that still owns events (ACCOUNT_HAS_EVENTS) — operator
+   *    must transfer ownership first via `transferEvents`
+   *
+   * The Event.ownerAccountId relation is configured `onDelete: Cascade`
+   * as a safety net, but the precheck here means we never rely on it.
+   */
+  async deleteAccount(targetAccountId: string, callerAccountId: string): Promise<void> {
+    if (targetAccountId === callerAccountId) {
+      throw new AccountError(
+        AccountErrorCodes.SELF_DELETE,
+        AccountErrorMessages.SELF_DELETE,
+        403,
+      );
+    }
+
+    const account = await this.prisma.account.findUnique({
+      where: { id: targetAccountId },
+    });
+    if (!account) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404,
+      );
+    }
+
+    const ownedCount = await this.prisma.event.count({
+      where: { ownerAccountId: targetAccountId },
+    });
+    if (ownedCount > 0) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_HAS_EVENTS,
+        AccountErrorMessages.ACCOUNT_HAS_EVENTS,
+        409,
+      );
+    }
+
+    await this.prisma.account.delete({ where: { id: targetAccountId } });
+  }
+
+  /**
+   * Transfer all events owned by `sourceAccountId` to `targetAccountId`.
+   *
+   * Runs as a single transaction so the bulk reassignment and the
+   * target-role promotion either both land or both don't. Auto-promotes
+   * a `player` target to `account_owner` to mirror what `event.service
+   * .createEvent()` already does for first-time event creators (line
+   * 233-240 in event.service.ts).
+   *
+   * Validation:
+   *  - target ≠ source                  (SAME_TRANSFER_TARGET)
+   *  - target exists and is `active`    (INVALID_TRANSFER_TARGET)
+   *
+   * Source can be the caller — an admin consolidating their own events
+   * before deleting their account is a legitimate flow. Source = self
+   * is NOT blocked here; `deleteAccount` will block the final delete
+   * step independently.
+   */
+  async transferEvents(
+    sourceAccountId: string,
+    targetAccountId: string,
+    _callerAccountId: string,
+  ): Promise<{ transferred: number }> {
+    if (sourceAccountId === targetAccountId) {
+      throw new AccountError(
+        AccountErrorCodes.SAME_TRANSFER_TARGET,
+        AccountErrorMessages.SAME_TRANSFER_TARGET,
+        400,
+      );
+    }
+
+    const [source, target] = await Promise.all([
+      this.prisma.account.findUnique({ where: { id: sourceAccountId } }),
+      this.prisma.account.findUnique({ where: { id: targetAccountId } }),
+    ]);
+
+    if (!source) {
+      throw new AccountError(
+        AccountErrorCodes.ACCOUNT_NOT_FOUND,
+        AccountErrorMessages.ACCOUNT_NOT_FOUND,
+        404,
+      );
+    }
+    if (!target || target.status !== 'active') {
+      throw new AccountError(
+        AccountErrorCodes.INVALID_TRANSFER_TARGET,
+        AccountErrorMessages.INVALID_TRANSFER_TARGET,
+        400,
+      );
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const update = await tx.event.updateMany({
+        where: { ownerAccountId: sourceAccountId },
+        data: { ownerAccountId: targetAccountId },
+      });
+
+      // Mirror eventService.createEvent's role promotion: if the new
+      // owner is still `player`, lift them to `account_owner`. Guarded
+      // by `where.role` so admins and existing organizers aren't
+      // touched. Only run when there was something to transfer —
+      // assigning ownership of zero events shouldn't change roles.
+      if (update.count > 0) {
+        await tx.account.updateMany({
+          where: { id: targetAccountId, role: 'player' },
+          data: { role: 'account_owner' },
+        });
+      }
+
+      return update.count;
+    });
+
+    return { transferred: result };
   }
 }

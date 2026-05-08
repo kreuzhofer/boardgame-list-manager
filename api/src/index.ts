@@ -136,6 +136,17 @@ const initializeSystem = async () => {
   const defaultEventId = await eventService.ensureDefaultEvent(adminId);
   await eventService.backfillDefaultEvent(defaultEventId);
   await eventService.backfillSlugs();
+  // Reap any events whose 30-day soft-delete grace has elapsed.
+  // Lazy sweep on `getEventsForOwner` covers steady-state usage; this
+  // boot sweep handles long-idle deployments where no owner has
+  // listed their events recently.
+  const purge = await eventService.purgeExpiredDeletedEvents().catch((err) => {
+    console.error('[bootstrap] Initial purge failed:', err);
+    return { purged: 0 };
+  });
+  if (purge.purged > 0) {
+    console.log(`[bootstrap] Purged ${purge.purged} expired deleted events`);
+  }
 };
 
 // Start server

@@ -671,4 +671,106 @@ router.delete('/:id/sessions', requireAuth, requireAdmin, async (req: Request, r
   }
 });
 
+/**
+ * GET /api/accounts/:id/owned-events
+ * Lists events owned by an account (admin only). Used by the delete
+ * pre-check and the transfer-events picker to show what's affected.
+ */
+router.get(
+  '/:id/owned-events',
+  requireAuth,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const events = await accountService.getOwnedEvents(id);
+      res.json({ events });
+    } catch (error) {
+      console.error('List owned events error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
+
+/**
+ * DELETE /api/accounts/:id
+ * Hard-delete an account (admin only). Refuses if account still owns
+ * events or if id === caller (self-lock).
+ */
+router.delete('/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { id } = req.params;
+    await accountService.deleteAccount(id, authReq.account.id);
+    res.json({ success: true, message: 'Konto wurde gelöscht.' });
+  } catch (error) {
+    if (error instanceof AccountError) {
+      res.status(error.statusCode).json({
+        error: error.code,
+        message: error.message,
+      });
+      return;
+    }
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+    });
+  }
+});
+
+/**
+ * POST /api/accounts/:id/transfer-events
+ * Body: { targetAccountId: string }
+ * Bulk-reassigns ownership of all events owned by :id to the target
+ * account. Auto-promotes the target from `player` to `account_owner`
+ * if needed. Admin only.
+ */
+router.post(
+  '/:id/transfer-events',
+  requireAuth,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const { id } = req.params;
+      const { targetAccountId } = req.body;
+
+      if (!targetAccountId || typeof targetAccountId !== 'string') {
+        res.status(400).json({
+          error: 'VALIDATION_ERROR',
+          message: 'Ziel-Konto fehlt oder ist ungültig.',
+        });
+        return;
+      }
+
+      const result = await accountService.transferEvents(
+        id,
+        targetAccountId,
+        authReq.account.id,
+      );
+      res.json({
+        ...result,
+        message: `${result.transferred} Treff(s) übertragen.`,
+      });
+    } catch (error) {
+      if (error instanceof AccountError) {
+        res.status(error.statusCode).json({
+          error: error.code,
+          message: error.message,
+        });
+        return;
+      }
+      console.error('Transfer events error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        message: 'Ein Fehler ist aufgetreten. Bitte später erneut versuchen.',
+      });
+    }
+  },
+);
+
 export default router;

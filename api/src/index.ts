@@ -22,6 +22,17 @@ import { AccountService } from './services/account.service';
 import { eventService } from './services/event.service';
 import { initEmailService, isSmtpReady } from './services/email.service';
 
+// Surface async failures that escape route handlers. Without these, a
+// rejected promise can terminate the process on newer Node versions
+// with no stack trace in the logs — exactly the silent-crash pattern
+// we hit in prod when the BGG cache loader OOM'd.
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+
 const app = express();
 const PORT = config.server.port;
 const accountService = new AccountService(prisma);

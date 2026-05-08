@@ -146,12 +146,25 @@ class BggCache {
    */
   private async loadFromDatabase(): Promise<void> {
     try {
+      // Explicit select — without it Prisma hauls every column for
+      // ~137k rows on boot, including the multi-KB `rawPreload` JSONB
+      // blob added in the soft-delete PR. That blew the API container's
+      // memory limit (OOM kill ~1 minute in). The cache only needs
+      // these six fields; the alt-names path lives inside enrichmentData.
       const dbGames = await prisma.bggGame.findMany({
         where: {
           isExpansion: false,
         },
         orderBy: {
           yearPublished: { sort: 'desc', nulls: 'last' },
+        },
+        select: {
+          id: true,
+          name: true,
+          yearPublished: true,
+          rank: true,
+          average: true,
+          enrichmentData: true,
         },
       });
 

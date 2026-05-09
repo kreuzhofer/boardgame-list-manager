@@ -269,7 +269,7 @@ export function GameRow({
       </td>
 
       {/* Game Name with Status Badge and Owner */}
-      <td className="w-[32%] 2xl:w-[34%] p-0">
+      <td className="w-[30%] 2xl:w-[33%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex flex-col gap-1">
             <span className="font-medium text-ink">{game.name}</span>
@@ -292,7 +292,7 @@ export function GameRow({
       </td>
 
       {/* Bringers (Bringt mit) - Requirement 3.9, 4.6 */}
-      <td className="w-[22%] 2xl:w-[23%] p-0">
+      <td className="w-[17%] 2xl:w-[19%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <BringerList 
             bringers={game.bringers} 
@@ -306,7 +306,7 @@ export function GameRow({
       </td>
 
       {/* Players (Mitspieler) - Requirement 3.9 */}
-      <td className="w-[22%] 2xl:w-[23%] p-0">
+      <td className="w-[17%] 2xl:w-[19%] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <PlayerList 
             players={game.players} 
@@ -323,17 +323,11 @@ export function GameRow({
       <td className="w-[200px] p-0">
         <div className="px-4 py-3" style={collapseStyle}>
           <div className="flex gap-2 flex-nowrap items-center">
-            <div className="shrink-0 hidden 2xl:flex">
-              <GameActions
-                game={game}
-                currentParticipantId={currentParticipantId}
-                onAddPlayer={handleAddPlayerWithToast}
-                onAddBringer={handleAddBringerWithToast}
-                onRemovePlayer={handleRemovePlayerWithToast}
-                onRemoveBringer={handleRemoveBringerWithToast}
-              />
-            </div>
-            <div className="shrink-0 flex 2xl:hidden">
+            {/* Icon-only buttons at every desktop width. The text-label
+                desktop variant (formerly behind 2xl:flex) was wider than
+                the column could hold and bloated the action area at the
+                expense of the data columns; consistency wins. */}
+            <div className="shrink-0 flex">
               <GameActions
                 game={game}
                 currentParticipantId={currentParticipantId}

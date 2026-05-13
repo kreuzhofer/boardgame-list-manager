@@ -418,7 +418,7 @@ export function HomePage({ participant }: HomePageProps) {
   if (loading) {
     return (
       <>
-        <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
+        <div className="sm:px-6 lg:px-14 py-6 lg:py-8">
           <div className="bg-paper-hi rounded-lg shadow p-8">
             <div className="flex items-center justify-center gap-3">
               <svg
@@ -453,7 +453,7 @@ export function HomePage({ participant }: HomePageProps) {
   if (error) {
     return (
       <>
-        <div className="px-4 sm:px-6 lg:px-14 py-6 lg:py-8">
+        <div className="sm:px-6 lg:px-14 py-6 lg:py-8">
           <div className="bg-blush-50 border border-blush rounded-lg p-6">
             <div className="flex items-start gap-3">
               <svg
@@ -488,7 +488,7 @@ export function HomePage({ participant }: HomePageProps) {
 
   return (
     <>
-      <div className={`px-4 sm:px-6 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1fr_320px] gap-8 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
+      <div className={`sm:px-6 lg:px-14 py-6 lg:py-8 grid lg:grid-cols-[1fr_320px] gap-8 ${(hasActiveFilters || searchQuery) ? 'pb-20 sm:pb-0' : ''}`}>
         <main className="space-y-6 min-w-0">
           {/* Unified Search Bar - replaces AddGameForm and SearchFilters name search.
               Hidden entirely when the event is archived — no adds, no searches that
